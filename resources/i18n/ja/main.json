@@ -300,7 +300,9 @@
       "timeout": "リクエストタイムアウト (ミリ秒)",
       "proxy": "プロキシ設定",
       "host": "ホスト",
-      "port": "ポート"
+      "port": "ポート",
+      "user_agent": "カスタム User-Agent（動画ストリーム）",
+      "user_agent_placeholder": "空欄で既定値"
     },
     "ui": {
       "header": "UI",

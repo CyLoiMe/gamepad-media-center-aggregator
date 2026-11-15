@@ -312,7 +312,9 @@
       "timeout": "Temps d'attente de la requête (en millisecondes)",
       "proxy": "Serveur proxy",
       "host": "Adresse",
-      "port": "Port"
+      "port": "Port",
+      "user_agent": "User-Agent personnalisé (flux vidéo)",
+      "user_agent_placeholder": "Valeur par défaut si vide"
     },
     "ui": {
       "header": "Paramètres de l'interface",

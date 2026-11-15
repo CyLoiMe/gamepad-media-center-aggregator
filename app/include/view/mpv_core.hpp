@@ -179,9 +179,23 @@ public:
 
     inline static std::string AUDIO_CHANNELS = "auto-safe";
 
+    /// Custom User-Agent for the stream layer (player_user_agent). Empty means
+    /// "not configured": mpv then gets the app's own UA, unless {configDir}/
+    /// mpv.conf carries a user-agent= line, which wins over the app default.
+    inline static std::string USER_AGENT;
+
+    /// The MPV core is created lazily (first playback), so the settings screen
+    /// can restart it to apply an option without first constructing a player it
+    /// would immediately destroy again.
+    static bool created() { return instanceCreated; }
+
 private:
     mpv_handle *mpv = nullptr;
     mpv_render_context *mpv_context = nullptr;
+    /// Set by the constructor. Never cleared: the core is only torn down at
+    /// application exit (or re-created in place by restart()), and a stale "true"
+    /// in between would just cost an extra restart of a live player.
+    static bool instanceCreated;
     brls::Rect rect = {0, 0, 1920, 1080};
     bool video_stopped = true;
     bool video_paused = false;

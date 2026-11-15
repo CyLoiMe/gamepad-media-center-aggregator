@@ -300,7 +300,9 @@
       "timeout": "İstek zaman aşımı (ms)",
       "proxy": "Vekil Sunucu Seçenekleri",
       "host": "Adres",
-      "port": "Bağlantı Noktası"
+      "port": "Bağlantı Noktası",
+      "user_agent": "Özel User-Agent (video akışları)",
+      "user_agent_placeholder": "Boşsa varsayılan"
     },
     "ui": {
       "header": "Arayüz",

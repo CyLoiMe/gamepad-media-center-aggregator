@@ -300,7 +300,9 @@
       "timeout": "请求超时时间 (毫秒)",
       "proxy": "代理服务器",
       "host": "地址",
-      "port": "端口"
+      "port": "端口",
+      "user_agent": "自定义 User-Agent（视频播放）",
+      "user_agent_placeholder": "留空则使用默认值"
     },
     "ui": {
       "header": "界面设置",

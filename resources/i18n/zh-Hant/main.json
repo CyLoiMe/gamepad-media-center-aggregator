@@ -300,7 +300,9 @@
       "timeout": "請求逾時時長 (毫秒)",
       "proxy": "代理伺服器",
       "host": "位址",
-      "port": "連接埠"
+      "port": "連接埠",
+      "user_agent": "自訂 User-Agent（影片播放）",
+      "user_agent_placeholder": "留空則使用預設值"
     },
     "ui": {
       "header": "介面設定",

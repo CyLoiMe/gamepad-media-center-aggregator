@@ -91,6 +91,8 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
     // options/labels are built at runtime from media::subtitleLangCatalog() in the
     // settings tab (value stored as-is: "auto" | "off" | 2-letter code)
     {PLAYER_SUBTITLE_LANG, {"player_subtitle_lang"}},
+    // free-form string, no option list: the settings tab uses an InputCell
+    {PLAYER_USER_AGENT, {"player_user_agent"}},
     {PLAYER_INMEMORY_CACHE,
         {
             "player_inmemory_cache",
@@ -386,6 +388,9 @@ bool AppConfig::init() {
     MPVCore::LOW_QUALITY = this->getItem(PLAYER_LOW_QUALITY, false);
 #endif
     MPVCore::SUBS_FALLBACK = this->getItem(PLAYER_SUBS_FALLBACK, true);
+    // stream User-Agent: empty = keep the app's own UA (mpv_core.cpp picks it,
+    // or leaves it to a user-agent= line in mpv.conf when the user wrote one)
+    MPVCore::USER_AGENT = this->getItem(PLAYER_USER_AGENT, std::string{});
 
     // 初始化是否使用硬件加速
     MPVCore::VO = this->getItem(MPV_VO, MPVCore::VO);

@@ -300,7 +300,9 @@
       "timeout": "요청 타임아웃 (ms)",
       "proxy": "프록시 설정",
       "host": "호스트",
-      "port": "포트"
+      "port": "포트",
+      "user_agent": "사용자 지정 User-Agent (동영상 스트림)",
+      "user_agent_placeholder": "비워 두면 기본값"
     },
     "ui": {
       "header": "UI",

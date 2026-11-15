@@ -300,7 +300,9 @@
       "timeout": "Časový limit požadavku (ms)",
       "proxy": "Nastavení proxy",
       "host": "Hostitel",
-      "port": "Port"
+      "port": "Port",
+      "user_agent": "Vlastní User-Agent (video streamy)",
+      "user_agent_placeholder": "Výchozí, je-li prázdné"
     },
     "ui": {
       "header": "Rozhraní",

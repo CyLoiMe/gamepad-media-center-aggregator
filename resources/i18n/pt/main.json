@@ -300,7 +300,9 @@
       "timeout": "Tempo limite do pedido (ms)",
       "proxy": "Definição de proxy",
       "host": "Anfitrião",
-      "port": "Porta"
+      "port": "Porta",
+      "user_agent": "User-Agent personalizado (streams de vídeo)",
+      "user_agent_placeholder": "Padrão quando vazio"
     },
     "ui": {
       "header": "Interface",

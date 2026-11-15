@@ -300,7 +300,9 @@
       "timeout": "Tiempo de espera de las peticiones (ms)",
       "proxy": "Proxy",
       "host": "Dirección",
-      "port": "Puerto"
+      "port": "Puerto",
+      "user_agent": "User-Agent personalizado (streams de vídeo)",
+      "user_agent_placeholder": "Valor por defecto si está vacío"
     },
     "ui": {
       "header": "Interfaz",

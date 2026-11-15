@@ -113,6 +113,8 @@
                     id="setting/network/proxy_passwd"
                     type="password"
                     visibility="gone" />
+                <brls:InputCell
+                    id="setting/network/user_agent" />
             </brls:Box>
 
             <brls:Header

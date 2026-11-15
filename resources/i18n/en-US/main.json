@@ -312,7 +312,9 @@
       "timeout": "Request timeout (ms)",
       "proxy": "Proxy Setting",
       "host": "Host",
-      "port": "Port"
+      "port": "Port",
+      "user_agent": "Custom User-Agent (video streams)",
+      "user_agent_placeholder": "App default when empty"
     },
     "ui": {
       "header": "UI",

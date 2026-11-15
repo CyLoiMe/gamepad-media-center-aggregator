@@ -120,6 +120,11 @@ public:
         PLAYER_ASPECT,
         PLAYER_SUBS_FALLBACK,
         PLAYER_SUBTITLE_LANG,  // preferred external-subtitle language: "auto" (= app locale), "off", or a 2-letter code
+        /// Custom User-Agent for the mpv stream layer (empty = the app's own UA,
+        /// or the user's `user-agent=` in {configDir}/mpv.conf when present).
+        /// Needed by cloud-drive CDNs reached through an Emby/Jellyfin 302,
+        /// which reject anything but a browser UA — see mpv_core.cpp init().
+        PLAYER_USER_AGENT,
         PLAYER_TV_MODE,
         ALWAYS_ON_TOP,
         SINGLE,
