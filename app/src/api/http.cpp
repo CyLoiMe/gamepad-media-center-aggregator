@@ -79,9 +79,11 @@ static HTTP::Error curl_error(const std::string& arg) { return HTTP::Error(HTTP:
 
 /// What the app presents by default, and what every request (API, images,
 /// downloads) and mpv send unless a custom User-Agent is configured.
-static std::string builtin_user_agent =
+/// NB: named `*_ua` on purpose — a file-static called `builtin_user_agent` would
+/// be shadowed by the accessor of the same name inside its own body.
+static std::string builtin_ua =
     fmt::format("{}/{} ({})", AppVersion::getPackageName(), AppVersion::getVersion(), AppVersion::getPlatform());
-static std::string user_agent = builtin_user_agent;
+static std::string user_agent = builtin_ua;
 
 /// @brief Verrous du cache partagé libcurl (CURLSH), indexés par curl_lock_data.
 /// libcurl exige des callbacks lock/unlock dès qu'un objet partagé (ici le cache DNS)
@@ -160,9 +162,9 @@ HTTP::~HTTP() {
 
 const std::string& HTTP::default_user_agent() { return user_agent; }
 
-const std::string& HTTP::builtin_user_agent() { return builtin_user_agent; }
+const std::string& HTTP::builtin_user_agent() { return builtin_ua; }
 
-void HTTP::set_default_user_agent(const std::string& agent) { user_agent = agent.empty() ? builtin_user_agent : agent; }
+void HTTP::set_default_user_agent(const std::string& agent) { user_agent = agent.empty() ? builtin_ua : agent; }
 
 void HTTP::set_user_agent(const std::string& agent) { curl_easy_setopt(this->easy, CURLOPT_USERAGENT, agent.c_str()); }
 
