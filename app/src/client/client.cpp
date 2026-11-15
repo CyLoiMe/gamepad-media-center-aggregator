@@ -6,6 +6,19 @@
 
 namespace remote {
 
+/// mpv option-list escaping: the value is embedded in a quoted `name="value"`
+/// item of the loadfile options string, where '"' would end the value early and
+/// '\' is the escape character.
+static std::string mpvQuote(const std::string& value) {
+    std::string out;
+    out.reserve(value.size());
+    for (char c : value) {
+        if (c == '\\' || c == '"') out.push_back('\\');
+        out.push_back(c);
+    }
+    return out;
+}
+
 std::shared_ptr<Client> create(const AppRemote& c) {
     auto pos = c.url.find_first_of("://");
     if (pos == std::string::npos) {
@@ -36,7 +49,11 @@ void Client::init(const AppRemote& conf, HTTP& cilent) {
         cilent.set_basic_auth(conf.user, conf.passwd);
     }
     if (conf.user_agent.size() > 0) {
-        ssextra << fmt::format(",user_agent=\"{}\"", conf.user_agent);
+        // "user-agent", not "user_agent": mpv matches option names byte for byte
+        // (options/m_config_frontend.c: bstrcmp in m_config_get_co_raw), so the
+        // underscore spelling was silently dropped and only the curl side of the
+        // override ever took effect.
+        ssextra << fmt::format(",user-agent=\"{}\"", mpvQuote(conf.user_agent));
         cilent.set_user_agent(conf.user_agent);
     }
     this->extra = ssextra.str();
