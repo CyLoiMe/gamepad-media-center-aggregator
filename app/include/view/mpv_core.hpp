@@ -179,11 +179,6 @@ public:
 
     inline static std::string AUDIO_CHANNELS = "auto-safe";
 
-    /// Custom User-Agent for the stream layer (player_user_agent). Empty means
-    /// "not configured": mpv then gets the app's own UA, unless {configDir}/
-    /// mpv.conf carries a user-agent= line, which wins over the app default.
-    inline static std::string USER_AGENT;
-
     /// The MPV core is created lazily (first playback), so the settings screen
     /// can restart it to apply an option without first constructing a player it
     /// would immediately destroy again.

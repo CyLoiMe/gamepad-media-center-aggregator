@@ -74,7 +74,17 @@ public:
     std::string _post(const std::string& url, const std::string& data);
     std::string _put(const std::string& url, const std::string& data);
     void set_user_agent(const std::string& agent);
+    /// User-Agent of every request the app sends — and the one mpv uses for the
+    /// stream layer (mpv_core.cpp). One value for both on purpose: cloud-drive
+    /// front-ends (TgtoDrive, …) sign the URL they hand out with the UA of the
+    /// request that asked for it, so a client playing with a different UA gets a
+    /// 403 from the CDN. Configured once in AppConfig::init().
     static const std::string& default_user_agent();
+    /// The built-in "<package>/<version> (<platform>)" UA, i.e. what an empty
+    /// custom UA falls back to.
+    static const std::string& builtin_user_agent();
+    /// Replace the UA above; an empty `agent` restores the built-in one.
+    static void set_default_user_agent(const std::string& agent);
     void set_basic_auth(const std::string& user, const std::string& passwd);
     void _delete(const std::string& url, std::ostream* out);
 

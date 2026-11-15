@@ -438,19 +438,21 @@ void SettingTab::onCreate() {
     });
     inputProxy->setVisibility(HTTP::PROXY_STATUS ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
 
-    // Custom stream User-Agent: cloud-drive CDNs reached through an Emby/Jellyfin
-    // 302 only accept a browser UA, and reject the app's own one with 403.
+    // Custom User-Agent. It is the ONLY User-Agent the app sends: the HTTP client
+    // (API, PlaybackInfo, artwork, downloads) and mpv share it, because
+    // cloud-drive front-ends (TgtoDrive…) sign the URL they hand out with the UA of
+    // the request that asked for it — a playback UA that differs is a CDN 403.
     // maxInputLength: InputCell caps the keyboard at 32 characters by default, a
     // browser UA is ~110 and would be cut in half without this.
-    inputUserAgent->init("main/setting/network/user_agent"_i18n, MPVCore::USER_AGENT,
-        [](std::string value) {
+    inputUserAgent->init("main/setting/network/user_agent"_i18n,
+        conf.getItem(AppConfig::PLAYER_USER_AGENT, std::string{}), [](std::string value) {
             // a padding space would end up inside the header
             const size_t last = value.find_last_not_of(" \t\r\n");
             value = last == std::string::npos ? "" : value.substr(0, last + 1);
             const size_t first = value.find_first_not_of(" \t\r\n");
             if (first != std::string::npos) value = value.substr(first);
-            MPVCore::USER_AGENT = value;
             AppConfig::instance().setItem(AppConfig::PLAYER_USER_AGENT, value);
+            HTTP::set_default_user_agent(value);  // empty -> the built-in UA again
             // mpv reads the option once, at init: restart a player that already
             // exists — but never create one just for this (the core is lazily
             // built at the first playback, and restarting it costs an mpv init).

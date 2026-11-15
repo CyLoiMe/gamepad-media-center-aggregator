@@ -53,6 +53,7 @@ constexpr uint32_t MINIMUM_WINDOW_HEIGHT = 360;
 #include "utils/theme_palette.hpp"
 #include "utils/keybind.hpp"
 #include "utils/misc.hpp"
+#include "utils/mpv_conf.hpp"
 #include "utils/ums.hpp"
 #include "utils/thread.hpp"
 #include "view/mpv_core.hpp"
@@ -388,9 +389,18 @@ bool AppConfig::init() {
     MPVCore::LOW_QUALITY = this->getItem(PLAYER_LOW_QUALITY, false);
 #endif
     MPVCore::SUBS_FALLBACK = this->getItem(PLAYER_SUBS_FALLBACK, true);
-    // stream User-Agent: empty = keep the app's own UA (mpv_core.cpp picks it,
-    // or leaves it to a user-agent= line in mpv.conf when the user wrote one)
-    MPVCore::USER_AGENT = this->getItem(PLAYER_USER_AGENT, std::string{});
+    // ONE User-Agent for the whole app: the settings tab / config.json value,
+    // else a `user-agent=` line in mpv.conf, else the built-in one. HTTP (API,
+    // PlaybackInfo, artwork, downloads) and mpv's stream layer both read it back
+    // through HTTP::default_user_agent(), so they can never disagree — cloud-drive
+    // front-ends such as TgtoDrive sign the URL they hand out with the UA of the
+    // request that asked for it, and a playback UA that differs is a CDN 403.
+    {
+        std::string ua = this->getItem(PLAYER_USER_AGENT, std::string{});
+        if (ua.empty()) ua = mpvconf::value(this->configDir(), "user-agent").value_or("");
+        HTTP::set_default_user_agent(ua);
+        if (!ua.empty()) brls::Logger::info("User-Agent: {}", ua);
+    }
 
     // 初始化是否使用硬件加速
     MPVCore::VO = this->getItem(MPV_VO, MPVCore::VO);

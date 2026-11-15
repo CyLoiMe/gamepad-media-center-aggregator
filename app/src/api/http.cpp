@@ -77,8 +77,11 @@ static HTTP::Error curl_error(CURLcode code) {
 }
 static HTTP::Error curl_error(const std::string& arg) { return HTTP::Error(HTTP::ErrorKind::Other, arg); }
 
-static std::string user_agent =
+/// What the app presents by default, and what every request (API, images,
+/// downloads) and mpv send unless a custom User-Agent is configured.
+static std::string builtin_user_agent =
     fmt::format("{}/{} ({})", AppVersion::getPackageName(), AppVersion::getVersion(), AppVersion::getPlatform());
+static std::string user_agent = builtin_user_agent;
 
 /// @brief Verrous du cache partagé libcurl (CURLSH), indexés par curl_lock_data.
 /// libcurl exige des callbacks lock/unlock dès qu'un objet partagé (ici le cache DNS)
@@ -156,6 +159,10 @@ HTTP::~HTTP() {
 }
 
 const std::string& HTTP::default_user_agent() { return user_agent; }
+
+const std::string& HTTP::builtin_user_agent() { return builtin_user_agent; }
+
+void HTTP::set_default_user_agent(const std::string& agent) { user_agent = agent.empty() ? builtin_user_agent : agent; }
 
 void HTTP::set_user_agent(const std::string& agent) { curl_easy_setopt(this->easy, CURLOPT_USERAGENT, agent.c_str()); }
 

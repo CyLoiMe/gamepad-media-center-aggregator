@@ -1,8 +1,10 @@
-// Standalone logic test — user mpv.conf scanning (utils/mpv_conf.hpp).
+// Standalone logic test — reading the User-Agent out of the user's mpv.conf
+// (utils/mpv_conf.hpp).
 //
-// The app must stay silent about an option the user's mpv.conf already sets,
-// otherwise mpv's own precedence (set_option_string == command line, which beats
-// the config file) would silently discard it.
+// The app sends ONE User-Agent (HTTP client + mpv): cloud-drive front-ends sign
+// the URL they hand out with the UA of the request that asked for it, so a
+// playback UA that differs is a CDN 403. This is the lane that lets a
+// `user-agent=` line in mpv.conf feed that single value.
 //
 //   c++ -std=gnu++17 -arch x86_64 -Iapp/include tests/test_mpv_conf.cpp -o /tmp/t && /tmp/t
 
@@ -13,40 +15,52 @@
 #include <utils/mpv_conf.hpp>
 
 static int failures = 0;
-#define CHECK(cond)                                          \
-    do {                                                     \
-        if (!(cond)) {                                       \
-            printf("FAIL: %s (line %d)\n", #cond, __LINE__); \
-            ++failures;                                      \
-        }                                                    \
-    } while (0)
+
+static const std::string key = "user-agent";
+
+/// `line` must yield exactly `want`.
+static void expectValue(const char* line, const char* want) {
+    auto v = mpvconf::lineValue(line, key);
+    if (!v || *v != want) {
+        ++failures;
+        printf("FAIL: line <%s> -> %s (want <%s>)\n", line, v ? ("<" + *v + ">").c_str() : "none", want);
+    }
+}
+
+/// `line` must not set the key at all.
+static void expectNone(const char* line) {
+    auto v = mpvconf::lineValue(line, key);
+    if (v) {
+        ++failures;
+        printf("FAIL: line <%s> should set nothing (got <%s>)\n", line, v->c_str());
+    }
+}
 
 int main() {
-    const std::string key = "user-agent";
-
     // --- accepted spellings ------------------------------------------------
-    CHECK(mpvconf::lineSets("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)", key));
-    CHECK(mpvconf::lineSets("--user-agent=Mozilla/5.0", key));  // leading -- as in the CLI docs
-    CHECK(mpvconf::lineSets("   user-agent=Mozilla", key));     // indented
-    CHECK(mpvconf::lineSets("\tuser-agent=Mozilla\r", key));    // CRLF config file
-    CHECK(mpvconf::lineSets("user-agent = Mozilla", key));      // blanks around '='
-    CHECK(mpvconf::lineSets("user-agent=", key));               // set to empty on purpose
-    CHECK(mpvconf::lineSets("user-agent=Mozilla  # note", key));  // a trailing comment changes nothing
-    CHECK(mpvconf::lineSets("volume=50", key) == false);        // sanity: another option
+    expectValue("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+    expectValue("--user-agent=Mozilla/5.0", "Mozilla/5.0");  // leading --, as in the CLI docs
+    expectValue("   user-agent=Mozilla", "Mozilla");         // indented
+    expectValue("\tuser-agent=Mozilla\r", "Mozilla");        // CRLF config file
+    expectValue("user-agent = Mozilla", "Mozilla");          // blanks around '='
+    expectValue("user-agent=Mozilla  # note", "Mozilla");    // trailing comment dropped
+    expectValue("user-agent=\"GMCA/1.4.0 (NX)\"", "GMCA/1.4.0 (NX)");  // quotes stripped
+    expectValue("user-agent=", "");                          // set to empty on purpose
 
     // --- rejected spellings ------------------------------------------------
-    CHECK(mpvconf::lineSets("#user-agent=Mozilla", key) == false);         // commented out
-    CHECK(mpvconf::lineSets("  # user-agent=Mozilla", key) == false);
-    CHECK(mpvconf::lineSets("user_agent=Mozilla", key) == false);          // '_' is not a separator in mpv
-    CHECK(mpvconf::lineSets("user-agent-fast=Mozilla", key) == false);     // prefix of another option
-    CHECK(mpvconf::lineSets("x-user-agent=Mozilla", key) == false);
-    CHECK(mpvconf::lineSets("user-agent", key) == false);                  // a bare name is a flag toggle
-    CHECK(mpvconf::lineSets("", key) == false);
-    CHECK(mpvconf::lineSets("   ", key) == false);
-    CHECK(mpvconf::lineSets("=", key) == false);
-    CHECK(mpvconf::lineSets("http-header-fields=User-Agent: Mozilla", key) == false);  // name, not a value
+    expectNone("volume=50");                            // another option
+    expectNone("#user-agent=Mozilla");                  // commented out
+    expectNone("  # user-agent=Mozilla");
+    expectNone("user_agent=Mozilla");                   // '_' is not a separator in mpv
+    expectNone("user-agent-fast=Mozilla");              // other option
+    expectNone("x-user-agent=Mozilla");
+    expectNone("user-agent");                           // a bare name is a flag toggle
+    expectNone("");
+    expectNone("   ");
+    expectNone("=");
+    expectNone("http-header-fields=User-Agent: Mozilla");  // the name appears in a value
 
-    // --- file scan, including the missing-file / missing-dir cases ---------
+    // --- whole-file scan ---------------------------------------------------
     namespace fs = std::filesystem;
     const fs::path dir = fs::temp_directory_path() / "gmca_test_mpv_conf";
     std::error_code ec;
@@ -54,14 +68,27 @@ int main() {
     fs::create_directories(dir, ec);
     const std::string base = dir.string();
 
-    CHECK(mpvconf::sets(base, key) == false);  // no mpv.conf at all
-    CHECK(mpvconf::sets(base + "/nope", key) == false);  // no such directory
+    if (mpvconf::value(base, key)) {  // no mpv.conf at all
+        ++failures;
+        printf("FAIL: missing mpv.conf should yield nothing\n");
+    }
+    if (mpvconf::value(base + "/nope", key)) {  // no such directory
+        ++failures;
+        printf("FAIL: missing directory should yield nothing\n");
+    }
 
-    std::ofstream(base + "/mpv.conf") << "# my settings\nvolume=50\nhwdec=auto-safe\n";
-    CHECK(mpvconf::sets(base, key) == false);
+    std::ofstream(base + "/mpv.conf") << "# mine\nvolume=50\nhwdec=auto-safe\n";
+    if (mpvconf::value(base, key)) {
+        ++failures;
+        printf("FAIL: a file without the key should yield nothing\n");
+    }
 
-    std::ofstream(base + "/mpv.conf") << "volume=50\nuser-agent=Mozilla/5.0\n";
-    CHECK(mpvconf::sets(base, key));
+    std::ofstream(base + "/mpv.conf") << "volume=50\nuser-agent=GMCA/1.4.0 (NX)\nuser-agent=second\n";
+    auto v = mpvconf::value(base, key);
+    if (!v || *v != "GMCA/1.4.0 (NX)") {  // first occurrence wins, like mpv
+        ++failures;
+        printf("FAIL: file scan -> %s\n", v ? v->c_str() : "none");
+    }
 
     fs::remove_all(dir, ec);
 

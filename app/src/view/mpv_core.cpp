@@ -6,7 +6,6 @@
 #include "view/hdr_options.hpp"
 #include "utils/config.hpp"
 #include "utils/misc.hpp"
-#include "utils/mpv_conf.hpp"
 #include "utils/log_redact.hpp"
 #include "api/http.hpp"
 #ifdef __PS4__
@@ -166,21 +165,13 @@ void MPVCore::init() {
     mpv_set_option_string(mpv, "gpu-shader-cache-dir", fmt::format("{}/cache", confDir).c_str());
     mpv_set_option_string(mpv, "ytdl", "no");
     mpv_set_option_string(mpv, "referrer", conf.getUrl().c_str());
-    // Stream User-Agent. Precedence: player_user_agent (config.json / settings
-    // tab) > a user-agent= line in mpv.conf > the app's own UA.
-    // Setting it unconditionally would silently discard the mpv.conf value (mpv
-    // treats an option set here like a command-line one, which overrides the
-    // config file), and some cloud-drive CDNs reached through an Emby/Jellyfin
-    // 302 only accept a browser UA — which is exactly what users put there.
-    // ffmpeg sends this UA on every request of the stream, the redirected CDN
-    // one included.
-    if (!MPVCore::USER_AGENT.empty()) {
-        mpv_set_option_string(mpv, "user-agent", MPVCore::USER_AGENT.c_str());
-    } else if (mpvconf::sets(confDir, "user-agent")) {
-        brls::Logger::info("mpv: keeping the user-agent from {}/mpv.conf", confDir);
-    } else {
-        mpv_set_option_string(mpv, "user-agent", HTTP::default_user_agent().c_str());
-    }
+    // Same User-Agent as every other request the app sends: HTTP::default_user_agent()
+    // is the single value both sides use (AppConfig::init() resolves it from
+    // player_user_agent, a user-agent= line in mpv.conf, or the built-in one).
+    // A playback UA that differs from the one that requested the URL breaks
+    // UA-signed CDNs (115 & co) with a 403, so never set this to anything else.
+    // ffmpeg sends it on every request of the stream, the redirected CDN included.
+    mpv_set_option_string(mpv, "user-agent", HTTP::default_user_agent().c_str());
     mpv_set_option_string(mpv, "osd-level", "0");
     mpv_set_option_string(mpv, "video-timing-offset", "0");  // 60fps
     mpv_set_option_string(mpv, "reset-on-next-file", "speed,pause");
