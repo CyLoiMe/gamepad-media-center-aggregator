@@ -9,6 +9,7 @@
 
 #include "api/jellyfin/backend.hpp"
 #include "api/jellyfin/types.hpp"
+#include "api/jellyfin/playback_info.hpp"
 #include "api/media/resolution.hpp"
 #include "utils/config.hpp"
 #include "utils/misc.hpp"
@@ -121,6 +122,22 @@ void deleteAction(const std::string& url) {
             brls::Logger::warning("jellyfin DELETE {}: {}", url, ex.what());
         }
     });
+}
+
+/// POST /Items/{id}/PlaybackInfo and return the play URL the server hands out for
+/// `sourceId` (empty when it gives none we can use — see jellyfin::directStreamUrl).
+/// Blocking: resolvePlayback() already runs inside brls::async.
+std::string playbackInfoUrl(const std::string& itemId, const std::string& sourceId, const std::string& tok) {
+    try {
+        HTTP::Form form = {{"UserId", userId()}};
+        std::string url = base() + fmt::format("/Items/{}/PlaybackInfo?{}", itemId, HTTP::encode_form(form));
+        return directStreamUrl(postSync(url, tok, "{}"), sourceId, base(), tok);
+    } catch (const std::exception& ex) {
+        // a server without PlaybackInfo (or a slow one) keeps the built URL: this
+        // path only helps remote sources and must never break the others
+        brls::Logger::warning("jellyfin PlaybackInfo {}: {}", itemId, ex.what());
+        return "";
+    }
 }
 
 }  // namespace
@@ -504,6 +521,18 @@ media::PlaybackSource JellyfinBackend::resolvePlayback(
     if (opts.bitrateCap <= 0 || opts.forceDirectPlay) {
         std::stringstream e = extra();
         if (opts.seekMs > 0) e << ",start=" << misc::sec2Time(opts.seekMs / 1000);
+        // Remote source (.strm -> cloud drive): the server may only serve it
+        // through the URL IT hands out in PlaybackInfo. Cloud-drive front-ends
+        // (TgtoDrive and the like) rewrite DirectStreamUrl to the CDN's signed
+        // link and reject the /Videos/{id}/stream URL built below with a 403.
+        if (version.remote && !version.sourceId.empty()) {
+            const std::string direct = playbackInfoUrl(item.ratingKey, version.sourceId, tok);
+            if (!direct.empty()) {
+                brls::Logger::info("jellyfin: remote source, playing the server's DirectStreamUrl");
+                return {direct, e.str(), false, "directplay"};
+            }
+            brls::Logger::info("jellyfin: no usable DirectStreamUrl, keeping the built stream URL");
+        }
         std::string url = withToken(base() + version.parts.front().key, tok);
         return {url, e.str(), false, "directplay"};
     }

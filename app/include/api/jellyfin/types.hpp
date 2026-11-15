@@ -153,6 +153,7 @@ inline media::Media parseMediaSource(const nlohmann::json& j, const std::string&
     std::string msId = jstr(j, "Id");
     if (msId.empty()) msId = itemId;
     m.sourceId = msId;
+    m.remote = jbool(j, "IsRemote");
     m.label = jstr(j, "Name");
     m.container = jstr(j, "Container");
     m.bitrate = jint(j, "Bitrate") / 1000;  // bps -> kbps (parity with Plex Media.bitrate)

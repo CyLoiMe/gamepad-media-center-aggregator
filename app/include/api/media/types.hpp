@@ -202,6 +202,11 @@ struct Media {
     int height = 0;
     int64_t duration = 0;  // ms
     std::vector<Part> parts;
+    /// The source lives outside the server (Jellyfin/Emby `IsRemote`): a `.strm`
+    /// pointing at a cloud drive, or similar. Such sources may be served only
+    /// through the URL the server hands out in PlaybackInfo — see
+    /// api/jellyfin/playback_info.hpp.
+    bool remote = false;
     // ---- source presentation (Stremio picker; empty/default on Plex/Jellyfin) ----
     std::string label;   // primary line: source/addon name (+ release group); Jellyfin/Emby: version name
     std::string detail;  // secondary line: codec · size · seeders (our own re-render)
