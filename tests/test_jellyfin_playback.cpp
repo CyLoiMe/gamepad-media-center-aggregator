@@ -43,16 +43,16 @@ int main() {
             "Id": "mediasource_1223",
             "Protocol": "Http",
             "IsRemote": true,
-            "Path": "http://192.168.3.244:12366/play115/d022j8qo/123/file.mp4",
+            "Path": "http://192.168.1.20:12366/play115/<pickcode>/123/file.mp4",
             "Container": "mp4",
             "SupportsDirectPlay": true,
             "AddApiKeyToDirectStreamUrl": false,
-            "DirectStreamUrl": "https://cdnfhnfile.115cdn.net/62653fc9/file.mp4?t=1794748531&k=09b8&v=1"
+            "DirectStreamUrl": "https://cdn.example.net/abc123/file.mp4?t=1794748531&k=09b8&v=1"
           }],
           "PlaySessionId": "130302a87b"
         })");
         CHECK(directStreamUrl(resp, "mediasource_1223", server, token) ==
-              "https://cdnfhnfile.115cdn.net/62653fc9/file.mp4?t=1794748531&k=09b8&v=1");
+              "https://cdn.example.net/abc123/file.mp4?t=1794748531&k=09b8&v=1");
     }
 
     // --- source selection: the requested source wins, otherwise the first ----
@@ -79,7 +79,7 @@ int main() {
     {
         CHECK(directStreamUrl(response("/videos/1/stream"), "x", server, token).empty());  // relative
         // server-internal addresses are unreachable from a console elsewhere
-        CHECK(directStreamUrl(response("http://192.168.3.244:12366/play115/a.mp4"), "x", server, token).empty());
+        CHECK(directStreamUrl(response("http://192.168.1.20:12366/play115/a.mp4"), "x", server, token).empty());
         CHECK(directStreamUrl(response("http://10.0.0.5:8096/v.mp4"), "x", server, token).empty());
         CHECK(directStreamUrl(response("http://172.20.1.9/v.mp4"), "x", server, token).empty());
         CHECK(directStreamUrl(response("http://169.254.1.1/v.mp4"), "x", server, token).empty());
