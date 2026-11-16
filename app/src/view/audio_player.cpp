@@ -21,10 +21,6 @@ static bool hasAccessible(const media::Item& it) {
     return false;
 }
 
-/// server progress reports pollute the real library in capture mode; playback
-/// itself stays enabled so the harness can hear/verify audio (SPEC.md).
-static bool reportingDisabled() { return std::getenv("SMCA_NAV_PIPE") != nullptr; }
-
 // AudioPlayer is a process-lifetime singleton, so async callbacks capture `this`
 // directly (no brls::View deletion-token dance).
 
@@ -268,7 +264,7 @@ void AudioPlayer::readFileTags() {
 }
 
 void AudioPlayer::reportTimeline(const std::string& state, int64_t timeMs) {
-    if (reportingDisabled() || this->fromFiles) return;
+    if (this->fromFiles) return;
     const media::Item& track = this->current();
     if (track.ratingKey.empty()) return;
     media::PlayState st = state == "paused"    ? media::PlayState::Paused
@@ -278,7 +274,7 @@ void AudioPlayer::reportTimeline(const std::string& state, int64_t timeMs) {
 }
 
 void AudioPlayer::maybeScrobble(int64_t timeMs) {
-    if (reportingDisabled() || this->fromFiles || this->scrobbled) return;
+    if (this->fromFiles || this->scrobbled) return;
     const media::Item& track = this->current();
     if (track.duration <= 0) return;
     if (double(timeMs) / double(track.duration) < SCROBBLE_THRESHOLD) return;

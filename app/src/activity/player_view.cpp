@@ -227,12 +227,6 @@ bool PlayerView::playIndex(int index) {
 }
 
 void PlayerView::playMedia(const int64_t seekMs) {
-    // Capture/automation guard: in SMCA_NAV_PIPE mode a stray "Play" from the
-    // screenshot harness must never actually start playback — doing so pushes a
-    // watch-progress report to the server and pollutes Continue Watching. Bail
-    // out immediately (the empty player pops itself, leaving us on the detail).
-    if (std::getenv("SMCA_NAV_PIPE")) { VideoView::close(); return; }
-
     // Release any transcode session we were running before (re)loading. Covers
     // quality/track switches, episode navigation, and transcode->direct play.
     // Without it each reload orphaned a server-side session (verified on dev:

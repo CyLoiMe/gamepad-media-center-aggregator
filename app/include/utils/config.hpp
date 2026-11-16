@@ -153,17 +153,6 @@ public:
         /// launch in application mode (Switch).
         HINT_FORWARDER,
 
-        /// SMCA-era HOME-tile re-nudge, gated separately from HINT_FORWARDER on
-        /// purpose: pleNx users who self-updated to SMCA are past the pleNx-era
-        /// HINT_FORWARDER gate but have no SMCA tile (fresh title id), so re-offer
-        /// it exactly once so they get a tile that resolves the migrated NRO.
-        HINT_FORWARDER_SMCA,
-
-        /// One-time "pleNx is now SMCA" welcome notice already shown. Set the
-        /// first time the notice is displayed (only to users migrated from a
-        /// legacy pleNx/Switchlex data dir — see AppConfig::migratedFromLegacy).
-        RENAME_NOTICE_SHOWN,
-
         KEY_REFRESH,        // 刷新快捷键
         KEY_LAST,           // 上一个Tab快捷键
         KEY_NEXT,           // 下一个Tab快捷键
@@ -278,12 +267,6 @@ public:
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AppConfig, user_id, device, users, servers, setting, remotes, pins);
 
     inline static bool SYNC = true;
-
-    /// True for this session only when init() relocated a legacy data dir
-    /// (pleNx/Switchlex -> SMCA). Runtime-only (never serialized): combined with
-    /// the persistent RENAME_NOTICE_SHOWN flag it gates the one-time rebrand
-    /// welcome notice so it shows exactly once, and only to migrated users.
-    bool migratedFromLegacy = false;
 
 private:
     static std::unordered_map<Item, Option> settingMap;

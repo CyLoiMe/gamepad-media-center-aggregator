@@ -956,7 +956,7 @@ index 59ec77bb..546db73f 100644
      this->registerStringXMLAttribute("title", [this](std::string value) {
          this->getAppletFrameItem()->title = value;
 diff --git a/library/lib/platforms/glfw/glfw_input.cpp b/library/lib/platforms/glfw/glfw_input.cpp
-index 9b31fcfa..00bb8f3c 100644
+index 9b31fcfa..deeb953a 100644
 --- a/library/lib/platforms/glfw/glfw_input.cpp
 +++ b/library/lib/platforms/glfw/glfw_input.cpp
 @@ -23,6 +23,9 @@
@@ -998,60 +998,7 @@ index 9b31fcfa..00bb8f3c 100644
      KeyState state {};
      state.key            = (BrlsKeyboardScancode)key;
      state.mods           = mods;
-@@ -241,6 +263,52 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
-     for (size_t i = 0; i < _AXES_MAX; i++)
-         state->axes[i] = 0;
- 
-+    // --- Remote navigation injection (desktop automation / screenshots) -------
-+    // When GMCA_NAV_PIPE names a file, one button token read from it is injected
-+    // for a couple of frames, driving the UI even while the window is NOT focused
-+    // (the GLFW_FOCUSED early-return below is deliberately bypassed for it). This
-+    // lets an external tool navigate + screenshot GMCA without stealing the
-+    // keyboard focus. Zero I/O / no effect when the env var is unset.
-+    static const char* navPipe = std::getenv("GMCA_NAV_PIPE");
-+    if (navPipe)
-+    {
-+        static int injBtn = -1, injFrames = 0;
-+        if (injFrames <= 0)
-+        {
-+            injBtn = -1;
-+            if (std::FILE* f = std::fopen(navPipe, "r"))
-+            {
-+                char tok[16] = {};
-+                if (std::fgets(tok, sizeof(tok), f))
-+                {
-+                    for (char* p = tok; *p; ++p)
-+                        if (*p == '\n' || *p == '\r') { *p = 0; break; }
-+                    if (!std::strcmp(tok, "up")) injBtn = BUTTON_UP;
-+                    else if (!std::strcmp(tok, "down")) injBtn = BUTTON_DOWN;
-+                    else if (!std::strcmp(tok, "left")) injBtn = BUTTON_LEFT;
-+                    else if (!std::strcmp(tok, "right")) injBtn = BUTTON_RIGHT;
-+                    else if (!std::strcmp(tok, "a")) injBtn = BUTTON_A;
-+                    else if (!std::strcmp(tok, "b")) injBtn = BUTTON_B;
-+                    else if (!std::strcmp(tok, "x")) injBtn = BUTTON_X;
-+                    else if (!std::strcmp(tok, "y")) injBtn = BUTTON_Y;
-+                }
-+                std::fclose(f);
-+                if (injBtn >= 0) injFrames = 2;
-+                if (std::FILE* t = std::fopen(navPipe, "w")) std::fclose(t); // consume token
-+            }
-+        }
-+        if (injFrames > 0 && injBtn >= 0)
-+        {
-+            state->buttons[injBtn] = true;
-+            if (injBtn == BUTTON_UP) state->buttons[BUTTON_NAV_UP] = true;
-+            else if (injBtn == BUTTON_DOWN) state->buttons[BUTTON_NAV_DOWN] = true;
-+            else if (injBtn == BUTTON_LEFT) state->buttons[BUTTON_NAV_LEFT] = true;
-+            else if (injBtn == BUTTON_RIGHT) state->buttons[BUTTON_NAV_RIGHT] = true;
-+            injFrames--;
-+        }
-+    }
-+    // --------------------------------------------------------------------------
-+
-     if (!glfwGetWindowAttrib(window, GLFW_FOCUSED))
-         return;
- 
-@@ -265,22 +333,22 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
+@@ -265,22 +287,22 @@ void GLFWInputManager::updateUnifiedControllerState(ControllerState* state)
  
      // Add keyboard keys on top of gamepad buttons
      if (Application::isSwapInputKeys()) {

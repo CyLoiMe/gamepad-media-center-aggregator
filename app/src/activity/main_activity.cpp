@@ -32,28 +32,6 @@ static void readSidebarLayout(const std::string& sid, std::vector<std::string>& 
             if (e.is_string()) hidden.insert(e.get<std::string>());
 }
 
-/// One-time "pleNx is now SMCA" welcome notice. Shown only to users whose data
-/// dir was just relocated from a legacy pleNx/Switchlex build (never on a fresh
-/// SMCA install), and only once (persistent RENAME_NOTICE_SHOWN flag). The flag
-/// is set before opening so an abrupt close never re-triggers it.
-static void maybeShowRenameNotice() {
-    auto& conf = AppConfig::instance();
-    if (!conf.migratedFromLegacy) return;
-    if (conf.getItem(AppConfig::RENAME_NOTICE_SHOWN, false)) return;
-    conf.setItem(AppConfig::RENAME_NOTICE_SHOWN, true);
-
-    // Deferred to the next frame so the notice opens once MainActivity is fully
-    // pushed and focused (opening a modal mid-onContentAvailable would steal
-    // focus before the activity finishes wiring it).
-    brls::sync([]() {
-        auto* box = dynamic_cast<brls::Box*>(brls::View::createFromXMLResource("view/rename_notice.xml"));
-        if (!box) return;
-        auto* dialog = new brls::Dialog(box);
-        dialog->addButton("main/rename/continue"_i18n, []() {});
-        dialog->open();
-    });
-}
-
 MainActivity::MainActivity() { brls::Logger::debug("MainActivity: create"); }
 
 void MainActivity::onContentAvailable() {
@@ -87,9 +65,6 @@ void MainActivity::onContentAvailable() {
             return true;
         },
         true);
-
-    // rebrand welcome notice (gated: migrated-from-legacy users, once)
-    maybeShowRenameNotice();
 }
 
 void MainActivity::addSidebarAvatar() {
