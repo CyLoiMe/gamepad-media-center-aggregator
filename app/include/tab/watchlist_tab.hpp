@@ -1,5 +1,5 @@
 /*
-    GMCA — "Watchlist" sidebar tab (plex.tv account).
+    SMCA — "Watchlist" sidebar tab (plex.tv account).
     Grid of 2:3 posters of watchlisted movies/shows, most recent first.
     API: GET discover.provider.plex.tv/library/sections/watchlist/all
     (api/plex/watchlist.hpp — ACCOUNT token), X-Plex-Container-* pagination.

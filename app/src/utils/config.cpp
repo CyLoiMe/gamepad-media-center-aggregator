@@ -126,7 +126,7 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
     {SIDEBAR_LAYOUT, {"sidebar_layout"}},
 
     {HINT_FORWARDER, {"hint_forwarder"}},
-    {HINT_FORWARDER_GMCA, {"hint_forwarder_gmca"}},
+    {HINT_FORWARDER_SMCA, {"hint_forwarder_gmca"}},
     {RENAME_NOTICE_SHOWN, {"rename_notice_shown"}},
 
     {KEY_REFRESH, {"key_refresh"}},
@@ -247,7 +247,7 @@ static std::string dataDir(const std::string& name) {
 }
 
 /// Silent migration of the config folder inherited from a previous name
-/// (Switchlex -> pleNx -> GMCA): Plex/Jellyfin session, settings and
+/// (Switchlex -> pleNx -> SMCA): Plex/Jellyfin session, settings and
 /// downloads must survive each rename. Returns true when a legacy dir was
 /// actually relocated (the caller uses this to gate the one-time rebrand
 /// welcome notice).
@@ -272,9 +272,9 @@ static bool migrateLegacyConfigDir(const std::string& legacy, const std::string&
 
 bool AppConfig::init() {
     // Chained most-recent-first; the !exists(to) guard means only the first
-    // applicable source migrates. pleNx 0.2.0 already targets the GMCA folder
+    // applicable source migrates. pleNx 0.2.0 already targets the SMCA folder
     // (BUILD_PACKAGE_NAME), so existing pleNx data is relocated here, and the
-    // renamed GMCA build then reads it in place.
+    // renamed SMCA build then reads it in place.
     // Only one source can migrate (the !exists(to) guard), so at most one of
     // these is true — enough to flag "this user just came from a legacy build".
     this->migratedFromLegacy = migrateLegacyConfigDir(dataDir("pleNx"), this->configDir());

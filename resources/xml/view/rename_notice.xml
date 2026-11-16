@@ -1,9 +1,9 @@
-<!-- One-time "pleNx is now GMCA" welcome card. Shown as the content of a
+<!-- One-time "pleNx is now SMCA" welcome card. Shown as the content of a
      brls::Dialog (the single "continue" button is added in C++, see
      MainActivity). Only ever shown to users migrated from a legacy pleNx /
      Switchlex data dir — see AppConfig::migratedFromLegacy + RENAME_NOTICE_SHOWN.
      Warm, celebratory tone: same app, grown up. All accent color comes from the
-     live GMCA/backend theme token @theme/color/app.
+     live SMCA/backend theme token @theme/color/app.
      Logo + title stay fixed; the body is a height-capped ScrollingFrame so long
      translations scroll instead of overflowing the 544p PS Vita dialog. -->
 <brls:Box

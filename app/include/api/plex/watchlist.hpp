@@ -1,5 +1,5 @@
 /*
-    GMCA — plex.tv account watchlist (discover/metadata.provider.plex.tv).
+    SMCA — plex.tv account watchlist (discover/metadata.provider.plex.tv).
 
     ACCOUNT-level feature: all provider requests use the plex.tv token of the
     active profile (AppConfig::getAccountToken()), NOT the server token.

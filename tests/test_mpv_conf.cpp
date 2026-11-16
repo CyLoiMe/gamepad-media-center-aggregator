@@ -44,7 +44,7 @@ int main() {
     expectValue("\tuser-agent=Mozilla\r", "Mozilla");        // CRLF config file
     expectValue("user-agent = Mozilla", "Mozilla");          // blanks around '='
     expectValue("user-agent=Mozilla  # note", "Mozilla");    // trailing comment dropped
-    expectValue("user-agent=\"GMCA/1.4.0 (NX)\"", "GMCA/1.4.0 (NX)");  // quotes stripped
+    expectValue("user-agent=\"SMCA/1.4.0 (NX)\"", "SMCA/1.4.0 (NX)");  // quotes stripped
     expectValue("user-agent=", "");                          // set to empty on purpose
 
     // --- rejected spellings ------------------------------------------------
@@ -83,9 +83,9 @@ int main() {
         printf("FAIL: a file without the key should yield nothing\n");
     }
 
-    std::ofstream(base + "/mpv.conf") << "volume=50\nuser-agent=GMCA/1.4.0 (NX)\nuser-agent=second\n";
+    std::ofstream(base + "/mpv.conf") << "volume=50\nuser-agent=SMCA/1.4.0 (NX)\nuser-agent=second\n";
     auto v = mpvconf::value(base, key);
-    if (!v || *v != "GMCA/1.4.0 (NX)") {  // first occurrence wins, like mpv
+    if (!v || *v != "SMCA/1.4.0 (NX)") {  // first occurrence wins, like mpv
         ++failures;
         printf("FAIL: file scan -> %s\n", v ? v->c_str() : "none");
     }

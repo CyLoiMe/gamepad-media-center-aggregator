@@ -2,7 +2,7 @@
 // so tests/test_hdr_options.cpp builds it alone.
 //
 // Why: the PS4 build has no runtime shader compiler (SDL loads libSceShaccVSH only when the hint
-// SDL_PS4_PIGLET_MODULES_PATH is set, and GMCA never sets it). Every shader is a precompiled
+// SDL_PS4_PIGLET_MODULES_PATH is set, and SMCA never sets it). Every shader is a precompiled
 // binary: nanovg's through glShaderBinary, mpv's through a table keyed by the SHA-256 of the
 // shader text (scripts/ps4/libmpv/mpv.patch, ps4_shaders_list). mpv's plain video shader is in the
 // table; an HDR file makes mpv generate a different text (linearize, tone map, matrix), which is

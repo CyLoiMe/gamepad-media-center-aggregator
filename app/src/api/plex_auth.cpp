@@ -1,5 +1,5 @@
 /*
-    GMCA — plex.tv authentication implementation.
+    SMCA — plex.tv authentication implementation.
     Specification: PLEX_MIGRATION.md §2.2-2.3.
 */
 

@@ -32,9 +32,9 @@ static void readSidebarLayout(const std::string& sid, std::vector<std::string>& 
             if (e.is_string()) hidden.insert(e.get<std::string>());
 }
 
-/// One-time "pleNx is now GMCA" welcome notice. Shown only to users whose data
+/// One-time "pleNx is now SMCA" welcome notice. Shown only to users whose data
 /// dir was just relocated from a legacy pleNx/Switchlex build (never on a fresh
-/// GMCA install), and only once (persistent RENAME_NOTICE_SHOWN flag). The flag
+/// SMCA install), and only once (persistent RENAME_NOTICE_SHOWN flag). The flag
 /// is set before opening so an abrupt close never re-triggers it.
 static void maybeShowRenameNotice() {
     auto& conf = AppConfig::instance();

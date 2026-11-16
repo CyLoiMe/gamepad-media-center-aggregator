@@ -1,9 +1,11 @@
 name: switch-portlibs
 
+# Rebuilds the Switch portlibs (mpv / ffmpeg / curl / …) from scripts/switch and
+# publishes them as the `switch-portlibs` prerelease of THIS repository, so the
+# build stops depending on another project's release. Run it by hand when a
+# portlib needs a bump, then point DEPS_URL in switch.yaml at the result.
 on:
-  push:
-    tags: [ switch-portlibs ]
-    branches: [ deko3d, mpv ]
+  workflow_dispatch:
 
 permissions:
   contents: write

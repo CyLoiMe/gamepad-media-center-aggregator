@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx nay là GMCA",
-    "intro": "Vẫn là ứng dụng đó, nhưng đã lớn hơn. pleNx đã trở thành GMCA — Gamepad Media Center Aggregator — và giờ đây làm được nhiều hơn rất nhiều.",
+    "title": "pleNx nay là SMCA",
+    "intro": "Vẫn là ứng dụng đó, nhưng đã lớn hơn. pleNx đã trở thành SMCA — Switch Media Center Aggregator — và giờ đây làm được nhiều hơn rất nhiều.",
     "whats_new": "CÓ GÌ MỚI",
     "feature_backends": "Một ứng dụng, mọi máy chủ — Plex, Jellyfin, Emby và Stremio",
     "feature_music": "Thư viện nhạc của bạn, ngay bên cạnh phim và chương trình",
@@ -329,7 +329,7 @@
       "font_q1": "Cách thiết lập phông chữ tùy chỉnh hoặc biểu tượng bản đồ phím",
       "font_a1": "1. Tải xuống phông chữ hoặc phông chữ biểu tượng mà bạn muốn\n2. Đổi tên phông chữ thành: font.ttf; Đổi tên biểu tượng thành: icon.ttf\n3. Đặt các tệp phông chữ vào thư mục cấu hình\n4. Khởi động lại ứng dụng",
       "font_q2": "Câu hỏi thường gặp",
-      "font_a2": "1. GMCA ưu tiên hiển thị phông chữ tùy chỉnh, với phông chữ tích hợp sẵn làm phương án dự phòng\n2. Mục \"Cài đặt - Hướng dẫn\" cung cấp một mục menu để mở nhanh thư mục cấu hình\n3. Trên Linux, GMCA sử dụng xdg-open để mở thư mục. Nếu không thể mở đúng thư mục cấu hình, bạn có thể cân nhắc cài đặt công cụ này",
+      "font_a2": "1. SMCA ưu tiên hiển thị phông chữ tùy chỉnh, với phông chữ tích hợp sẵn làm phương án dự phòng\n2. Mục \"Cài đặt - Hướng dẫn\" cung cấp một mục menu để mở nhanh thư mục cấu hình\n3. Trên Linux, SMCA sử dụng xdg-open để mở thư mục. Nếu không thể mở đúng thư mục cấu hình, bạn có thể cân nhắc cài đặt công cụ này",
       "font_q3": "Phụ đề không hiển thị",
       "font_a3": "Đặt bất kỳ tệp ttf nào vào {}/subfont.ttf"
     },
@@ -382,17 +382,17 @@
     }
   },
   "hints": {
-    "title": "Khởi chạy GMCA như một ứng dụng đầy đủ",
-    "text_applet": "GMCA đang chạy ở chế độ applet: bộ nhớ khả dụng không đủ để phát video. Hãy khởi chạy nó như một ứng dụng đầy đủ bằng một trong các tùy chọn bên dưới.",
-    "text_app": "GMCA đang chạy như một ứng dụng đầy đủ. Hãy cài biểu tượng trên menu HOME để khởi chạy theo cách này trực tiếp.",
+    "title": "Khởi chạy SMCA như một ứng dụng đầy đủ",
+    "text_applet": "SMCA đang chạy ở chế độ applet: bộ nhớ khả dụng không đủ để phát video. Hãy khởi chạy nó như một ứng dụng đầy đủ bằng một trong các tùy chọn bên dưới.",
+    "text_app": "SMCA đang chạy như một ứng dụng đầy đủ. Hãy cài biểu tượng trên menu HOME để khởi chạy theo cách này trực tiếp.",
     "install_title": "Biểu tượng menu HOME (khuyến nghị)",
-    "install_text": "Cài NSP forwarder được tích hợp sẵn: biểu tượng sẽ khởi chạy GMCA như một ứng dụng đầy đủ ngay từ menu HOME.",
+    "install_text": "Cài NSP forwarder được tích hợp sẵn: biểu tượng sẽ khởi chạy SMCA như một ứng dụng đầy đủ ngay từ menu HOME.",
     "install_button": "Cài biểu tượng",
     "takeover_title": "Giải pháp khác: chiếm quyền tựa game",
-    "takeover_text": "Giữ R khi khởi chạy bất kỳ trò chơi đã cài nào để mở menu homebrew như một ứng dụng đầy đủ, sau đó khởi chạy GMCA từ đó.",
-    "prompt": "Cài biểu tượng GMCA trên menu HOME?\nBiểu tượng khởi chạy ứng dụng như một ứng dụng đầy đủ (cần thiết để phát video).",
+    "takeover_text": "Giữ R khi khởi chạy bất kỳ trò chơi đã cài nào để mở menu homebrew như một ứng dụng đầy đủ, sau đó khởi chạy SMCA từ đó.",
+    "prompt": "Cài biểu tượng SMCA trên menu HOME?\nBiểu tượng khởi chạy ứng dụng như một ứng dụng đầy đủ (cần thiết để phát video).",
     "hint_confirm": "Cài đặt NSP forwarder có thể bị ban\nVui lòng xác nhận lại",
-    "remove_old": "GMCA đã ở trên menu HOME. Nếu ô pleNx cũ vẫn còn, hãy xóa nó trong Cài đặt hệ thống > Quản lý dữ liệu > Xóa phần mềm."
+    "remove_old": "SMCA đã ở trên menu HOME. Nếu ô pleNx cũ vẫn còn, hãy xóa nó trong Cài đặt hệ thống > Quản lý dữ liệu > Xóa phần mềm."
   },
   "plex": {
     "title": "Đăng nhập vào tài khoản Plex của bạn",

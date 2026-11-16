@@ -1,5 +1,5 @@
 /*
-    GMCA — connection switcher grid (see connection_switcher.hpp).
+    SMCA — connection switcher grid (see connection_switcher.hpp).
 */
 
 #include "view/connection_switcher.hpp"

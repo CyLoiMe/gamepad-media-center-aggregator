@@ -1,5 +1,5 @@
 /*
-    GMCA — subtitle language helpers (backend-agnostic).
+    SMCA — subtitle language helpers (backend-agnostic).
 
     Stremio subtitles carry a `lang` that is an ISO 639-2 code (3 letters, /B or
     /T variants), sometimes an ISO 639-1 code (2 letters) or a plain-text name, or

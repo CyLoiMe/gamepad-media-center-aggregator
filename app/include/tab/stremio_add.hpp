@@ -1,5 +1,5 @@
 /*
-    GMCA — sign-in form for a Stremio account (api.strem.io).
+    SMCA — sign-in form for a Stremio account (api.strem.io).
     Email + password login. On success the account's authKey and synced addon
     collection are persisted as an AppServer (type "stremio") + AppUser and the
     app enters MainActivity.

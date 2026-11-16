@@ -1,12 +1,20 @@
 cmake_minimum_required(VERSION 3.18)
 
-# build options
+# Build options
 set(BOREALIS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/library/borealis)
 set(BOREALIS_LIBRARY ${BOREALIS_DIR}/library)
 
 # Include Platform common options
-# example: cmake -B build -DPLATFORM_DESKTOP=ON
 include(${BOREALIS_LIBRARY}/cmake/commonOption.cmake)
+
+# SMCA is a Nintendo Switch application. The toolchain, packaging and source
+# lists for the other platforms the upstream project supported are gone; fail
+# here, with a clear message, instead of deep inside the build.
+if (NOT PLATFORM_SWITCH)
+    message(FATAL_ERROR
+        "SMCA builds for Nintendo Switch only. Configure with:\n"
+        "  cmake -B build -DPLATFORM_SWITCH=ON")
+endif ()
 
 option(USE_SYSTEM_CURL "use system installed libcurl" ON)
 
@@ -51,21 +59,21 @@ message(STATUS "git commit ${GIT_TAG_SHORT} build ${VERSION_BUILD}")
 include(${BOREALIS_LIBRARY}/cmake/toolchain.cmake)
 
 # project info
-project(GMCA)  # short token for files/binaries/IDs; display name = "Gamepad Media Center Aggregator"
-set(VERSION_MAJOR "1")
-set(VERSION_MINOR "4")
+project(SMCA)  # short token for files/binaries/IDs; display name = "Switch Media Center Aggregator"
+set(VERSION_MAJOR "0")
+set(VERSION_MINOR "1")
 set(VERSION_ALTER "0")
-# Homebrew forwarder title ID for GMCA, in the community forwarder range (05...),
-# which is outside Nintendo's commercial 01... space — so it cannot collide with
-# an official title, and no title-ID registry check is needed. The "GMCA" vanity
-# (474D4341) keeps it unique among homebrew (checked: no other repo uses it). A
-# fresh id (not pleNx's) also stops the Switch HOME menu serving the cached pleNx
-# name/icon. (hacbrewpack lower-cases the filename → see forwarder/CMakeLists.txt.)
-set(PROJECT_TITLEID "0500474D43410000")
-set(PROJECT_AUTHOR "thcolin")
-set(PACKAGE_NAME "fun.thcolin.gmca")
-set(VITA_TITLEID "GMCA00001")
-set(PSN_TITLE_ID "GMCA00000")
+# Homebrew forwarder title ID, in the community forwarder range (05...), which is
+# outside Nintendo's commercial 01... space — so it cannot collide with an
+# official title, and no title-ID registry check is needed. The low 32 bits spell
+# the app name in ASCII ("SMCA" = 534D4341), the same convention the rest of the
+# homebrew scene uses. (hacbrewpack lower-cases the filename → see
+# forwarder/CMakeLists.txt.)
+set(PROJECT_TITLEID "0500534D43410000")
+set(PROJECT_AUTHOR "CyLoiMe")
+set(PACKAGE_NAME "fun.cyloime.smca")
+set(VITA_TITLEID "SMCA00001")
+set(PSN_TITLE_ID "SMCA00000")
 # VITA_VERSION is the Vita package version (2-digit MM.NN, independent of the
 # main version). Bumped every Vita release so the package version never
 # regresses; 00.23 shipped with the broken v1.0.3 VPK, 00.24 is the first that

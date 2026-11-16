@@ -1,5 +1,5 @@
 /*
-    GMCA — shared audio playback controller (SPEC.md — issue #11).
+    SMCA — shared audio playback controller (SPEC.md — issue #11).
 
     Owns the music queue and drives MPVCore per track (resolvePlayback +
     server progress/scrobble), mirroring PlayerView's playback engine without

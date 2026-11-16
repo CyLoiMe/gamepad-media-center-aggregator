@@ -1,5 +1,5 @@
 /*
-    GMCA — libraries manager (see library_manager.hpp).
+    SMCA — libraries manager (see library_manager.hpp).
 */
 
 #include "view/library_manager.hpp"

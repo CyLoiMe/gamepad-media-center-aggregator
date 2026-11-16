@@ -1,5 +1,5 @@
 /*
-    GMCA — subtitle language helpers (see api/media/langs.hpp).
+    SMCA — subtitle language helpers (see api/media/langs.hpp).
 
     A single ordered catalog of common subtitle languages, each with a canonical
     ISO 639-1 code, an endonym label, and every alias we want to recognize (639-1,

@@ -1,22 +1,11 @@
-# Build Depency
+# scripts
 
-### build for macOS
+| Path | What it is |
+|---|---|
+| `build-switch.sh` | builds `SMCA.nro` in the devkitPro Docker image (mirrors `switch.yaml`); `DRIVER=opengl` for the fallback renderer |
+| `switch/` | PKGBUILDs of the Switch portlibs the build pins (mpv, ffmpeg, curl, mbedtls, dav1d, libssh2, libuam, hacbrewpack, nspmini) |
+| `patches/` | applied at build time: `borealis-fixes.patch` (required), plus the two v4l2request patches the portlibs use |
+| `forwarder/` | the NSP forwarder generator (`-DBUILTIN_NSP=ON`), producing the HOME-menu tile |
 
-```shell
-# https://pkg-config.freedesktop.org/releases/pkg-config-0.29.2.tar.gz
-LDFLAGS="-framework CoreFoundation -framework Carbon" ./configure --with-internal-glib
-
-# https://github.com/ninja-build/ninja/releases/download/v1.12.0/ninja-mac.zip
-# https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/macosx/nasm-2.16.01-macosx.zip
-```
-
-### generate icons
-
-```shell
-sudo apt-get install -y librsvg2-bin
-for size in 32 48 64 128 256; do
-    icon_path="icons/${size}x${size}"
-    mkdir -p ${icon_path}
-    rsvg-convert -w ${size} -h ${size} -o ${icon_path}/fun.thcolin.plenx.png plenx.svg
-done
-```
+Rebuilding the portlibs: run the `switch-portlibs` workflow (manual dispatch) and
+publish the resulting packages as the `ci-deps` prerelease — see `RELEASING.md`.

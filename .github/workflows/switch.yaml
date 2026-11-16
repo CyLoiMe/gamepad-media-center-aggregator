@@ -1,0 +1,91 @@
+name: switch
+
+# SMCA ships one platform: Nintendo Switch (Atmosphère). This replaces the
+# multi-platform matrix the project inherited from GMCA.
+on:
+  push:
+    branches: [ main, smca ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      driver:
+        description: "render backend"
+        type: choice
+        options: [ deko3d, opengl ]
+        default: deko3d
+      no_forwarder:
+        description: "skip the built-in NSP forwarder"
+        type: boolean
+        default: false
+
+env:
+  # TODO: mirror these packages in THIS repository's own release before
+  # publishing releases — they currently point at the GMCA project's ci-deps
+  # prerelease. If that release changes or disappears, this build stops working.
+  # scripts/switch/* holds the PKGBUILDs, and .github/workflows/switch-portlibs.yaml
+  # rebuilds them; upload the resulting `switch-*.pkg.tar.zst` under a
+  # `ci-deps` prerelease here and point DEPS_URL at it.
+  DEPS_URL: https://github.com/thcolin/gamepad-media-center-aggregator/releases/download/ci-deps
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkita64:20260219
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        submodules: recursive
+
+    - name: Apply borealis patches
+      run: |
+        git config --global --add safe.directory '*'
+        git -C library/borealis apply --verbose ../../scripts/patches/borealis-fixes.patch
+
+    - name: Select render backend
+      run: |
+        DRIVER="${{ github.event.inputs.driver || 'deko3d' }}"
+        if [ "$DRIVER" = "deko3d" ]; then
+          echo "CMAKE_DRIVER=-DUSE_DEKO3D=ON" >> "$GITHUB_ENV"
+          echo "SHUFFIX=-deko3d" >> "$GITHUB_ENV"
+          dkp-pacman --noconfirm -R switch-libmpv
+          dkp-pacman --noconfirm -U $DEPS_URL/libuam-master-1-any.pkg.tar.zst
+        fi
+        echo "DRIVER=$DRIVER" >> "$GITHUB_ENV"
+
+    - name: Update dependencies
+      run: |
+        dkp-pacman --noconfirm -U $DEPS_URL/hacBrewPack-3.05-1-x86_64.pkg.tar.zst
+        for pkg in mbedtls-3.6.7-1 libssh2-1.11.1-1 dav1d-1.5.4-1 curl-8.16.0-3 \
+                   ffmpeg-7.1.5-5 libmpv${{ env.SHUFFIX }}-0.36.0-5 nspmini-main-1; do
+          dkp-pacman --noconfirm -U $DEPS_URL/switch-${pkg}-any.pkg.tar.zst
+        done
+        git config --system --add safe.directory $GITHUB_WORKSPACE
+
+    - name: Build libusbhsfs (UMS/USB drive support)
+      run: |
+        git clone https://github.com/DarkMatterCore/libusbhsfs.git --depth=1
+        make -C libusbhsfs BUILD_TYPE=GPL install -j$(nproc)
+
+    - name: Build NRO
+      run: |
+        cmake -B build ${{ env.CMAKE_DRIVER }} \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DPLATFORM_SWITCH=ON \
+          -DUSE_LIBUSBHSFS=ON \
+          -DBUILTIN_NSP=${{ github.event.inputs.no_forwarder && 'OFF' || 'ON' }} \
+          -DVERSION_BUILD=${{ github.run_number }}
+        make -C build SMCA.nro -j$(nproc)
+
+    - name: Upload NRO
+      uses: actions/upload-artifact@v6
+      with:
+        name: SMCA-NintendoSwitch${{ env.SHUFFIX }}-${{ github.run_number }}
+        path: build/SMCA.nro
+
+    - name: Upload debug ELF
+      uses: actions/upload-artifact@v6
+      with:
+        name: SMCA-dev-elf-${{ env.DRIVER }}-${{ github.run_number }}
+        path: build/SMCA.elf

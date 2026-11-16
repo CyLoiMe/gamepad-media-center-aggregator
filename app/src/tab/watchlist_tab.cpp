@@ -1,5 +1,5 @@
 /*
-    GMCA — "Watchlist" sidebar tab (see watchlist_tab.hpp).
+    SMCA — "Watchlist" sidebar tab (see watchlist_tab.hpp).
 */
 
 #include "tab/watchlist_tab.hpp"

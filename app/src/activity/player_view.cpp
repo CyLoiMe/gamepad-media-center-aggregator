@@ -1,5 +1,5 @@
 /*
-    GMCA — Plex video player.
+    SMCA — Plex video player.
     Verified pipeline: PLEX_MIGRATION.md §2.7.
     Units: mpv positions in seconds, Plex API in milliseconds.
 */
@@ -227,11 +227,11 @@ bool PlayerView::playIndex(int index) {
 }
 
 void PlayerView::playMedia(const int64_t seekMs) {
-    // Capture/automation guard: in GMCA_NAV_PIPE mode a stray "Play" from the
+    // Capture/automation guard: in SMCA_NAV_PIPE mode a stray "Play" from the
     // screenshot harness must never actually start playback — doing so pushes a
     // watch-progress report to the server and pollutes Continue Watching. Bail
     // out immediately (the empty player pops itself, leaving us on the detail).
-    if (std::getenv("GMCA_NAV_PIPE")) { VideoView::close(); return; }
+    if (std::getenv("SMCA_NAV_PIPE")) { VideoView::close(); return; }
 
     // Release any transcode session we were running before (re)loading. Covers
     // quality/track switches, episode navigation, and transcode->direct play.

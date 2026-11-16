@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx artık GMCA",
-    "intro": "Aynı uygulama, ama büyüdü. pleNx artık GMCA oldu — Gamepad Media Center Aggregator — ve çok daha fazlasını yapıyor.",
+    "title": "pleNx artık SMCA",
+    "intro": "Aynı uygulama, ama büyüdü. pleNx artık SMCA oldu — Switch Media Center Aggregator — ve çok daha fazlasını yapıyor.",
     "whats_new": "YENİLİKLER",
     "feature_backends": "Tek uygulama, tüm sunucular — Plex, Jellyfin, Emby ve Stremio",
     "feature_music": "Filmlerin ve dizilerin yanında müzik kitaplığın",
@@ -329,7 +329,7 @@
       "font_q1": "Nasıl özel bir yazı tipi veya tuş ataması simgesi kullanılır",
       "font_a1": "1. İstediğiniz yazı tipini veya simge yazı tipini indirin\n2. Yazı tipinin 'font.ttf', simge tipini de 'icon.ttf' olarak adlandırın\n3. Yazı tipi dosyalarını yapılandırma klasörüne yerleştirin\n4. Uygulamayı yeniden başlatın",
       "font_q2": "Sıkça Sorulan Sorular",
-      "font_a2": "1. GMCA, özel yazı tiplerinin görüntülenmesine öncelik verir; yerleşik yazı tipleri ise yedek olarak kullanılır.\n2. 'Ayarlar - Kılavuz' bölümünde, yapılandırma dizinini hızlıca açmak için bir menü öğesi bulunur.\n3. Linux’ta GMCA, dizini açmak için xdg-open kullanır. Yapılandırma dizini düzgün şekilde açılamıyorsa bu aracı yüklemeyi düşünebilirsiniz.",
+      "font_a2": "1. SMCA, özel yazı tiplerinin görüntülenmesine öncelik verir; yerleşik yazı tipleri ise yedek olarak kullanılır.\n2. 'Ayarlar - Kılavuz' bölümünde, yapılandırma dizinini hızlıca açmak için bir menü öğesi bulunur.\n3. Linux’ta SMCA, dizini açmak için xdg-open kullanır. Yapılandırma dizini düzgün şekilde açılamıyorsa bu aracı yüklemeyi düşünebilirsiniz.",
       "font_q3": "Alt yazılar görünmüyor",
       "font_a3": "Herhangi bir TTF dosyasını {}/subfont.ttf konumuna yerleştirin."
     },
@@ -382,17 +382,17 @@
     }
   },
   "hints": {
-    "title": "GMCA'i tam uygulama olarak başlat",
-    "text_applet": "GMCA uygulama modunda çalışıyor: mevcut bellek video oynatma için yeterli değil. Aşağıdaki seçeneklerden birini kullanarak tam uygulama olarak başlatın.",
-    "text_app": "GMCA tam uygulama olarak çalışıyor. Doğrudan bu şekilde başlatmak için HOME menüsü kutucuğunu yükleyin.",
+    "title": "SMCA'i tam uygulama olarak başlat",
+    "text_applet": "SMCA uygulama modunda çalışıyor: mevcut bellek video oynatma için yeterli değil. Aşağıdaki seçeneklerden birini kullanarak tam uygulama olarak başlatın.",
+    "text_app": "SMCA tam uygulama olarak çalışıyor. Doğrudan bu şekilde başlatmak için HOME menüsü kutucuğunu yükleyin.",
     "install_title": "HOME menüsü kutucuğu (önerilir)",
-    "install_text": "Yerleşik NSP yönlendiricisini yükler: kutucuk, GMCA'i doğrudan HOME menüsünden tam uygulama olarak başlatır.",
+    "install_text": "Yerleşik NSP yönlendiricisini yükler: kutucuk, SMCA'i doğrudan HOME menüsünden tam uygulama olarak başlatır.",
     "install_button": "Kutucuğu yükle",
     "takeover_title": "Alternatif: oyun üzerinden başlatma",
-    "takeover_text": "Yüklü herhangi bir oyunu başlatırken R tuşunu basılı tutarak homebrew menüsünü tam uygulama olarak açın, ardından GMCA'i oradan başlatın.",
-    "prompt": "GMCA kutucuğu HOME menüsüne yüklensin mi?\nKutucuk, uygulamayı tam uygulama olarak başlatır (video oynatma için gereklidir).",
+    "takeover_text": "Yüklü herhangi bir oyunu başlatırken R tuşunu basılı tutarak homebrew menüsünü tam uygulama olarak açın, ardından SMCA'i oradan başlatın.",
+    "prompt": "SMCA kutucuğu HOME menüsüne yüklensin mi?\nKutucuk, uygulamayı tam uygulama olarak başlatır (video oynatma için gereklidir).",
     "hint_confirm": "NSP yönlendiricisini kurmak konsolunuzun çevrim içi özelliklerden yasaklanmasına neden olabilir\n\nLütfen tekrar onaylayın",
-    "remove_old": "GMCA, HOME menünüzde. Eski bir pleNx kutucuğu hâlâ varsa Sistem Ayarları > Veri Yönetimi > Yazılım Sil'den kaldırın."
+    "remove_old": "SMCA, HOME menünüzde. Eski bir pleNx kutucuğu hâlâ varsa Sistem Ayarları > Veri Yönetimi > Yazılım Sil'den kaldırın."
   },
   "plex": {
     "title": "Plex hesabınıza giriş yapın",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds GMCA.nro for Nintendo Switch via Docker (devkitPro image),
-# replicating the `build-nx` job of .github/workflows/build.yaml.
+# Builds SMCA.nro for Nintendo Switch via Docker (devkitPro image),
+# replicating the `build` job of .github/workflows/switch.yaml.
 #
 # Usage:
 #   ./scripts/build-switch.sh             # deko3d driver (recommended)
@@ -15,6 +15,9 @@ cd "$(dirname "$0")/.."
 
 DRIVER="${DRIVER:-deko3d}"
 IMAGE="devkitpro/devkita64:20260219"
+# Portlibs release. TODO: mirror these in THIS project's own `ci-deps` release
+# (scripts/switch/* + .github/workflows/switch-portlibs.yaml rebuild them) —
+# until then the build borrows GMCA's pinned set.
 BASE_URL="https://github.com/thcolin/gamepad-media-center-aggregator/releases/download/ci-deps"
 BUILD_DIR="build_switch_${DRIVER}"
 
@@ -59,8 +62,8 @@ docker run --rm --platform linux/amd64 \
         -DPLATFORM_SWITCH=ON \
         -DUSE_LIBUSBHSFS=ON \
         -DBUILTIN_NSP=ON
-    make -C $BUILD_DIR GMCA.nro -j\$(nproc)
+    make -C $BUILD_DIR SMCA.nro -j\$(nproc)
 "
 
 echo ''
-echo ">> OK : $BUILD_DIR/GMCA.nro"
+echo ">> OK : $BUILD_DIR/SMCA.nro"

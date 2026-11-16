@@ -1,5 +1,5 @@
 /*
-    GMCA — Stremio addon engine implementation (see stremio/addons.hpp).
+    SMCA — Stremio addon engine implementation (see stremio/addons.hpp).
     Re-syncs the account's addon collection, then loads the configured
     transportUrls' manifests once and routes resource queries across them.
 */

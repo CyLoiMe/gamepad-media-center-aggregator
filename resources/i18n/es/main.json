@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx ahora es GMCA",
-    "intro": "La misma app, pero más grande. pleNx se ha convertido en GMCA — el Gamepad Media Center Aggregator — y ahora hace mucho más.",
+    "title": "pleNx ahora es SMCA",
+    "intro": "La misma app, pero más grande. pleNx se ha convertido en SMCA — el Switch Media Center Aggregator — y ahora hace mucho más.",
     "whats_new": "NOVEDADES",
     "feature_backends": "Una sola app, todos tus servidores — Plex, Jellyfin, Emby y Stremio",
     "feature_music": "Tu biblioteca de música, junto a películas y series",
@@ -329,7 +329,7 @@
       "font_q1": "Cómo establecer una fuente o icono de teclas personalizados",
       "font_a1": "1. Descarga la fuente o el icono que quieras utilizar\n2. Renombra la fuente a: font.ttf; Renombra el icono a: icon.ttf\n3. Sitúa los archivos de fuentes en el directorio de configuración\n4. Reinicia la aplicación",
       "font_q2": "Preguntas frecuentes",
-      "font_a2": "1. GMCA prioriza mostrar las fuentes personalizadas, usando las integradas como alternativa\n2. \"Ajustes - Tutorial\" ofrece un menú para abrir rápidamente el directorio de configuración\n3. En Linux, GMCA usa xdg-open para abrir el directorio. Si el directorio de configuración no se abre correctamente, considera instalar esta herramienta",
+      "font_a2": "1. SMCA prioriza mostrar las fuentes personalizadas, usando las integradas como alternativa\n2. \"Ajustes - Tutorial\" ofrece un menú para abrir rápidamente el directorio de configuración\n3. En Linux, SMCA usa xdg-open para abrir el directorio. Si el directorio de configuración no se abre correctamente, considera instalar esta herramienta",
       "font_q3": "No se muestran los subtítulos",
       "font_a3": "Coloca cualquier archivo ttf en {}/subfont.ttf"
     },
@@ -382,17 +382,17 @@
     }
   },
   "hints": {
-    "title": "Iniciar GMCA como aplicación completa",
-    "text_applet": "GMCA se está ejecutando en modo applet: la memoria disponible no es suficiente para la reproducción de vídeo. Inícialo como aplicación completa usando una de las opciones de abajo.",
-    "text_app": "GMCA se está ejecutando como aplicación completa. Instala el icono del menú HOME para iniciarlo así directamente.",
+    "title": "Iniciar SMCA como aplicación completa",
+    "text_applet": "SMCA se está ejecutando en modo applet: la memoria disponible no es suficiente para la reproducción de vídeo. Inícialo como aplicación completa usando una de las opciones de abajo.",
+    "text_app": "SMCA se está ejecutando como aplicación completa. Instala el icono del menú HOME para iniciarlo así directamente.",
     "install_title": "Icono del menú HOME (recomendado)",
-    "install_text": "Instala el NSP forwarder integrado: el icono inicia GMCA como aplicación completa directamente desde el menú HOME.",
+    "install_text": "Instala el NSP forwarder integrado: el icono inicia SMCA como aplicación completa directamente desde el menú HOME.",
     "install_button": "Instalar el icono",
     "takeover_title": "Alternativa: apropiación de título",
-    "takeover_text": "Mantén pulsado R al iniciar cualquier juego instalado para abrir el menú homebrew como aplicación completa, y luego inicia GMCA desde ahí.",
-    "prompt": "¿Instalar el icono de GMCA en el menú HOME?\nEl icono inicia la aplicación como aplicación completa (necesario para la reproducción de vídeo).",
+    "takeover_text": "Mantén pulsado R al iniciar cualquier juego instalado para abrir el menú homebrew como aplicación completa, y luego inicia SMCA desde ahí.",
+    "prompt": "¿Instalar el icono de SMCA en el menú HOME?\nEl icono inicia la aplicación como aplicación completa (necesario para la reproducción de vídeo).",
     "hint_confirm": "Instalar el NSP forwarder puede resultar en un baneo\nPor favor confirma de nuevo",
-    "remove_old": "GMCA está en tu menú HOME. Si aún hay un icono antiguo de pleNx, elimínalo en Configuración del sistema > Gestión de datos > Eliminar software."
+    "remove_old": "SMCA está en tu menú HOME. Si aún hay un icono antiguo de pleNx, elimínalo en Configuración del sistema > Gestión de datos > Eliminar software."
   },
   "plex": {
     "title": "Inicia sesión en tu cuenta de Plex",

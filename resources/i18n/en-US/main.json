@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx is now GMCA",
-    "intro": "Same app, all grown up. pleNx has become GMCA — the Gamepad Media Center Aggregator — and it does a whole lot more.",
+    "title": "pleNx is now SMCA",
+    "intro": "Same app, all grown up. pleNx has become SMCA — the Switch Media Center Aggregator — and it does a whole lot more.",
     "whats_new": "WHAT'S NEW",
     "feature_backends": "One app, every server — Plex, Jellyfin, Emby and Stremio",
     "feature_music": "Your music library, right next to movies and shows",
@@ -341,7 +341,7 @@
       "font_q1": "How to set custom font or keymap icon",
       "font_a1": "1. Download the font or icon font you want\n2. Rename font to: font.ttf; Rename icon to: icon.ttf\n3. Place font files in the config directory\n4. Restart the application",
       "font_q2": "FAQ",
-      "font_a2": "1. GMCA prioritizes the display of custom fonts, with built-in fonts as a fallback\n2. \"Settings - Tutorial\" provides a menu item to quickly open the config directory\n3. On Linux, GMCA uses xdg-open to open the directory. If the configuration directory cannot be opened correctly, you can consider installing this tool",
+      "font_a2": "1. SMCA prioritizes the display of custom fonts, with built-in fonts as a fallback\n2. \"Settings - Tutorial\" provides a menu item to quickly open the config directory\n3. On Linux, SMCA uses xdg-open to open the directory. If the configuration directory cannot be opened correctly, you can consider installing this tool",
       "font_q3": "Subtitles didn't display",
       "font_a3": "Put any ttf file at {}/subfont.ttf"
     },
@@ -394,17 +394,17 @@
     }
   },
   "hints": {
-    "title": "Launch GMCA as a full application",
-    "text_applet": "GMCA is running in applet mode: the available memory is not sufficient for video playback. Launch it as a full application using one of the options below.",
-    "text_app": "GMCA is running as a full application. Install the HOME menu tile to launch it this way directly.",
+    "title": "Launch SMCA as a full application",
+    "text_applet": "SMCA is running in applet mode: the available memory is not sufficient for video playback. Launch it as a full application using one of the options below.",
+    "text_app": "SMCA is running as a full application. Install the HOME menu tile to launch it this way directly.",
     "install_title": "HOME menu tile (recommended)",
-    "install_text": "Installs the embedded NSP forwarder: the tile launches GMCA as a full application straight from the HOME menu.",
+    "install_text": "Installs the embedded NSP forwarder: the tile launches SMCA as a full application straight from the HOME menu.",
     "install_button": "Install the tile",
     "takeover_title": "Alternative: title takeover",
-    "takeover_text": "Hold R while launching any installed game to open the homebrew menu as a full application, then launch GMCA from there.",
-    "prompt": "Install the GMCA tile on the HOME menu?\nThe tile launches the app as a full application (required for video playback).",
+    "takeover_text": "Hold R while launching any installed game to open the homebrew menu as a full application, then launch SMCA from there.",
+    "prompt": "Install the SMCA tile on the HOME menu?\nThe tile launches the app as a full application (required for video playback).",
     "hint_confirm": "Installing NSP forwarder may result in a ban\nPlease confirm again",
-    "remove_old": "GMCA is on your HOME menu. If an old pleNx tile is still there, remove it from System Settings > Data Management > Delete Software."
+    "remove_old": "SMCA is on your HOME menu. If an old pleNx tile is still there, remove it from System Settings > Data Management > Delete Software."
   },
   "plex": {
     "title": "Sign in to your Plex account",

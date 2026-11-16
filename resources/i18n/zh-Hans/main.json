@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx 现已成为 GMCA",
-    "intro": "还是那个应用，只是更强大了。pleNx 已升级为 GMCA（Gamepad Media Center Aggregator），如今能做的事情多得多。",
+    "title": "pleNx 现已成为 SMCA",
+    "intro": "还是那个应用，只是更强大了。pleNx 已升级为 SMCA（Switch Media Center Aggregator），如今能做的事情多得多。",
     "whats_new": "全新功能",
     "feature_backends": "一个应用，连接所有服务器 — Plex、Jellyfin、Emby 和 Stremio",
     "feature_music": "在电影和剧集之外，还有你的音乐库",
@@ -329,7 +329,7 @@
       "font_q1": "如何设置自定义字体或键位图标",
       "font_a1": "1. 下载你想要的字体或图标字体文件\n2. 字体重命名为：font.ttf  图标重命名为：icon.ttf\n3. 将重命名后的文件放置在应用的配置目录\n4. 重启应用",
       "font_q2": "常见问题",
-      "font_a2": "1. 软件优先显示自定义字体，以内置字体作为后备\n2. 「设置 - 使用教程」 提供了快速打开配置目录的菜单项\n3. 在 Linux 上，GMCA 使用 xdg-open 打开目录。如果无法正确打开配置目录，可以考虑安装该工具",
+      "font_a2": "1. 软件优先显示自定义字体，以内置字体作为后备\n2. 「设置 - 使用教程」 提供了快速打开配置目录的菜单项\n3. 在 Linux 上，SMCA 使用 xdg-open 打开目录。如果无法正确打开配置目录，可以考虑安装该工具",
       "font_q3": "字幕无法正常显示",
       "font_a3": "将合适的 ttf 字体文件复制到 {}/subfont.ttf"
     },
@@ -382,17 +382,17 @@
     }
   },
   "hints": {
-    "title": "以完整应用模式启动 GMCA",
-    "text_applet": "GMCA 正运行于小程序模式：可用内存不足以播放视频。请使用下方选项之一以完整应用模式启动。",
-    "text_app": "GMCA 正以完整应用模式运行。安装 HOME 菜单图标即可直接以此方式启动。",
+    "title": "以完整应用模式启动 SMCA",
+    "text_applet": "SMCA 正运行于小程序模式：可用内存不足以播放视频。请使用下方选项之一以完整应用模式启动。",
+    "text_app": "SMCA 正以完整应用模式运行。安装 HOME 菜单图标即可直接以此方式启动。",
     "install_title": "HOME 菜单图标（推荐）",
-    "install_text": "安装内置的 NSP 转发器：该图标可直接从 HOME 菜单以完整应用模式启动 GMCA。",
+    "install_text": "安装内置的 NSP 转发器：该图标可直接从 HOME 菜单以完整应用模式启动 SMCA。",
     "install_button": "安装图标",
     "takeover_title": "备选方案：标题接管",
-    "takeover_text": "启动任意已安装游戏时按住 R，以完整应用模式打开自制软件菜单，再从中启动 GMCA。",
-    "prompt": "在 HOME 菜单上安装 GMCA 图标？\n该图标会以完整应用模式启动应用（播放视频所需）。",
+    "takeover_text": "启动任意已安装游戏时按住 R，以完整应用模式打开自制软件菜单，再从中启动 SMCA。",
+    "prompt": "在 HOME 菜单上安装 SMCA 图标？\n该图标会以完整应用模式启动应用（播放视频所需）。",
     "hint_confirm": "安装桌面图标可能导致ban机\n请再次确认",
-    "remove_old": "GMCA 已在 HOME 菜单中。如果旧的 pleNx 磁贴仍然存在，请在 系统设置 > 数据管理 > 删除软件 中删除它。"
+    "remove_old": "SMCA 已在 HOME 菜单中。如果旧的 pleNx 磁贴仍然存在，请在 系统设置 > 数据管理 > 删除软件 中删除它。"
   },
   "plex": {
     "title": "登录你的 Plex 账户",

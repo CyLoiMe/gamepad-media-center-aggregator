@@ -72,14 +72,14 @@ static bool isForwarderInstalled() {
 /// First launch in application mode: offers to install the HOME tile
 /// (launched from the tile itself or tile already there -> ns sees it -> nothing).
 static void proposeForwarderInstall() {
-    if (isForwarderInstalled()) return;  // a GMCA HOME tile is already present
+    if (isForwarderInstalled()) return;  // a SMCA HOME tile is already present
 
     auto& conf = AppConfig::instance();
-    // One-time GMCA-era nudge, keyed separately from HINT_FORWARDER on purpose:
-    // pleNx users who self-updated to GMCA are past the pleNx-era HINT_FORWARDER
-    // gate yet have no GMCA tile (fresh title id), so re-offer it exactly once.
-    if (conf.getItem(AppConfig::HINT_FORWARDER_GMCA, false)) return;
-    conf.setItem(AppConfig::HINT_FORWARDER_GMCA, true);
+    // One-time SMCA-era nudge, keyed separately from HINT_FORWARDER on purpose:
+    // pleNx users who self-updated to SMCA are past the pleNx-era HINT_FORWARDER
+    // gate yet have no SMCA tile (fresh title id), so re-offer it exactly once.
+    if (conf.getItem(AppConfig::HINT_FORWARDER_SMCA, false)) return;
+    conf.setItem(AppConfig::HINT_FORWARDER_SMCA, true);
     conf.setItem(AppConfig::HINT_FORWARDER, true);
 
     auto dialog = new brls::Dialog("main/hints/prompt"_i18n);
@@ -144,10 +144,10 @@ int main(int argc, char* argv[]) {
     // ("scrollbar", default true). Off = clean captures / a quieter chrome.
     brls::ScrollingFrame::setScrollingIndicatorVisibleGlobal(conf.getItem(AppConfig::SCROLLBAR, true));
 
-    // Screenshot/automation harness (GMCA_NAV_PIPE input hook): keep the render
+    // Screenshot/automation harness (SMCA_NAV_PIPE input hook): keep the render
     // + input loop at full speed even while unfocused, so background navigation
     // and captures stay in sync (the default 5 FPS idle throttle desyncs them).
-    if (std::getenv("GMCA_NAV_PIPE")) brls::Application::setDeactivatedFPS(60);
+    if (std::getenv("SMCA_NAV_PIPE")) brls::Application::setDeactivatedFPS(60);
 
     ImageCache::init();
     DownloadManager::instance().init();

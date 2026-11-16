@@ -1,5 +1,5 @@
 /*
-    GMCA — Now Playing screen for music (SPEC.md — issue #11).
+    SMCA — Now Playing screen for music (SPEC.md — issue #11).
     A pushed activity (like PlayerView) that observes the AudioPlayer controller:
     cover + title/artist + transport + shuffle/repeat. Audio keeps playing when
     it is popped (the controller owns playback).

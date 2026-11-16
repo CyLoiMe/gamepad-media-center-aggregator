@@ -1,5 +1,5 @@
 /*
-    GMCA — view of ONE Plex playlist.
+    SMCA — view of ONE Plex playlist.
     Plain header (title + "N items · total duration") and grid of the
     items in the server order of the playlist (no sort/filters).
     API: GET /playlists/{ratingKey}/items (plex::apiPlaylistItems),

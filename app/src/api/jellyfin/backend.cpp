@@ -1,5 +1,5 @@
 /*
-    GMCA — Jellyfin/Emby implementation of media::Backend (see jellyfin/backend.hpp).
+    SMCA — Jellyfin/Emby implementation of media::Backend (see jellyfin/backend.hpp).
     Translates the Jellyfin API into the neutral media:: model. Reads the active
     server/token/userId from AppConfig live.
 

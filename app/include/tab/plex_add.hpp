@@ -1,5 +1,5 @@
 /*
-    GMCA — sign in to a Plex server.
+    SMCA — sign in to a Plex server.
     plex.tv PIN flow then server/profile discovery (PLEX_MIGRATION.md §2.2-2.3).
     Reached from ServerTypeChoose once the user picks Plex; it is a content view
     of the ServerList AppletFrame (pushed via View::present), so it inherits the

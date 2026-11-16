@@ -1,5 +1,5 @@
 /*
-    GMCA — music detail views (SPEC.md — issue #11).
+    SMCA — music detail views (SPEC.md — issue #11).
     Artist -> Album -> Track mirrors Show -> Season -> Episode; getChildren is
     already generic, so these are thin views over it.
 */

@@ -1,5 +1,5 @@
 /*
-    GMCA — a settings cell that opens a sub-screen.
+    SMCA — a settings cell that opens a sub-screen.
 */
 
 #pragma once

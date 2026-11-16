@@ -1,5 +1,5 @@
 /*
-    GMCA — abstract media backend interface.
+    SMCA — abstract media backend interface.
 
     Every server type (Plex, Jellyfin/Emby, Stremio) implements media::Backend
     and produces neutral media::* models. The UI talks ONLY to the active backend

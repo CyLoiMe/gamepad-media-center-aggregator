@@ -1,5 +1,5 @@
 /*
-    GMCA — a server refusal (HTTP 403), backend-agnostic.
+    SMCA — a server refusal (HTTP 403), backend-agnostic.
 
     Another delivery path hits the same refusal, so the player stops retrying.
 */

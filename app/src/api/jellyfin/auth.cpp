@@ -1,5 +1,5 @@
 /*
-    GMCA — Jellyfin/Emby authentication (see jellyfin/auth.hpp).
+    SMCA — Jellyfin/Emby authentication (see jellyfin/auth.hpp).
 */
 
 #include "api/jellyfin/auth.hpp"

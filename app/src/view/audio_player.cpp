@@ -23,7 +23,7 @@ static bool hasAccessible(const media::Item& it) {
 
 /// server progress reports pollute the real library in capture mode; playback
 /// itself stays enabled so the harness can hear/verify audio (SPEC.md).
-static bool reportingDisabled() { return std::getenv("GMCA_NAV_PIPE") != nullptr; }
+static bool reportingDisabled() { return std::getenv("SMCA_NAV_PIPE") != nullptr; }
 
 // AudioPlayer is a process-lifetime singleton, so async callbacks capture `this`
 // directly (no brls::View deletion-token dance).

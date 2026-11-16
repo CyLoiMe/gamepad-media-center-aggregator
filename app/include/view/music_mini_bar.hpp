@@ -1,5 +1,5 @@
 /*
-    GMCA — persistent "now playing" mini-bar (SPEC.md T11 — issue #11).
+    SMCA — persistent "now playing" mini-bar (SPEC.md T11 — issue #11).
     Mounted under the main frame (re-created with MainActivity on each
     server-switch); visible only while the AudioPlayer has a queue. Shows the
     current track and opens the full Now Playing (click, or the global Y action

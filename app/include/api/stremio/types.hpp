@@ -1,5 +1,5 @@
 /*
-    GMCA — Stremio addon protocol: manifest/catalog/meta shapes, transport
+    SMCA — Stremio addon protocol: manifest/catalog/meta shapes, transport
     helpers, and mappers Stremio JSON -> neutral media:: model.
 
     A Stremio addon is a stateless HTTP REST service described by a manifest.

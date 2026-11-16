@@ -1,5 +1,5 @@
 /*
-    GMCA — libraries manager (issue #9).
+    SMCA — libraries manager (issue #9).
 
     A full-content detail view (presented over the main content area while the
     sidebar stays visible, so every change previews live) that reorders and

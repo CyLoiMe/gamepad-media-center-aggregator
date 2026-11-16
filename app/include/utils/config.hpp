@@ -30,12 +30,12 @@ public:
     static void checkUpdate(int delay = 2000, bool showUpToDateDialog = false);
 
     inline static std::shared_ptr<std::atomic_bool> updating = std::make_shared<std::atomic_bool>(true);
-    inline static std::string git_repo = "thcolin/gamepad-media-center-aggregator";
+    inline static std::string git_repo = "CyLoiMe/switch-media-center-aggregator";
 
     /// Real path of the running NRO (argv[0] provided by hbloader or the
     /// forwarder), filled in main(). THIS is the file the auto-update must
-    /// replace: the NRO may live at `sdmc:/switch/GMCA.nro` (forwarder)
-    /// or `sdmc:/switch/GMCA/GMCA.nro`. Empty off-Switch or if unavailable.
+    /// replace: the NRO may live at `sdmc:/switch/SMCA.nro` (forwarder)
+    /// or `sdmc:/switch/SMCA/SMCA.nro`. Empty off-Switch or if unavailable.
     inline static std::string nro_path;
 };
 
@@ -153,13 +153,13 @@ public:
         /// launch in application mode (Switch).
         HINT_FORWARDER,
 
-        /// GMCA-era HOME-tile re-nudge, gated separately from HINT_FORWARDER on
-        /// purpose: pleNx users who self-updated to GMCA are past the pleNx-era
-        /// HINT_FORWARDER gate but have no GMCA tile (fresh title id), so re-offer
+        /// SMCA-era HOME-tile re-nudge, gated separately from HINT_FORWARDER on
+        /// purpose: pleNx users who self-updated to SMCA are past the pleNx-era
+        /// HINT_FORWARDER gate but have no SMCA tile (fresh title id), so re-offer
         /// it exactly once so they get a tile that resolves the migrated NRO.
-        HINT_FORWARDER_GMCA,
+        HINT_FORWARDER_SMCA,
 
-        /// One-time "pleNx is now GMCA" welcome notice already shown. Set the
+        /// One-time "pleNx is now SMCA" welcome notice already shown. Set the
         /// first time the notice is displayed (only to users migrated from a
         /// legacy pleNx/Switchlex data dir — see AppConfig::migratedFromLegacy).
         RENAME_NOTICE_SHOWN,
@@ -280,7 +280,7 @@ public:
     inline static bool SYNC = true;
 
     /// True for this session only when init() relocated a legacy data dir
-    /// (pleNx/Switchlex -> GMCA). Runtime-only (never serialized): combined with
+    /// (pleNx/Switchlex -> SMCA). Runtime-only (never serialized): combined with
     /// the persistent RENAME_NOTICE_SHOWN flag it gates the one-time rebrand
     /// welcome notice so it shows exactly once, and only to migrated users.
     bool migratedFromLegacy = false;

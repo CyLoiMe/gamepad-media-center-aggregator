@@ -1,5 +1,5 @@
 /*
-    GMCA — max playback resolution, backend-agnostic.
+    SMCA — max playback resolution, backend-agnostic.
 
     A limit is a height ("1080p") read as a 16:9 box: 1080p means at most
     1920x1080, so a 1920x800 scope film and a 1440x1080 4:3 one both fit.

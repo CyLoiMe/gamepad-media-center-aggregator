@@ -1,7 +1,7 @@
 {
   "rename": {
-    "title": "pleNx devient GMCA",
-    "intro": "La même app, en plus grand. pleNx est devenu GMCA — le Gamepad Media Center Aggregator — et il en fait désormais bien plus.",
+    "title": "pleNx devient SMCA",
+    "intro": "La même app, en plus grand. pleNx est devenu SMCA — le Switch Media Center Aggregator — et il en fait désormais bien plus.",
     "whats_new": "CE QUI CHANGE",
     "feature_backends": "Une seule app, tous vos serveurs — Plex, Jellyfin, Emby et Stremio",
     "feature_music": "Votre musique, aux côtés des films et des séries",
@@ -394,17 +394,17 @@
     }
   },
   "hints": {
-    "title": "Lancer GMCA en application complète",
-    "text_applet": "GMCA tourne en mode applet : la mémoire disponible ne suffit pas pour la lecture vidéo. Lancez-le en application complète via l'une des options ci-dessous.",
-    "text_app": "GMCA tourne en application complète. Installez la tuile du menu HOME pour le lancer directement ainsi.",
+    "title": "Lancer SMCA en application complète",
+    "text_applet": "SMCA tourne en mode applet : la mémoire disponible ne suffit pas pour la lecture vidéo. Lancez-le en application complète via l'une des options ci-dessous.",
+    "text_app": "SMCA tourne en application complète. Installez la tuile du menu HOME pour le lancer directement ainsi.",
     "install_title": "Tuile du menu HOME (recommandé)",
-    "install_text": "Installe le forwarder NSP embarqué : la tuile lance GMCA en application complète depuis le menu HOME.",
+    "install_text": "Installe le forwarder NSP embarqué : la tuile lance SMCA en application complète depuis le menu HOME.",
     "install_button": "Installer la tuile",
     "takeover_title": "Alternative : title takeover",
-    "takeover_text": "Maintenez R en lançant n'importe quel jeu installé pour ouvrir le menu homebrew en application complète, puis lancez-y GMCA.",
-    "prompt": "Installer la tuile GMCA sur le menu HOME ?\nLa tuile lance l'application en session complète (indispensable pour la lecture vidéo).",
+    "takeover_text": "Maintenez R en lançant n'importe quel jeu installé pour ouvrir le menu homebrew en application complète, puis lancez-y SMCA.",
+    "prompt": "Installer la tuile SMCA sur le menu HOME ?\nLa tuile lance l'application en session complète (indispensable pour la lecture vidéo).",
     "hint_confirm": "L'installation du forwarder NSP peut entraîner un bannissement de la console. Veuillez confirmer à nouveau",
-    "remove_old": "GMCA est sur ton menu HOME. Si une ancienne tuile pleNx y figure encore, supprime-la depuis Réglages système > Gestion des données > Supprimer un logiciel."
+    "remove_old": "SMCA est sur ton menu HOME. Si une ancienne tuile pleNx y figure encore, supprime-la depuis Réglages système > Gestion des données > Supprimer un logiciel."
   },
   "plex": {
     "title": "Connectez-vous à votre compte Plex",

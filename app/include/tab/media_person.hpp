@@ -1,5 +1,5 @@
 /*
-    GMCA — person page: portrait + filmography (movies / shows).
+    SMCA — person page: portrait + filmography (movies / shows).
     Data: GET /library/people/{id}/media.
 */
 

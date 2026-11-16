@@ -1,5 +1,5 @@
 /*
-    GMCA — music detail views (issue #11). See tab/media_music.hpp.
+    SMCA — music detail views (issue #11). See tab/media_music.hpp.
 */
 
 #include "tab/media_music.hpp"

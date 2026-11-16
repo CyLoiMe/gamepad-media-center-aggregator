@@ -29,7 +29,7 @@ void HintActivity::onContentAvailable() {
             brls::Application::unblockInputs();
             // The old pleNx HOME tile is a separate installed title that stays
             // until removed by hand (updating the app can't touch it). Point the
-            // user at it, then launch the freshly installed GMCA tile.
+            // user at it, then launch the freshly installed SMCA tile.
             auto info = new brls::Dialog("main/hints/remove_old"_i18n);
             info->addButton("hints/ok"_i18n, [AppTitleID]() { appletRequestLaunchApplication(AppTitleID, NULL); });
             info->open();

@@ -1,5 +1,5 @@
 /*
-    GMCA — disclosure cell (see disclosure_cell.hpp).
+    SMCA — disclosure cell (see disclosure_cell.hpp).
 */
 
 #include "view/disclosure_cell.hpp"

@@ -4,17 +4,17 @@
 #include <unistd.h>
 
 #define HBMENU_NRO "sdmc:/hbmenu.nro"
-#define DEFAULT_NRO "sdmc:/switch/GMCA.nro"
-#define APP_STORE_NRO "sdmc:/switch/GMCA/GMCA.nro"
-// Legacy pleNx paths: users who self-updated pleNx -> GMCA in place still have
-// the (now-GMCA) binary at the old name. Resolve it so this tile launches the
-// app instead of falling through to hbmenu, until they re-stage GMCA.nro.
+#define DEFAULT_NRO "sdmc:/switch/SMCA.nro"
+#define APP_STORE_NRO "sdmc:/switch/SMCA/SMCA.nro"
+// Legacy pleNx paths: users who self-updated pleNx -> SMCA in place still have
+// the (now-SMCA) binary at the old name. Resolve it so this tile launches the
+// app instead of falling through to hbmenu, until they re-stage SMCA.nro.
 #define LEGACY_NRO "sdmc:/switch/pleNx.nro"
 #define LEGACY_APP_STORE_NRO "sdmc:/switch/pleNx/pleNx.nro"
 
 // A candidate NRO is usable only if it exists AND looks like a real NRO (magic
 // "NRO0" at offset 0x10). Guards against a 0-byte / truncated file — e.g. a
-// broken GMCA.nro left by an older build's in-app copy — so we fall through to
+// broken SMCA.nro left by an older build's in-app copy — so we fall through to
 // the next path instead of loading a corrupt image and crashing.
 static int nro_ok(const char* path) {
     int fd = open(path, O_RDONLY);

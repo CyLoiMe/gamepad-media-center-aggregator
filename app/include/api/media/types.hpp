@@ -1,5 +1,5 @@
 /*
-    GMCA — neutral pivot model shared by every media backend.
+    SMCA — neutral pivot model shared by every media backend.
 
     These structs are produced by each backend (Plex, Jellyfin/Emby, Stremio):
     the UI consumes `media::Item` / `media::Container<T>` and never sees a

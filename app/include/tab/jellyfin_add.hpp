@@ -1,5 +1,5 @@
 /*
-    GMCA — sign-in form for a Jellyfin or Emby server.
+    SMCA — sign-in form for a Jellyfin or Emby server.
     URL + username/password login. The backend type ("jellyfin" | "emby") only
     changes the title and the value stored in the saved AppServer. On success
     the active server/user are persisted and the app enters MainActivity.
