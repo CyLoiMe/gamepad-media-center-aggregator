@@ -1,33 +1,25 @@
 cmake_minimum_required(VERSION 3.18)
 
-# Build options
+# SMCA — Switch Media Center Aggregator.
+# One platform, one artifact: SMCA.nro for Nintendo Switch (Atmosphère).
+
 set(BOREALIS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/library/borealis)
 set(BOREALIS_LIBRARY ${BOREALIS_DIR}/library)
 
-# Include Platform common options
+# Platform options (PLATFORM_SWITCH, USE_DEKO3D, …) come from borealis.
 include(${BOREALIS_LIBRARY}/cmake/commonOption.cmake)
 
-# SMCA is a Nintendo Switch application. The toolchain, packaging and source
-# lists for the other platforms the upstream project supported are gone; fail
-# here, with a clear message, instead of deep inside the build.
 if (NOT PLATFORM_SWITCH)
     message(FATAL_ERROR
         "SMCA builds for Nintendo Switch only. Configure with:\n"
         "  cmake -B build -DPLATFORM_SWITCH=ON")
 endif ()
 
-option(USE_SYSTEM_CURL "use system installed libcurl" ON)
-
-# Linux
-# Using CMAKE_INSTALL_PREFIX specifies the location where the application is installed.
-cmake_dependent_option(CMAKE_INSTALL "Install to system path" OFF "UNIX;NOT APPLE" OFF)
-
-# NintendoSwitch
+# Nintendo Switch options
 cmake_dependent_option(BUILTIN_NSP "Built in NSP forwarder" OFF "PLATFORM_SWITCH" OFF)
 cmake_dependent_option(USE_LIBUSBHSFS "Use libusbhsfs for ums access" OFF "PLATFORM_SWITCH" OFF)
 
-# mpv related
-# If your system does not support OpenGL(ES), you can use software rendering, but it will affect performance.
+# Render the video with the CPU: slower, but works without a GPU path.
 option(MPV_SW_RENDER "Using CPU to draw videos" OFF)
 if (MPV_SW_RENDER)
     list(APPEND APP_PLATFORM_OPTION -DMPV_SW_RENDER)
@@ -68,95 +60,33 @@ set(VERSION_ALTER "0")
 # official title, and no title-ID registry check is needed. The low 32 bits spell
 # the app name in ASCII ("SMCA" = 534D4341), the same convention the rest of the
 # homebrew scene uses. (hacbrewpack lower-cases the filename → see
-# forwarder/CMakeLists.txt.)
+# scripts/forwarder/CMakeLists.txt.)
 set(PROJECT_TITLEID "0500534D43410000")
 set(PROJECT_AUTHOR "CyLoiMe")
-set(PACKAGE_NAME "fun.cyloime.smca")
-set(VITA_TITLEID "SMCA00001")
-set(PSN_TITLE_ID "SMCA00000")
-# VITA_VERSION is the Vita package version (2-digit MM.NN, independent of the
-# main version). Bumped every Vita release so the package version never
-# regresses; 00.23 shipped with the broken v1.0.3 VPK, 00.24 is the first that
-# actually installs.
-set(VITA_VERSION "00.30")
 set(PROJECT_ICON ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon/icon.jpg)
 set(PROJECT_RESOURCES ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 
 # Embed the changelog (single source of truth at the repo root) into the
-# resources so the in-app Changelog screen can read it via romfs /
-# BRLS_RESOURCES on every platform. Configure-time copy: picked up by
-# libromfs and the resource copy steps; editing CHANGELOG.md re-triggers
-# CMake configure. The copy under resources/ is gitignored.
+# resources so the in-app Changelog screen can read it. Configure-time copy:
+# editing CHANGELOG.md re-triggers CMake configure. The copy under resources/ is
+# gitignored.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md ${PROJECT_RESOURCES}/CHANGELOG.md COPYONLY)
 
 if (CUSTOM_RESOURCES_DIR)
     set(BRLS_RESOURCES_DIR ${CUSTOM_RESOURCES_DIR})
-elseif (CMAKE_INSTALL)
-    set(BRLS_RESOURCES_DIR ${CMAKE_INSTALL_PREFIX}/share/gmca)
 endif ()
 
-# setting src and include
+# sources
 file(GLOB_RECURSE MAIN_SRC "${PROJECT_SOURCE_DIR}/app/src/*.cpp")
-if (PLATFORM_SWITCH)
-    # System service initialization functions required for libnx
-    list(APPEND MAIN_SRC ${BOREALIS_LIBRARY}/lib/platforms/switch/switch_wrapper.c)
-elseif (PLATFORM_PS4)
-    # Static-init guards that work with the PS4's thread ids, see the file
-    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/platform/ps4/cxa_guard.c)
-    # Show backtrace when app crash
-    list(APPEND MAIN_SRC ${BOREALIS_LIBRARY}/lib/platforms/ps4/crashlog.c)
-    # OpenOrbis' link.x collects `.data` but not `.data.*`, and -fdata-sections puts
-    # each initialized global in its own .data.<name> section. create-fself only
-    # loads `.data`, so the rest read as 0 on the console (ThreadPool::max_thread_num,
-    # stdio's FILEs, libunwind's cache, ...). Link with a copy that merges them.
-    file(READ ${OPENORBIS}/link.x PS4_LINK_SCRIPT)
-    string(REGEX REPLACE "\\*\\(\\.data\\)" "*(.data .data.*)" PS4_LINK_SCRIPT_FIXED "${PS4_LINK_SCRIPT}")
-    if (PS4_LINK_SCRIPT_FIXED STREQUAL PS4_LINK_SCRIPT)
-        message(FATAL_ERROR "Could not patch ${OPENORBIS}/link.x to merge .data.* sections")
-    endif ()
-    file(WRITE ${CMAKE_BINARY_DIR}/link.x "${PS4_LINK_SCRIPT_FIXED}")
-    string(REPLACE "${OPENORBIS}/link.x" "${CMAKE_BINARY_DIR}/link.x" CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-    string(FIND "${CMAKE_EXE_LINKER_FLAGS}" "${CMAKE_BINARY_DIR}/link.x" PS4_LINK_SCRIPT_FLAG)
-    if (PS4_LINK_SCRIPT_FLAG EQUAL -1)
-        message(FATAL_ERROR "The PS4 linker flags don't reference ${OPENORBIS}/link.x")
-    endif ()
-    # Linux clock ids -> FreeBSD ones, see the file (linked with --wrap below)
-    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/platform/ps4/clock_ids.c)
-elseif (PLATFORM_PSV)
-    configure_file("${CMAKE_SOURCE_DIR}/app/platform/vita/template.xml.in" "${CMAKE_BINARY_DIR}/template.xml")
-    # In-app self-update (issue #14): app/src/utils/vita_install.cpp unpacks the
-    # downloaded VPK (miniz) and promotes it in place via ScePromoterUtility.
-    # miniz is built with MINIZ_NO_STDIO/MINIZ_NO_TIME and every file access is
-    # routed through sceIo, so the Vita newlib stdio quirks never come into play.
-    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/library/miniz/miniz.c)
-    list(APPEND APP_PLATFORM_INCLUDE ${CMAKE_SOURCE_DIR}/library/miniz)
-    list(APPEND APP_PLATFORM_OPTION -DMINIZ_NO_STDIO -DMINIZ_NO_TIME)
-    list(APPEND APP_PLATFORM_LIB ScePromoterUtil_stub SceSysmodule_stub)
-elseif (WIN32)
-    configure_file("${CMAKE_SOURCE_DIR}/app/platform/win32/app.rc.in" "${CMAKE_BINARY_DIR}/app.rc")
-    list(APPEND MAIN_SRC ${CMAKE_BINARY_DIR}/app.rc)
-elseif (APPLE)
-    list(APPEND MAIN_SRC ${CMAKE_SOURCE_DIR}/app/platform/osx/app.icns)
-endif ()
+# System service initialization functions required for libnx
+list(APPEND MAIN_SRC ${BOREALIS_LIBRARY}/lib/platforms/switch/switch_wrapper.c)
 
 if (USE_LIBROMFS)
     message(STATUS "USE LIBROMFS")
     add_definitions(-DUSE_LIBROMFS)
     set(LIBROMFS_PROJECT_NAME ${PROJECT_NAME})
     set(LIBROMFS_RESOURCE_LOCATION "${PROJECT_RESOURCES}")
-endif ()
-
-# The deployment target must be known BEFORE add_subdirectory(library):
-# borealis only links CoreWLAN if CMAKE_OSX_DEPLOYMENT_TARGET >= 10.6
-if (PLATFORM_DESKTOP AND APPLE)
-    if (NOT CMAKE_OSX_ARCHITECTURES)
-        set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "" FORCE)
-    endif ()
-    if (NOT CMAKE_OSX_DEPLOYMENT_TARGET)
-        set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "" FORCE)
-        set(CMAKE_XCODE_ATTRIBUTE_MACOSX_DEPLOYMENT_TARGET[arch=arm64] "11.0" CACHE STRING "" FORCE)
-    endif ()
 endif ()
 
 # build borealis and other third party libraries
@@ -166,92 +96,29 @@ add_subdirectory(library)
 # std::runtime_error no longer matched catch (const std::exception&)
 target_compile_options(yogacore PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-frtti>)
 
-if (USE_SYSTEM_CURL)
-    find_package(CURL REQUIRED)
-else ()
-    include(FetchContent)
-    FetchContent_Declare(curl
-        URL https://curl.se/download/curl-8.16.0.tar.xz
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    if (WIN32)
-        set(CURL_USE_SCHANNEL ON)
-        set(USE_WIN32_IDN ON)
-        set(ZLIB_USE_STATIC_LIBS ON)
-    elseif (PLATFORM_ANDROID)
-        set(CURL_USE_MBEDTLS ON)
-    else ()
-        find_package(OpenSSL REQUIRED)
-        set(CURL_USE_OPENSSL ON)
-    endif()
-    set(HTTP_ONLY ON)
-    set(BUILD_CURL_EXE OFF)
-    set(BUILD_TESTING OFF)
-    set(BUILD_EXAMPLES OFF)
-    set(BUILD_LIBCURL_DOCS OFF)
-    set(BUILD_MISC_DOCS OFF)
-    set(ENABLE_CURL_MANUAL OFF)
-    set(USE_NGHTTP2 OFF)
-    set(USE_LIBIDN2 OFF)
-    set(CURL_BROTLI OFF)
-    set(CURL_ZSTD OFF)
-    set(CURL_USE_LIBSSH2 OFF)
-    set(CURL_USE_LIBPSL OFF)
-    set(CURL_DISABLE_PROGRESS_METER ON)
-    FetchContent_MakeAvailable(curl)
+# Cross compilation: the Switch portlibs are found through pkg-config. If a
+# dependency is not found, point PKG_CONFIG_LIBDIR at the matching pkgconfig dir.
+find_package(PkgConfig REQUIRED)
+
+pkg_search_module(MPV REQUIRED mpv)
+list(APPEND APP_PLATFORM_INCLUDE ${MPV_INCLUDE_DIRS})
+list(APPEND APP_PLATFORM_LIB ${MPV_LIBRARIES})
+link_directories(${MPV_LIBRARY_DIRS})
+
+pkg_search_module(LIBWEBP QUIET libwebp)
+if (LIBWEBP_FOUND)
+    message(STATUS "Found libwebp: ${LIBWEBP_INCLUDE_DIRS} ${LIBWEBP_LIBRARIES}")
+    list(APPEND APP_PLATFORM_INCLUDE ${LIBWEBP_INCLUDE_DIRS})
+    list(APPEND APP_PLATFORM_LIB ${LIBWEBP_LIBRARIES})
+    list(APPEND APP_PLATFORM_OPTION -DUSE_WEBP)
+    link_directories(${LIBWEBP_LIBRARY_DIRS})
 endif ()
+
+find_package(CURL REQUIRED)
 list(APPEND APP_PLATFORM_LIB CURL::libcurl)
 
 find_package(Threads REQUIRED)
 list(APPEND APP_PLATFORM_LIB ${CMAKE_THREAD_LIBS_INIT})
-
-if (USE_BOOST_FILESYSTEM)
-    find_package(Boost 1.44 REQUIRED COMPONENTS filesystem)
-    if(Boost_FOUND)
-        list(APPEND APP_PLATFORM_LIB Boost::filesystem)
-        list(APPEND APP_PLATFORM_OPTION -DUSE_BOOST_FILESYSTEM -DBOOST_FILESYSTEM_VERSION=4)
-    endif()
-endif ()
-
-if (PLATFORM_DESKTOP)
-    find_package(MPV REQUIRED)
-    list(APPEND APP_PLATFORM_INCLUDE ${MPV_INCLUDE_DIR})
-    list(APPEND APP_PLATFORM_LIB ${MPV_LIBRARY})
-    if (NOT WIN32)
-        find_library(AVFORMAT_LIB NAMES avformat REQUIRED)
-        list(APPEND APP_PLATFORM_LIB ${AVFORMAT_LIB})
-    endif ()
-
-    find_package(WebP)
-    if (WebP_FOUND)
-        list(APPEND APP_PLATFORM_OPTION -DUSE_WEBP)
-        list(APPEND APP_PLATFORM_INCLUDE ${WebP_INCLUDE_DIRS})
-        list(APPEND APP_PLATFORM_LIB ${WebP_LIBRARY})
-    endif ()
-
-    if (MINGW)
-        set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
-    endif ()
-else ()
-    # Used for Cross Compile such as NintendoSwitch
-    # If dependent files cannot be found, environment variables can be set before executing the cmake command:
-    # PKG_CONFIG_LIBDIR=/some/path/arm64/lib/pkgconfig
-    find_package(PkgConfig REQUIRED)
-
-    pkg_search_module(MPV REQUIRED mpv)
-    list(APPEND APP_PLATFORM_INCLUDE ${MPV_INCLUDE_DIRS})
-    list(APPEND APP_PLATFORM_LIB ${MPV_LIBRARIES})
-    link_directories(${MPV_LIBRARY_DIRS})
-
-    pkg_search_module(LIBWEBP QUIET libwebp)
-    if (LIBWEBP_FOUND)
-        message(STATUS "Found libwebp: ${LIBWEBP_INCLUDE_DIRS} ${LIBWEBP_LIBRARIES}")
-        list(APPEND APP_PLATFORM_INCLUDE ${LIBWEBP_INCLUDE_DIRS})
-        list(APPEND APP_PLATFORM_LIB ${LIBWEBP_LIBRARIES})
-        list(APPEND APP_PLATFORM_OPTION -DUSE_WEBP)
-        link_directories(${LIBWEBP_LIBRARY_DIRS})
-    endif ()
-endif()
 
 if (BUILTIN_NSP)
     find_library(NSP_LIB NAMES nsp REQUIRED)
@@ -274,12 +141,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME} PRIVATE app/include ${APP_PLATFORM_INCLUDE})
 target_compile_options(${PROJECT_NAME} PRIVATE -ffunction-sections -fdata-sections -Wunused-variable ${APP_PLATFORM_OPTION})
 target_link_libraries(${PROJECT_NAME} PRIVATE borealis lunasvg ${APP_PLATFORM_LIB})
-if (PLATFORM_PS4)
-    target_link_options(${PROJECT_NAME} PRIVATE "LINKER:--wrap=clock_gettime")
-elseif (PLATFORM_PSV)
-    # vita-elf-create appends the SCE module info after the first segment, which needs room before the next one.
-    target_link_options(${PROJECT_NAME} PRIVATE "LINKER:--defsym=__sce_headroom=0x10000")
-endif ()
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     APP_VERSION=${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}
     APP_BUILD=${VERSION_BUILD}
@@ -287,126 +148,17 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     BUILD_PACKAGE_NAME=${PROJECT_NAME}
 )
 
-# building release file
-if (PLATFORM_DESKTOP)
-    if (APPLE)
-        message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
-
-        set_target_properties(${PROJECT_NAME} PROPERTIES
-            MACOSX_BUNDLE TRUE
-            MACOSX_BUNDLE_BUNDLE_NAME ${PROJECT_NAME}
-            MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-            MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}"
-            MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}"
-            MACOSX_BUNDLE_ICON_FILE "app.icns"
-            MACOSX_BUNDLE_COPYRIGHT "Copyright 2026 ${PROJECT_AUTHOR}"
-            RESOURCE "${CMAKE_SOURCE_DIR}/app/platform/osx/app.icns"
-        )
-
-        if (CMAKE_PREFIX_PATH)
-            set(BUNDLE_ARG -s ${CMAKE_PREFIX_PATH}/lib)
-        endif ()
-
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} Resources/resources
-            COMMAND otool -L MacOS/${PROJECT_NAME}
-            COMMAND dylibbundler -cd -ns -b -of ${BUNDLE_ARG} -x MacOS/${PROJECT_NAME} -d Frameworks/ -p "@executable_path/../Frameworks/"
-            COMMAND codesign --sign - --force Frameworks/*
-            WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/${PROJECT_NAME}.app/Contents"
-        )
-    elseif (CMAKE_INSTALL)
-        set(icon_dirs 32x32 48x48 64x64 128x128 256x256)
-        linux_install(
-            "${PROJECT_RESOURCES}" "${BRLS_RESOURCES_DIR}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/gmca.svg"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/icons" "${icon_dirs}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/${PACKAGE_NAME}.appdata.xml"
-            "${CMAKE_CURRENT_SOURCE_DIR}/scripts/${PACKAGE_NAME}.desktop"
-        )
-    elseif (NOT USE_LIBROMFS)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${PROJECT_BINARY_DIR}/resources
-        )
-    endif()
-
-elseif (PLATFORM_SWITCH)
-    if (BUILTIN_NSP)
-        add_dependencies(${PROJECT_NAME} forwarder.nsp)
-    endif ()
-    if (USE_DEKO3D)
-        gen_dksh("${PROJECT_RESOURCES}/shaders")
-    endif ()
-    add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
-        COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
-        COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/resources/font/keymap*.ttf ${CMAKE_BINARY_DIR}/resources/font/*_fallback.ttf ${CMAKE_BINARY_DIR}/resources/font/switch_font.ttf
-        COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
-    )
-elseif (PLATFORM_PSV)
-    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d ATTRIBUTE2=12") # max heap size mode
-    # LiveArea assets must be 8-bit PNGs or the Vita rejects the VPK at 99% of
-    # the install with error 0x8010113D. icon0/bg additionally forbid an alpha
-    # channel; startup may keep one. We ship them 8-bit indexed (palette) — the
-    # format every reference uses (borealis defaults, hammerill/livearea-specs).
-    # Regenerate with:  magick in.png -alpha off -colors 256 PNG8:out.png
-    # This configure-time guard reads each PNG's IHDR (bit depth @ byte 24,
-    # colour type @ byte 25) so a 16-bit re-export fails the build here instead
-    # of shipping a VPK that only fails once it reaches a real console.
-    function(_psv_assert_livearea_png path alpha_allowed)
-        file(READ "${path}" _ihdr HEX LIMIT 26)
-        string(SUBSTRING "${_ihdr}" 48 2 _depth)  # IHDR bit-depth byte
-        string(SUBSTRING "${_ihdr}" 50 2 _ctype)  # IHDR colour-type byte
-        if (NOT _depth STREQUAL "08")
-            math(EXPR _bits "0x${_depth}")
-            message(FATAL_ERROR "LiveArea PNG ${path} is ${_bits}-bit per channel; the PS Vita only accepts 8-bit (install error 0x8010113D). Re-encode: magick in.png -alpha off -colors 256 PNG8:out.png")
-        endif ()
-        if (NOT alpha_allowed AND _ctype STREQUAL "06")
-            message(FATAL_ERROR "LiveArea PNG ${path} carries an alpha channel; icon0/bg forbid transparency (install error 0x8010113D). Flatten: magick in.png -alpha off -colors 256 PNG8:out.png")
-        endif ()
-    endfunction()
-    _psv_assert_livearea_png(${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/icon0.png   FALSE)
-    _psv_assert_livearea_png(${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/pic0.png    FALSE)
-    _psv_assert_livearea_png(${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/bg.png      FALSE)
-    _psv_assert_livearea_png(${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/startup.png TRUE)
-    set(PSV_ASSETS_FILES
-        FILE ${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/icon0.png sce_sys/icon0.png
-        FILE ${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/pic0.png sce_sys/pic0.png
-        FILE ${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/bg.png sce_sys/livearea/contents/bg.png
-        FILE ${CMAKE_SOURCE_DIR}/app/platform/vita/sce_sys/startup.png sce_sys/livearea/contents/startup.png
-        FILE ${CMAKE_BINARY_DIR}/template.xml sce_sys/livearea/contents/template.xml
-    )
-    if (NOT USE_LIBROMFS)
-        list(APPEND PSV_ASSETS_FILES ${CMAKE_SOURCE_DIR}/resources resources)
-    endif ()
-    if (USE_VITA_SHARK)
-        list(APPEND PSV_ASSETS_FILES "${CMAKE_BINARY_DIR}/vendor/SceShaccCg" module)
-    endif ()
-    vita_create_self(${PROJECT_NAME}.self ${PROJECT_NAME} UNSAFE NOASLR)
-    vita_create_vpk(${PROJECT_NAME}.vpk ${VITA_TITLEID} ${PROJECT_NAME}.self
-        VERSION ${VITA_VERSION}
-        NAME ${PROJECT_NAME}
-        FILE ${PSV_ASSETS_FILES}
-    )
-elseif (PLATFORM_PS4)
-    # param.sfo ATTRIBUTE: 0x800000 is PS4 Pro mode. 0x20 makes system dialogs such as the
-    # keyboard take their enter button from the console's setting, as borealis does for the app's
-    # own keys; without it the keyboard confirmed with Circle on a console set to Cross. Tested on
-    # a GoldHEN PS4 set to Cross. Override with -DPS4_SFO_ATTRIBUTE=<value>.
-    if (NOT DEFINED PS4_SFO_ATTRIBUTE)
-        set(PS4_SFO_ATTRIBUTE 8388640)
-    endif ()
-    add_self(${PROJECT_NAME})
-    add_pkg(${PROJECT_NAME}
-            ${CMAKE_BINARY_DIR}/ps4
-            ${PSN_TITLE_ID}
-            ${PROJECT_NAME}
-            ${VITA_VERSION}
-            ${PS4_SFO_ATTRIBUTE}
-    )
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${BOREALIS_DIR}/ps4/sce_module ${CMAKE_BINARY_DIR}/ps4/sce_module
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_SOURCE_DIR}/app/platform/ps4/sce_sys ${CMAKE_BINARY_DIR}/ps4/sce_sys
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${BOREALIS_DIR}/ps4/sce_sys/about ${CMAKE_BINARY_DIR}/ps4/sce_sys/about
-        COMMAND "${CMAKE_COMMAND}" -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/ps4/resources
-    )
+# building release file: the NRO, with the resources packed as romfs and the NACP
+# (title, author, version) generated from the values above.
+if (BUILTIN_NSP)
+    add_dependencies(${PROJECT_NAME} forwarder.nsp)
 endif ()
+if (USE_DEKO3D)
+    gen_dksh("${PROJECT_RESOURCES}/shaders")
+endif ()
+add_custom_target(${PROJECT_NAME}.nro DEPENDS ${PROJECT_NAME}
+    COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" ${PROJECT_NAME}.nacp
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_RESOURCES} ${CMAKE_BINARY_DIR}/resources
+    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/resources/font/keymap*.ttf ${CMAKE_BINARY_DIR}/resources/font/*_fallback.ttf ${CMAKE_BINARY_DIR}/resources/font/switch_font.ttf
+    COMMAND ${NX_ELF2NRO_EXE} ${PROJECT_NAME}.elf ${PROJECT_NAME}.nro --icon=${PROJECT_ICON} --nacp=${PROJECT_NAME}.nacp --romfsdir=${CMAKE_BINARY_DIR}/resources
+)
