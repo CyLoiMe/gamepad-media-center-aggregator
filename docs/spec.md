@@ -1,5 +1,12 @@
 # SPEC — Navigation hors-ligne des téléchargements (issue #19)
 
+> **Upstream document** — written for GMCA (then pleNx), in French, before the
+> SMCA fork. The intent still holds, but it describes a multi-platform project:
+> files it references (`PLEX_MIGRATION.md`, `UI_REDESIGN.md`, `GMCA_MIGRATION.md`)
+> were removed with the other platforms, and only the Switch build exists now.
+> Kept as design reference; `docs/architecture.md` is the current map.
+
+
 > Fork pleNx (client Plex natif, gamepad-first, C++/Borealis — Switch, Vita, PS4,
 > desktop). Cette spec couvre la fonctionnalité « Offline Download Browsing »
 > (GitHub thcolin/pleNx#19) et sert de contrat avant implémentation.

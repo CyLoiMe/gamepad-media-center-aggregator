@@ -16,7 +16,7 @@ by thcolin (Apache-2.0), rebuilt as a Switch-only project. See `NOTICE`.
   when needed, resume positions, audio/subtitle track selection, speed, aspect.
 - **Remote `.strm` libraries**: items stored on a cloud drive and fronted by a
   302 proxy (TgtoDrive and similar) play through the URL the server hands out in
-  `PlaybackInfo` — see `EMBY_REMOTE_PLAYBACK.md`.
+  `PlaybackInfo` — see `docs/emby-remote-playback.md`.
 - **Offline**: download to the SD card and play local files, with an offline
   catalog for Jellyfin/Emby sources as well.
 - **Files**: browse the SD card, a WebDAV/HTTP share or a USB drive (UMS).
@@ -75,6 +75,12 @@ covers the rest. Two files next to it are read at startup:
 | `scripts/switch` | PKGBUILDs of the Switch portlibs this build pins |
 | `scripts/patches` | borealis fixes applied at build time |
 | `tests/` | standalone logic tests (`./tests/run.sh`, no CMake wiring) |
+
+## Docs
+
+`AGENTS.md` is the entry point for anyone working on the code (humans and AI
+assistants alike): it indexes `docs/` — architecture, build, playback, conventions,
+backlog, releasing.
 
 ## License
 

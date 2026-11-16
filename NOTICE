@@ -5,7 +5,7 @@ Based on GMCA by thcolin — https://github.com/thcolin/gamepad-media-center-agg
 (formerly pleNx) — licensed under the Apache License, Version 2.0.
 Changes made for SMCA: renamed and rebranded, Nintendo Switch build only, the other
 platforms and their packaging removed, and the playback / User-Agent changes
-described in EMBY_REMOTE_PLAYBACK.md.
+described in docs/emby-remote-playback.md.
 
 This product includes software developed as part of the Switchfin project
 (https://github.com/dragonflylee/switchfin), licensed under the Apache License,

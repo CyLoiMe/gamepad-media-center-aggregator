@@ -1,5 +1,12 @@
 # pleNx — Architecture multi-backend (Plex · Jellyfin/Emby · Stremio)
 
+> **Upstream document** — written for GMCA (then pleNx), in French, before the
+> SMCA fork. The intent still holds, but it describes a multi-platform project:
+> files it references (`PLEX_MIGRATION.md`, `UI_REDESIGN.md`, `GMCA_MIGRATION.md`)
+> were removed with the other platforms, and only the Switch build exists now.
+> Kept as design reference; `docs/architecture.md` is the current map.
+
+
 > **But** : permettre de connecter pleNx à un serveur **Plex**, **Emby/Jellyfin** ou **Stremio**, en
 > conservant une **interface/expérience identique** quel que soit le type de serveur. Seuls les
 > **actions, menus et onglets** varient, pilotés par les **capacités** du backend connecté.

@@ -8,4 +8,4 @@
 | `forwarder/` | the NSP forwarder generator (`-DBUILTIN_NSP=ON`), producing the HOME-menu tile |
 
 Rebuilding the portlibs: run the `switch-portlibs` workflow (manual dispatch) and
-publish the resulting packages as the `ci-deps` prerelease — see `RELEASING.md`.
+publish the resulting packages as the `ci-deps` prerelease — see `docs/releasing.md`.
