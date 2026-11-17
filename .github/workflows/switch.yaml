@@ -4,7 +4,7 @@ name: switch
 # multi-platform matrix the project inherited from GMCA.
 on:
   push:
-    branches: [ main, smca ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
