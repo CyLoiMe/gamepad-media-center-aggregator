@@ -90,7 +90,14 @@ JellyfinAdd::JellyfinAdd(const std::string& type, const AppUser& user, const App
 
 JellyfinAdd::~JellyfinAdd() { brls::Logger::debug("JellyfinAdd: delete"); }
 
-brls::View* JellyfinAdd::getDefaultFocus() { return this->editing ? this->btnConnect : this->cellUrl; }
+brls::View* JellyfinAdd::getDefaultFocus() {
+    // BoundView<Button> and BoundView<InputCell> are unrelated types: the
+    // conditional operator only tries to convert each member to the OTHER
+    // member's type, so it never finds brls::View* and the build fails. Cast
+    // both to the common base (each cast is the member's own operator T*()
+    // followed by a derived-to-base pointer conversion).
+    return this->editing ? static_cast<brls::View*>(this->btnConnect) : static_cast<brls::View*>(this->cellUrl);
+}
 
 void JellyfinAdd::submit() {
     std::string url = trim(this->cellUrl->getValue());
