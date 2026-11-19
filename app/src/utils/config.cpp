@@ -811,7 +811,10 @@ void AppConfig::upsertUser(const AppUser& u) {
         it->server_id = u.server_id;
         it->thumb = u.thumb;
     } else {
+        // push_back can reallocate and invalidate the active-profile iterator
         this->users.push_back(u);
+        this->user = std::find_if(this->users.begin(), this->users.end(),
+            [this](const AppUser& o) { return o.id == this->user_id; });
     }
     this->save();
 }
@@ -862,14 +865,30 @@ void AppConfig::removePin(const std::string& path) {
 }
 
 bool AppConfig::removeUser(const std::string& id) {
-    for (auto it = this->users.begin(); it != this->users.end(); ++it) {
-        if (it->id == id) {
-            this->users.erase(it);
-            this->save();
-            return true;
-        }
+    auto it = std::find_if(this->users.begin(), this->users.end(),
+        [&id](const AppUser& u) { return u.id == id; });
+    if (it == this->users.end()) return false;
+
+    // vector::erase invalidates every iterator from the erased slot onwards, and
+    // `user` is dereferenced by getUser() — re-seat it or the next MainActivity
+    // reads freed storage.
+    const bool wasActive = (id == this->user_id);
+    this->users.erase(it);
+    if (wasActive) {
+        // the connection being browsed is gone: drop the active state instead of
+        // leaving server_url/token pointing at it, and let the UI fall back to
+        // the logged-out root (ServerList).
+        this->user_id.clear();
+        this->server_url.clear();
+        this->server_token.clear();
+        this->resetBackend();
+        this->user = this->users.end();
+    } else {
+        this->user = std::find_if(this->users.begin(), this->users.end(),
+            [this](const AppUser& u) { return u.id == this->user_id; });
     }
-    return false;
+    this->save();
+    return true;
 }
 
 const std::vector<AppUser> AppConfig::getUsers(const std::string& id) const {

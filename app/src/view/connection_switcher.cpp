@@ -4,6 +4,7 @@
 
 #include "view/connection_switcher.hpp"
 #include "activity/main_activity.hpp"
+#include "activity/server_list.hpp"
 #include "activity/loading_activity.hpp"
 #include "tab/server_type_choose.hpp"
 #include "tab/media_collection.hpp"
@@ -208,7 +209,21 @@ public:
         this->addGestureRecognizer(new brls::TapGestureRecognizer(this));
         this->registerAction("hints/delete"_i18n, brls::BUTTON_X, [u, parent](brls::View*) {
             Dialog::cancelable("main/setting/server/delete"_i18n, [u, parent]() {
+                // removeUser() drops the active connection when that is the one
+                // deleted, leaving the shell nothing to browse: go back to the
+                // logged-out root rather than rebuild over a removed server.
+                const bool wasActive = (u.id == AppConfig::instance().getUserId());
                 AppConfig::instance().removeUser(u.id);
+                if (wasActive) {
+                    // clear() destroys the shell this tile lives in: run it after
+                    // the click handler and the closing dialog have unwound.
+                    brls::sync([]() {
+                        NetworkState::setOffline(false);
+                        brls::Application::clear();
+                        brls::Application::pushActivity(new ServerList(), brls::TransitionAnimation::NONE);
+                    });
+                    return;
+                }
                 parent->rebuild();
                 // the deleted tile is gone: refocus a remaining tile / the "+".
                 brls::Application::giveFocus(parent->getDefaultFocus());
