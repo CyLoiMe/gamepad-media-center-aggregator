@@ -43,6 +43,25 @@ The settings **cell writes**: `setItem()` (persists `config.json`) *and* updates
 runtime value, so the change is live without a restart (the player is restarted when
 an mpv-level option changes, and only if it already exists — `MPVCore::created()`).
 
+## Persistence
+
+`config.json` is a `nlohmann::json` dump of `AppConfig`, its `AppServer`/`AppUser`
+lists and the settings map. Structs use `NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT`
+so a missing key keeps the member default.
+
+**One exception, and it is not optional:** a struct member of type
+`std::optional<T>` cannot go through those macros with the bundled nlohmann
+(3.12, vendored by borealis). Its `std::optional` converters are `#ifndef
+JSON_USE_IMPLICIT_CONVERSIONS` (`json.hpp:4835`, `:5917`) while that macro
+defaults to 1 (`:2946`), so `json::value(key, std::optional<T>)` has no viable
+overload and the build fails with *"template argument deduction/substitution
+failed"* pointing inside `json.hpp`. `AppUser` is the current case: it has a
+hand-written `to_json`/`from_json` pair instead, and adding a member to it means
+editing that pair too.
+
+Convention for tri-state members: **the key is absent = `nullopt`** ("never
+configured"), the key is present (even as `[]`) = engaged and authoritative.
+
 ## i18n
 
 - Every user-visible string lives in `resources/i18n/<locale>/main.json` (or

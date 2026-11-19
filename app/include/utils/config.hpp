@@ -67,8 +67,41 @@ struct AppUser {
     /// server see different libraries.
     std::optional<std::vector<std::string>> wan_visible_libraries;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-    AppUser, id, name, access_token, server_id, thumb, wan_visible_libraries);
+
+/// Hand-written instead of NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT: the
+/// bundled nlohmann (3.12, from borealis) only defines its std::optional
+/// converters when `JSON_USE_IMPLICIT_CONVERSIONS` is 0 (json.hpp:4835 / 5917
+/// are `#ifndef`, and that macro defaults to 1 at json.hpp:2946). With the
+/// default, `json::value(key, std::optional<T>)` has no viable overload — the
+/// key-based one is SFINAE'd out, the json_pointer one cannot deduce — so the
+/// macro cannot be used on a struct holding an optional. The pair below keeps
+/// the macro's semantics (a missing key leaves the member's default in place)
+/// and serialises the tri-state as "key absent = nullopt, key present = engaged".
+///
+/// Adding a member to AppUser therefore means adding it here too.
+inline void to_json(nlohmann::json& nlohmann_json_j, const AppUser& nlohmann_json_t) {
+    nlohmann_json_j = nlohmann::json{{"id", nlohmann_json_t.id},
+        {"name", nlohmann_json_t.name},
+        {"access_token", nlohmann_json_t.access_token},
+        {"server_id", nlohmann_json_t.server_id},
+        {"thumb", nlohmann_json_t.thumb}};
+    // Written only when engaged: an absent key reads back as nullopt, which is
+    // exactly "never configured" (an engaged EMPTY list must survive as []).
+    if (nlohmann_json_t.wan_visible_libraries)
+        nlohmann_json_j["wan_visible_libraries"] = *nlohmann_json_t.wan_visible_libraries;
+}
+
+inline void from_json(const nlohmann::json& nlohmann_json_j, AppUser& nlohmann_json_t) {
+    nlohmann_json_t.id = nlohmann_json_j.value("id", std::string{});
+    nlohmann_json_t.name = nlohmann_json_j.value("name", std::string{});
+    nlohmann_json_t.access_token = nlohmann_json_j.value("access_token", std::string{});
+    nlohmann_json_t.server_id = nlohmann_json_j.value("server_id", std::string{});
+    nlohmann_json_t.thumb = nlohmann_json_j.value("thumb", std::string{});
+    nlohmann_json_t.wan_visible_libraries.reset();
+    if (const auto it = nlohmann_json_j.find("wan_visible_libraries");
+        it != nlohmann_json_j.end() && !it->is_null())
+        nlohmann_json_t.wan_visible_libraries = it->get<std::vector<std::string>>();
+}
 
 /// A known media server. `access_token` is the server access token (Plex: from
 /// /api/v2/resources; Jellyfin/Emby: the AccessToken of the account that
