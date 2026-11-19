@@ -347,6 +347,13 @@ public:
     /// Active media backend (built lazily from the active server's type).
     /// The UI talks to this; it never formats a provider URL itself.
     media::Backend& backend();
+    /// `AppServer::type` of the active connection ("plex" | "jellyfin" | "emby" |
+    /// "stremio"), "" when nothing is connected (offline shell). Resolved through
+    /// the active profile's `server_id`, because matching on `server_url` is
+    /// ambiguous when two servers share one URL. `backend()` builds from it, and
+    /// views gate the backends that enforce the WAN allow-list on it
+    /// (`view/library_manager.cpp`).
+    std::string activeServerType() const;
     const std::vector<AppRemote>& getRemotes() const { return this->remotes; }
     void addRemote(const AppRemote& r);
     void updateRemote(size_t index, const AppRemote& r);
@@ -383,12 +390,6 @@ private:
 
     /// (Re)builds activeBackend from the active server's type on next backend().
     void resetBackend();
-
-    /// AppServer::type of the active connection ("plex" | "jellyfin" | "emby" |
-    /// "stremio"). Resolved through the active profile's server_id: matching on
-    /// server_url is ambiguous when two servers share one URL, and empty in the
-    /// offline shell.
-    std::string activeServerType() const;
 
     /// Writes one palette variant onto the matching borealis Theme singleton.
     void applyThemeVariant(brls::ThemeVariant tv, const plenx::ThemePalette& p);
