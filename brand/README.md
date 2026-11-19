@@ -28,3 +28,12 @@ The script writes it with `progressive=False` and strips metadata for that reaso
 
 `icon-rounded.png` is drawn on the theme background (`iconInterpolation`, no
 `cornerRadius`), so its corners are real transparency, not a baked-in colour.
+
+## Two icons, two destinations
+
+`icon.jpg` feeds **both** the hbmenu entry (`elf2nro --icon`) and the HOME-menu
+tile. The tile is a separate installed title — the forwarder NSP — whose icon
+`scripts/forwarder/CMakeLists.txt` copies into `control/icon_AmericanEnglish.dat`
+at build time. Replacing `SMCA.nro` therefore does not touch an already installed
+tile; it must be reinstalled from a build that regenerated `forwarder.nsp`. See
+`docs/build.md` §Two different icons and `scripts/inspect-nro.py`.

@@ -78,6 +78,10 @@ see `NOTICE` for the attribution that must stay).
    token in `AppUser::access_token` is the one that must be sent. Always read
    `AppConfig::getToken()`, never `server_token`/`AppServer::access_token`
    directly — `utils/connection_token.hpp` holds the rule.
+8. **The HOME tile icon is not the NRO icon.** The tile is the forwarder NSP, with
+   `resources/icon/icon.jpg` baked into `control/icon_AmericanEnglish.dat` at build
+   time; replacing `SMCA.nro` does not touch it. `docs/build.md` §Two different
+   icons, `scripts/inspect-nro.py`.
 
 ## Current state
 
