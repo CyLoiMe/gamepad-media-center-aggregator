@@ -403,7 +403,8 @@
     "takeover_text": "Hold R while launching any installed game to open the homebrew menu as a full application, then launch SMCA from there.",
     "prompt": "Install the SMCA tile on the HOME menu?\nThe tile launches the app as a full application (required for video playback).",
     "hint_confirm": "Installing NSP forwarder may result in a ban\nPlease confirm again",
-    "remove_old": "SMCA is on your HOME menu. If an old pleNx tile is still there, remove it from System Settings > Data Management > Delete Software."
+    "remove_old": "SMCA is on your HOME menu. If an old pleNx tile is still there, remove it from System Settings > Data Management > Delete Software.",
+    "install_failed": "Installation failed: the HOME tile could not be written. The SD card may be full, or an older SMCA tile still exists — check System Settings > Data Management, then retry."
   },
   "network": {
     "status": "Network status",

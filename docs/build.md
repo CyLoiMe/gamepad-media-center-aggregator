@@ -138,6 +138,19 @@ rebuilt at boot), then reinstall the tile if it is still stale.
    Changing `VERSION_ALTER` (or the title ID) is the experiment that separates a
    cache problem from a build problem.
 
+### Installing the tile used to fail silently
+
+`HintActivity` called `mini::InstallSD()` and dropped its return value, then read
+`mini::GetTitleID()` — which returns the **last element of a vector filled during
+the install**, i.e. an empty vector when the install threw. A failed install
+therefore looked like a success: "done" dialog, then a launch of the tile that was
+already installed (with the old icon), and nothing in the UI said so.
+
+The button now checks the result, logs the failure and stops; `install_failed`
+(`main/hints/install_failed`, 14 locales) tells the user the tile was NOT written.
+Seeing that dialog means the artwork question is moot — fix the install first
+(SD space, or delete the existing SMCA title in System Settings > Data Management).
+
 ## Verifying on hardware
 
 ```sh

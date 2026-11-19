@@ -391,7 +391,8 @@
     "takeover_text": "Halte R gedrückt, während du ein installiertes Spiel startest, um das Homebrew-Menü als vollwertige Anwendung zu öffnen, und starte SMCA von dort.",
     "prompt": "Die SMCA-Kachel im HOME-Menü installieren?\nDie Kachel startet die App als vollwertige Anwendung (für die Videowiedergabe erforderlich).",
     "hint_confirm": "Die Installation des NSP-Forwarders kann zu einer Sperre führen\nBitte erneut bestätigen",
-    "remove_old": "SMCA ist in deinem HOME-Menü. Falls noch eine alte pleNx-Kachel vorhanden ist, entferne sie über Systemeinstellungen > Datenverwaltung > Software löschen."
+    "remove_old": "SMCA ist in deinem HOME-Menü. Falls noch eine alte pleNx-Kachel vorhanden ist, entferne sie über Systemeinstellungen > Datenverwaltung > Software löschen.",
+    "install_failed": "Installation fehlgeschlagen: Das HOME-Symbol konnte nicht geschrieben werden. Die SD-Karte ist vielleicht voll oder ein älteres SMCA-Symbol ist noch vorhanden — prüfe Systemeinstellungen > Datenverwaltung und versuche es erneut."
   },
   "network": {
     "status": "Netzwerkstatus",

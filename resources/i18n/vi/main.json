@@ -391,7 +391,8 @@
     "takeover_text": "Giữ R khi khởi chạy bất kỳ trò chơi đã cài nào để mở menu homebrew như một ứng dụng đầy đủ, sau đó khởi chạy SMCA từ đó.",
     "prompt": "Cài biểu tượng SMCA trên menu HOME?\nBiểu tượng khởi chạy ứng dụng như một ứng dụng đầy đủ (cần thiết để phát video).",
     "hint_confirm": "Cài đặt NSP forwarder có thể bị ban\nVui lòng xác nhận lại",
-    "remove_old": "SMCA đã ở trên menu HOME. Nếu ô pleNx cũ vẫn còn, hãy xóa nó trong Cài đặt hệ thống > Quản lý dữ liệu > Xóa phần mềm."
+    "remove_old": "SMCA đã ở trên menu HOME. Nếu ô pleNx cũ vẫn còn, hãy xóa nó trong Cài đặt hệ thống > Quản lý dữ liệu > Xóa phần mềm.",
+    "install_failed": "Cài đặt thất bại: không ghi được biểu tượng trên menu HOME. Có thể thẻ SD đã hết dung lượng hoặc còn biểu tượng SMCA cũ — hãy kiểm tra Cài đặt hệ thống > Quản lý dữ liệu rồi thử lại."
   },
   "network": {
     "status": "Trạng thái mạng",

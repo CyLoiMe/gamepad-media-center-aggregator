@@ -19,6 +19,10 @@
 
 ### Fixed
 
+- Installing the HOME tile (Settings → Home menu icon) now reports a failure
+  instead of showing "done": the install result was ignored and the title ID read
+  afterwards was undefined, so a failed install launched the previously installed
+  tile and left its old icon on screen.
 - Streams from a cloud-drive front-end (TgtoDrive and similar) behind a 302 play
   through the server's `PlaybackInfo` URL instead of an assembled one.
 - The app and mpv send the same User-Agent; the CDN signature binds the two.
