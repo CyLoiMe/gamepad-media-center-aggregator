@@ -111,3 +111,32 @@ is the part that actually protects the quota.
       urgency — do it only if maintaining them is a real cost.
 - [ ] Verify the offline catalog for Jellyfin/Emby against a real server (inherited
       as "best-effort / unverified" from upstream).
+
+## Reported on hardware, 2026-11-19 (to investigate)
+
+Two symptoms reported after the first build that contains the dual-address work.
+Neither is confirmed as a defect yet — the first checks are listed with each one.
+
+- [ ] **Two Emby accounts end up sharing one LAN address.** Both entries originally
+      carried only the remote address; after the LAN address was filled in on one,
+      both show the same value.
+      *Expected by design, needs confirming:* the addresses live on `AppServer`,
+      which is keyed by the **server Id** — two accounts on the SAME server share
+      one entry, and `updateConnection()` (`app/src/utils/config.cpp`, the "server
+      entry" block) writes `urls`/`local_url` there. What is per PROFILE is the WAN
+      allow-list (`AppUser::wan_visible_libraries`). Verify with
+      `sdmc:/switch/SMCA/config.json`: if both users have the same `server_id`, one
+      `AppServer` entry is correct and only the UI wording is misleading; if the
+      ids differ, `updateConnection` matched the wrong entry and it is a real bug.
+      Either way the form should say that the addresses belong to the server, not
+      to the account.
+- [ ] **No WAN column in Settings → Libraries.** The visibility matrix is an **X**
+      column that only exists when `LibraryManager::wanEnabled` holds:
+      `activeServerType()` is `jellyfin`/`emby` **and** `getUserId()` is non-empty
+      (`app/src/view/library_manager.cpp:231`). Its row list also comes from
+      `MainTabFrame::getReorderableEntries()`, and the settings cell finds that
+      frame by walking the view parents — if Settings is ever presented outside the
+      tab frame, the click silently does nothing (`tab/setting_tab.cpp:510`).
+      Check, in order: the version sha on the settings screen (a stale NRO has none
+      of this), the backend of the ACTIVE connection, `getUserId()` being non-empty,
+      and whether `rowsBox` is empty because `entries` was empty.

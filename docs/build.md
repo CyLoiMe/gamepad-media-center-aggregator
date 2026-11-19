@@ -40,7 +40,27 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON \
 make -C build SMCA.nro -j$(nproc)
 ```
 
-Output: `build/SMCA.nro`, install as `sdmc:/switch/SMCA.nro`.
+Output: `build/SMCA.nro`.
+
+## Installing: two paths, and the stale-binary trap
+
+The NRO can live in **two** places, and the one you launch is the one that runs:
+
+| Entry point | File |
+|---|---|
+| hbmenu | `sdmc:/switch/SMCA.nro` |
+| HOME menu tile (forwarder NSP) | `sdmc:/switch/SMCA/SMCA.nro` |
+| in-app updater | whatever `argv[0]` was, i.e. `AppVersion::nro_path` |
+
+Copying the new build to only one of them means the other entry point keeps
+running the **old binary** — with the old feature set, and no error anywhere. This
+already cost a debugging session ("the new features are gone"). Copy it to both,
+or delete the copy you no longer use.
+
+To tell which binary is running, look at the settings screen: it prints
+`v<version>-<commit> (<platform>)` (`tab/setting_tab.cpp`), and the commit is the
+short sha CMake took from git at configure time. Compare it with
+`git rev-parse --short HEAD`.
 
 ## Pinned portlibs
 

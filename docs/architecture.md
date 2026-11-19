@@ -18,6 +18,14 @@ utils/        config, downloads, offline catalog, images, misc helpers
 (`resources/xml`), translations, fonts, SVG icons and the romfs payload that gets
 packed into the NRO.
 
+The rules worth testing live in header-only modules with no borealis/mpv dependency,
+so `tests/run.sh` compiles them standalone: `utils/dual_url.hpp` (address candidates
+for a policy), `utils/wan_filter.hpp` (is a library visible here), `utils/wan_guard.hpp`
+(may this item be played), `utils/connection_edit.hpp` (what an edit keeps),
+`utils/connection_token.hpp` (which token a request carries), `utils/mpv_conf.hpp`
+(the `user-agent` scan) and `api/jellyfin/playback_info.hpp` (which `DirectStreamUrl`
+to trust). A new rule of that kind belongs there, not in a view.
+
 ## The two singletons
 
 | Singleton | Owns | Created |
@@ -114,6 +122,14 @@ A LAN candidate fails fast (2 s) while a remote one keeps the 5 s budget, so a d
 home address does not hold up the fallback. `NetworkBadge`
 (`view/network_badge.cpp`, top right) shows LAN/WAN and opens its dialog on **ZR**
 (R is already next-tab); it can re-probe or force the other address.
+
+**Scope matters: addresses belong to the SERVER, visibility to the PROFILE.**
+`AppServer` is keyed by the server Id, so two Jellyfin/Emby accounts on the same
+server share one entry — filling the LAN address while editing either account
+writes that one field, and both accounts then report the same address. That is the
+intended shape (an address is a property of the machine, not of the login). What is
+per-account is `AppUser::wan_visible_libraries`, because two accounts on one server
+see different libraries. Any UI that shows or edits the address should say so.
 
 `AppUser::wan_visible_libraries` is the per-profile WAN allow-list this mode exists
 to enforce. `AppConfig::allowedLibraries()` snapshots it on the UI thread (nullopt =

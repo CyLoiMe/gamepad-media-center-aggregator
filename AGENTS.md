@@ -88,9 +88,18 @@ see `NOTICE` for the attribution that must stay).
    operator only tries to convert each operand to the OTHER operand's type. Cast to
    the base (`static_cast<brls::View*>(...)`) or call `.getView()`. Same trap in any
    `auto x = cond ? boundA : boundB;`.
+10. **Two NRO paths, and only the launched one runs.** hbmenu starts
+    `sdmc:/switch/SMCA.nro`, the HOME tile (forwarder NSP) starts
+    `sdmc:/switch/SMCA/SMCA.nro`, and the in-app updater replaces `argv[0]`. Copying
+    a build to one of them leaves the other entry point on the old binary — the
+    "my new features are gone" report. Verify with the sha the settings screen
+    prints (`docs/build.md` §Installing).
 
 ## Current state
 
-Version 0.1.0, first SMCA release. Playback verified on hardware (Emby + a
-cloud-drive 302 front-end), build verified by CI. `docs/backlog.md` lists what is
-knowingly missing — read it before starting anything ambitious.
+Version 0.1.0 plus an unreleased batch: dual-address connections with the
+`wan_policy` probe, the per-profile WAN library allow-list with its playback guard,
+in-place connection editing, and the NetworkBadge. `CHANGELOG.md` keeps the list.
+CI (`switch.yaml`) builds `main` only; the artifact is the `.nro`. Two symptoms
+reported on hardware are recorded, with their first checks, in `docs/backlog.md`
+§Reported on hardware — start there before touching the address allow-list code.
