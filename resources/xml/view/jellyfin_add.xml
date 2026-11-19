@@ -37,6 +37,11 @@
         <brls:InputCell
             id="jellyfin/add/url" />
 
+        <!-- Optional home-network address: probed first, so the console stays off
+             the tunnel at home. Leaving it empty keeps the single-address setup. -->
+        <brls:InputCell
+            id="jellyfin/add/local_url" />
+
         <brls:InputCell
             id="jellyfin/add/user" />
 

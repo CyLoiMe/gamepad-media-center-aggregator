@@ -101,6 +101,10 @@
                     id="setting/network/threads" />
                 <brls:SelectorCell
                     id="setting/network/timeout" />
+                <!-- LAN vs WAN fallback policy for connections that declare both
+                     addresses (utils/dual_url.hpp). -->
+                <brls:SelectorCell
+                    id="setting/network/wan_policy" />
                 <brls:BooleanCell
                     id="setting/network/proxy_status" />
                 <brls:InputCell

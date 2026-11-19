@@ -57,6 +57,33 @@ switch rebuilds `MainActivity` and everything inside it, but nothing outside.
 - [ ] `AudioPlayer`'s queue is not cleared on a switch — only `player_view` and
       `remote_view` call `release()`.
 
+## WAN bandwidth protection
+
+A connection may carry a home address (`AppServer::local_url`) and a remote one
+behind a metered tunnel. The dual-address probe, the LAN/WAN badge and the ZR
+status dialog exist (`utils/dual_url.hpp`, `view/network_badge.cpp`); what remains
+is the part that actually protects the quota.
+
+- [ ] **Enforce `AppUser::wan_visible_libraries`.** The field is persisted but
+      nothing reads it yet. `nullopt` means "never configured" (everything
+      visible); an engaged list must be authoritative. Filter at REQUEST time —
+      `listSections`, and the per-library `Latest`/`Resume`/`NextUp` loops in
+      `getHomeHubs`/`getContinueWatching` — because dropping items after parsing
+      breaks `TotalRecordCount` and the page sizes.
+- [ ] **Playback guard.** Before `resolvePlayback` hands a URL to mpv, refuse it
+      when the mode is WAN and the item's library is hidden, or when the resolved
+      URL still points at the server host (i.e. the bytes go through the tunnel).
+      `api/jellyfin/playback_info.hpp` already distinguishes a server-internal host
+      from an external CDN link.
+- [ ] **Library visibility matrix + editing a connection.** One screen for both:
+      the matrix writes `wan_visible_libraries`, and editing re-enters the sign-in
+      form pre-filled (`JellyfinAdd`). Editing has to survive a re-login that
+      changes the Jellyfin user Id: migrate the profile entry and keep its
+      visibility list and sidebar layout.
+- [ ] `librarySectionID` is not populated by the Jellyfin/Emby mapper, so an item
+      cannot say which library it belongs to. Needed by the playback guard; prefer
+      `Ancestors`, since `ParentId` is the season for an episode, not the library.
+
 ## Product
 
 - [ ] Drop the Plex and Stremio backends if they are not wanted: `media::Backend`

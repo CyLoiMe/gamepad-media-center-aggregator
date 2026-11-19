@@ -62,6 +62,12 @@ std::string raceConnections(const std::vector<std::string>& urls, const std::str
 /// not on the Plex root).
 std::string raceConnections(const std::vector<std::string>& urls, const std::function<bool(const std::string&)>& probe);
 
+/// Probes `urls` concurrently and returns the FIRST one that answers, whatever
+/// its position — i.e. the fastest, not the best-ranked. Only for the opt-in
+/// `race` WAN policy (utils/dual_url.hpp): it can pick a metered tunnel address
+/// over a reachable LAN one, so it is never the default.
+std::string raceFirst(const std::vector<std::string>& urls, const std::function<bool(const std::string&)>& probe);
+
 /// Picks the best connection for a server: races `preferredUri` (if any) ahead
 /// of the ranked candidates and returns the first reachable base URL, or "".
 std::string findBestConnection(const ServerResource& server, const std::string& preferredUri = "");

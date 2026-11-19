@@ -291,7 +291,13 @@
       "host": "Hostitel",
       "port": "Port",
       "user_agent": "Vlastní User-Agent (video streamy)",
-      "user_agent_placeholder": "Výchozí, je-li prázdné"
+      "user_agent_placeholder": "Výchozí, je-li prázdné",
+      "wan_policy": {
+        "header": "Záložní WAN",
+        "lan_first": "Nejprve LAN (doporučeno)",
+        "lan_only": "Pouze LAN (doma)",
+        "race": "Nejrychlejší"
+      }
     },
     "ui": {
       "header": "Rozhraní",
@@ -382,6 +388,18 @@
     "prompt": "Nainstalovat dlaždici SMCA do nabídky HOME?\nDlaždice spustí aplikaci jako plnou aplikaci (nutné pro přehrávání videa).",
     "hint_confirm": "Instalace NSP forwarderu může vést k banu\nProsím potvrďte znovu",
     "remove_old": "SMCA je ve vaší nabídce HOME. Pokud tam ještě je stará dlaždice pleNx, odstraňte ji v Nastavení systému > Správa dat > Odstranit software."
+  },
+  "network": {
+    "status": "Stav sítě",
+    "lan": "LAN — domácí síť (bez kvóty)",
+    "wan": "WAN — tunel/FRP (s kvótou)",
+    "active": "Aktivní adresa",
+    "local_addr": "Domácí adresa",
+    "reprobe": "Otestovat znovu",
+    "force": "Přepnout režim",
+    "unreachable": "Žádná adresa neodpovídá",
+    "switched_lan": "Přepnuto na domácí síť",
+    "switched_wan": "Přepnuto na adresu tunelu"
   },
   "plex": {
     "title": "Přihlaste se ke svému účtu Plex",

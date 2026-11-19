@@ -51,6 +51,7 @@ constexpr uint32_t MINIMUM_WINDOW_HEIGHT = 360;
 #include "utils/atomic_file.hpp"
 #include "utils/config.hpp"
 #include "utils/connection_token.hpp"
+#include "utils/dual_url.hpp"
 #include "utils/theme_palette.hpp"
 #include "utils/keybind.hpp"
 #include "utils/misc.hpp"
@@ -122,6 +123,7 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
         {"request_timeout", {"3000", "5000", "10000", "20000", "30000"}, {3000, 5000, 10000, 20000, 30000}}},
     {HTTP_PROXY_STATUS, {"http_proxy_status"}},
     {HTTP_PROXY, {"http_proxy"}},
+    {WAN_POLICY, {"wan_policy", {"lan_first", "lan_only", "race"}}},
 
     {LIBRARY_SORT, {"library_sort"}},
     {SIDEBAR_LAYOUT, {"sidebar_layout"}},
@@ -340,6 +342,11 @@ bool AppConfig::init() {
     HTTP::TIMEOUT = this->getItem(REQUEST_TIMEOUT, 3000L);
     HTTP::PROXY_STATUS = this->getItem(HTTP_PROXY_STATUS, false);
     HTTP::PROXY = this->getItem(HTTP_PROXY, std::string("http://192.168.1.1:1080"));
+
+    // Which address wins when a connection has both a LAN and a WAN one. Defaults
+    // to the strictly-priority behaviour: a reachable LAN address is never
+    // preempted by a faster tunnel answer (utils/dual_url.hpp).
+    AppConfig::wan_policy = this->getItem(WAN_POLICY, std::string("lan_first"));
 
     // 初始化是否全屏，必须在创建窗口前设置此值
     VideoContext::FULLSCREEN = this->getItem(FULLSCREEN, false);
@@ -609,21 +616,56 @@ media::BackendType AppConfig::backendTypeFromString(const std::string& type) {
     return media::BackendType::Plex;
 }
 
-std::string AppConfig::reachableUrl(const AppServer& s) {
+std::string AppConfig::reachableUrl(const AppServer& s, bool* lan) {
     // The candidates are raced in parallel so an unreachable LAN address does
     // not block a reachable remote/relay one while roaming (GH #36). Stremio has
     // no single reachable "server" (it aggregates remote addons + an optional
     // account); skip the probe, accept the stored one.
+    if (lan) *lan = false;
     switch (backendTypeFromString(s.type)) {
         case media::BackendType::Stremio:
             return s.urls.empty() ? std::string() : s.urls.front();
         case media::BackendType::Jellyfin:
-        case media::BackendType::Emby:
-            return plex::raceConnections(s.urls, [](const std::string& url) { return jellyfin::probeConnection(url); });
+        case media::BackendType::Emby: {
+            // A LAN candidate fails fast (2 s): a dead home address must not hold
+            // up the remote one. A remote candidate keeps the usual budget — it
+            // may have to cross a tunnel where 2 s is not enough for TLS.
+            auto probe = [&s](const std::string& url) {
+                const bool home = dualurl::isLan(url, s.local_url);
+                return jellyfin::probeConnection(url, home ? 2000 : 5000, home ? 2000 : 2000);
+            };
+            const dualurl::Policy policy = dualurl::policyOf(AppConfig::wan_policy);
+            const std::vector<std::string> candidates = dualurl::candidates(policy, s.local_url, s.urls);
+            // LanFirst/LanOnly keep strict priority: the tunnel only wins once the
+            // LAN probe has failed. Race is the opt-in "fastest answer wins".
+            std::string chosen = (policy == dualurl::Policy::Race)
+                                     ? plex::raceFirst(candidates, probe)
+                                     : plex::raceConnections(candidates, probe);
+            if (lan) *lan = dualurl::isLan(chosen, s.local_url);
+            return chosen;
+        }
         case media::BackendType::Plex:
             break;
     }
     return plex::raceConnections(s.urls, s.access_token);
+}
+
+std::string AppConfig::getLocalUrl() const {
+    auto profile = std::find_if(this->users.begin(), this->users.end(),
+        [this](const AppUser& u) { return u.id == this->user_id; });
+    if (profile == this->users.end()) return {};
+    auto server = std::find_if(this->servers.begin(), this->servers.end(),
+        [&profile](const AppServer& s) { return s.id == profile->server_id; });
+    return server == this->servers.end() ? std::string() : server->local_url;
+}
+
+void AppConfig::setActiveUrl(const std::string& url, bool lan) {
+    if (url.empty()) return;
+    this->server_url = url;
+    this->lan_mode = lan;
+    // the backend caches nothing connection-specific except its class, but reset
+    // anyway so a forced switch cannot leave a half-initialised backend behind
+    this->resetBackend();
 }
 
 const std::vector<std::string>& AppConfig::getStremioAddons() const {
@@ -652,20 +694,25 @@ bool AppConfig::checkLogin() {
 
     auto is_server = [this](const AppServer& s) { return s.id == this->user->server_id; };
     auto it = std::find_if(this->servers.begin(), this->servers.end(), is_server);
-    if (it == this->servers.end() || it->urls.empty()) return false;
+    if (it == this->servers.end() || (it->urls.empty() && it->local_url.empty())) return false;
 
     // Reconnect to a remembered endpoint. No dependency on plex.tv here: a
     // reachable stored URL is enough.
-    std::string url = reachableUrl(*it);
+    bool lan = false;
+    std::string url = reachableUrl(*it, &lan);
     if (url.empty()) {
         brls::Logger::warning("AppConfig checkLogin: aucun endpoint joignable pour {}", it->name);
         return false;
     }
     this->server_url = url;
+    this->lan_mode = lan;
     this->server_token = it->access_token;
     this->resetBackend();
     this->applyTheme(backendTypeFromString(it->type));
-    if (url != it->urls.front()) {
+    // Remember the reachable WAN endpoint at the front of the candidate list. A
+    // LAN answer must NOT overwrite that list: local_url holds it, and copying it
+    // into urls would forget the remote addresses.
+    if (!lan && !it->urls.empty() && url != it->urls.front()) {
         AppServer front = *it;
         front.urls = {url};
         this->addServer(front);
@@ -753,7 +800,7 @@ bool AppConfig::addServer(const AppServer& s) {
     return false;
 }
 
-void AppConfig::addUser(const AppUser& u, const std::string& url) {
+void AppConfig::addUser(const AppUser& u, const std::string& url, bool lan) {
     auto is_user = [u](const AppUser& o) { return o.id == u.id; };
     auto it = std::find_if(this->users.begin(), this->users.end(), is_user);
     if (it != this->users.end()) {
@@ -767,6 +814,7 @@ void AppConfig::addUser(const AppUser& u, const std::string& url) {
     this->server_url = url;
     this->user_id = u.id;
     this->user = it;
+    this->lan_mode = lan;
     // keeps the active server token in sync with the active user
     std::string activeType = "plex";
     for (auto& s : this->servers) {

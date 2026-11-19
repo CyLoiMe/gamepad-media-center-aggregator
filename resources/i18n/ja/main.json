@@ -291,7 +291,13 @@
       "host": "ホスト",
       "port": "ポート",
       "user_agent": "カスタム User-Agent（動画ストリーム）",
-      "user_agent_placeholder": "空欄で既定値"
+      "user_agent_placeholder": "空欄で既定値",
+      "wan_policy": {
+        "header": "WAN フォールバック",
+        "lan_first": "LAN 優先（推奨）",
+        "lan_only": "LAN のみ（自宅用）",
+        "race": "最速優先"
+      }
     },
     "ui": {
       "header": "UI",
@@ -382,6 +388,18 @@
     "prompt": "HOME メニューに SMCA のタイルをインストールしますか？\nタイルはアプリをフルアプリケーションとして起動します (ビデオ再生に必要)。",
     "hint_confirm": "NSP フォワーダーのインストールは BAN される可能性があります\n再度ご確認ください",
     "remove_old": "SMCA がHOMEメニューにあります。古い pleNx タイルが残っている場合は、本体設定 > データ管理 > ソフトの削除 から削除してください。"
+  },
+  "network": {
+    "status": "ネットワーク状態",
+    "lan": "LAN — 宅内ネットワーク（通信量なし）",
+    "wan": "WAN — トンネル/FRP（通信量あり）",
+    "active": "使用中のアドレス",
+    "local_addr": "宅内アドレス",
+    "reprobe": "再検出",
+    "force": "モードを切り替え",
+    "unreachable": "応答するアドレスがありません",
+    "switched_lan": "宅内ネットワークに切り替えました",
+    "switched_wan": "トンネルアドレスに切り替えました"
   },
   "plex": {
     "title": "Plex アカウントにサインイン",

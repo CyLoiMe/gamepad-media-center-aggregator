@@ -38,6 +38,8 @@ JellyfinAdd::JellyfinAdd(const std::string& type) : type(type) {
                                           : "main/server/jellyfin/title_jellyfin"_i18n);
 
     this->cellUrl->init("main/server/jellyfin/url"_i18n, "", [](std::string) {}, "http://host:8096", "", 256);
+    this->cellLocal->init(
+        "main/network/local_addr"_i18n, "", [](std::string) {}, "http://192.168.1.100:8096", "", 256);
     this->cellUser->init("main/server/jellyfin/username"_i18n, "", [](std::string) {}, "", "", 64);
     this->cellPasswd->init("main/server/jellyfin/password"_i18n, "", [](std::string) {}, "", "", 128);
     this->cellPasswd->setType(brls::InputCellType::PASSWORD);
@@ -74,6 +76,14 @@ void JellyfinAdd::submit() {
     std::string user = this->cellUser->getValue();
     std::string pass = this->cellPasswd->getValue();
 
+    // Optional home address: same normalisation, ignored when left empty.
+    std::string local = trim(this->cellLocal->getValue());
+    while (!local.empty() && local.back() == '/') local.pop_back();
+    if (!local.empty() && local.rfind("http://", 0) != 0 && local.rfind("https://", 0) != 0) {
+        this->labelStatus->setText("main/setting/server/invalid"_i18n);
+        return;
+    }
+
     this->labelStatus->setText("main/plex/connecting"_i18n);
     this->btnConnect->setVisibility(brls::Visibility::GONE);
     this->spinner->setVisibility(brls::Visibility::VISIBLE);
@@ -81,7 +91,7 @@ void JellyfinAdd::submit() {
 
     std::string type = this->type;
     ASYNC_RETAIN
-    brls::async([ASYNC_TOKEN, type, url, user, pass]() {
+    brls::async([ASYNC_TOKEN, type, url, local, user, pass]() {
         std::string error;
         jellyfin::LoginResult r;
         bool ok = false;
@@ -95,25 +105,38 @@ void JellyfinAdd::submit() {
         } catch (const std::exception& ex) {
             error = ex.what();
         }
-        brls::sync([ASYNC_TOKEN, url, r, ok, error]() {
+
+        // Pick the address to activate: the LAN one when it answers (no tunnel
+        // quota), otherwise the remote one that just authenticated. Probed here,
+        // off the UI thread, so the badge is right as soon as the app opens.
+        bool lan = false;
+        std::string active = url;
+        if (ok && !local.empty() && jellyfin::probeConnection(local, 1500, 1200)) {
+            active = local;
+            lan = true;
+        }
+
+        brls::sync([ASYNC_TOKEN, url, local, active, lan, r, ok, error]() {
             ASYNC_RELEASE
             brls::Application::unblockInputs();
             this->spinner->setVisibility(brls::Visibility::GONE);
             this->btnConnect->setVisibility(brls::Visibility::VISIBLE);
             if (ok)
-                this->finish(url, r);
+                this->finish(url, local, active, lan, r);
             else
                 this->labelStatus->setText(error);
         });
     });
 }
 
-void JellyfinAdd::finish(const std::string& url, const jellyfin::LoginResult& r) {
+void JellyfinAdd::finish(const std::string& remote, const std::string& local,
+    const std::string& active, bool lan, const jellyfin::LoginResult& r) {
     AppServer s;
-    s.name = r.serverName.empty() ? url : r.serverName;
-    s.id = r.serverId.empty() ? url : r.serverId;
+    s.name = r.serverName.empty() ? remote : r.serverName;
+    s.id = r.serverId.empty() ? remote : r.serverId;
     s.access_token = r.token;
-    s.urls.push_back(url);
+    s.urls.push_back(remote);
+    s.local_url = local;
     s.type = this->type;
     AppConfig::instance().addServer(s);
 
@@ -122,8 +145,8 @@ void JellyfinAdd::finish(const std::string& url, const jellyfin::LoginResult& r)
     u.name = r.userName;
     u.access_token = r.token;
     u.server_id = s.id;
-    u.thumb = jellyfin::userImageUrl(url, r.userId, r.userImageTag, this->type == "emby");
-    AppConfig::instance().addUser(u, url);
+    u.thumb = jellyfin::userImageUrl(active, r.userId, r.userImageTag, this->type == "emby");
+    AppConfig::instance().addUser(u, active, lan);
 
     brls::Application::clear();
     brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);

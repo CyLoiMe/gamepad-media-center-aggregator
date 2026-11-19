@@ -1,5 +1,6 @@
 #include "activity/main_activity.hpp"
 #include "view/connection_switcher.hpp"
+#include "view/network_badge.hpp"
 #include "view/music_mini_bar.hpp"
 #include "view/audio_player.hpp"
 #include "view/music_now_playing.hpp"
@@ -65,6 +66,19 @@ void MainActivity::onContentAvailable() {
             return true;
         },
         true);
+
+    // LAN/WAN pill over the content, with its status dialog on ZR. R is taken
+    // (next tab) and ZR is free outside the player. A connection with a single
+    // address has no mode to report, so nothing is created or hinted then.
+    this->networkBadge = new NetworkBadge();
+    if (brls::Box* column = dynamic_cast<brls::Box*>(this->tabFrame->getParent()))
+        column->addView(this->networkBadge);
+    if (this->networkBadge->applicable()) {
+        this->frame->registerAction("main/network/status"_i18n, brls::BUTTON_RT, [this](brls::View*) {
+            this->networkBadge->showDialog();
+            return true;
+        });
+    }
 }
 
 void MainActivity::addSidebarAvatar() {

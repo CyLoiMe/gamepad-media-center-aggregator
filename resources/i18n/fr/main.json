@@ -303,7 +303,13 @@
       "host": "Adresse",
       "port": "Port",
       "user_agent": "User-Agent personnalisé (flux vidéo)",
-      "user_agent_placeholder": "Valeur par défaut si vide"
+      "user_agent_placeholder": "Valeur par défaut si vide",
+      "wan_policy": {
+        "header": "Repli WAN",
+        "lan_first": "LAN prioritaire (recommandé)",
+        "lan_only": "LAN uniquement (maison)",
+        "race": "Le plus rapide"
+      }
     },
     "ui": {
       "header": "Paramètres de l'interface",
@@ -394,6 +400,18 @@
     "prompt": "Installer la tuile SMCA sur le menu HOME ?\nLa tuile lance l'application en session complète (indispensable pour la lecture vidéo).",
     "hint_confirm": "L'installation du forwarder NSP peut entraîner un bannissement de la console. Veuillez confirmer à nouveau",
     "remove_old": "SMCA est sur ton menu HOME. Si une ancienne tuile pleNx y figure encore, supprime-la depuis Réglages système > Gestion des données > Supprimer un logiciel."
+  },
+  "network": {
+    "status": "État du réseau",
+    "lan": "LAN — réseau local (sans quota)",
+    "wan": "WAN — tunnel/FRP (quota)",
+    "active": "Adresse active",
+    "local_addr": "Adresse locale",
+    "reprobe": "Sonder à nouveau",
+    "force": "Changer de mode",
+    "unreachable": "Aucune adresse ne répond",
+    "switched_lan": "Basculé sur le réseau local",
+    "switched_wan": "Basculé sur l'adresse du tunnel"
   },
   "plex": {
     "title": "Connectez-vous à votre compte Plex",

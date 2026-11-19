@@ -197,6 +197,42 @@ std::string raceConnections(const std::vector<std::string>& urls, const std::fun
     }
 }
 
+std::string raceFirst(const std::vector<std::string>& urls, const std::function<bool(const std::string&)>& probe) {
+    if (urls.empty()) return "";
+    if (urls.size() == 1) return probe(urls.front()) ? urls.front() : "";
+
+    // Same shape as raceConnections, but any Reachable candidate wins at once —
+    // rank is irrelevant. Used for the opt-in "fastest wins" WAN policy only.
+    struct State {
+        std::mutex mutex;
+        std::condition_variable cond;
+        std::string winner;
+        size_t decided = 0;
+    };
+    auto state = std::make_shared<State>();
+
+    for (auto& url : urls) {
+        ThreadPool::instance().submit([state, url, probe](HTTP&) {
+            bool ok = false;
+            try {
+                ok = probe(url);
+            } catch (...) {
+            }
+            {
+                std::lock_guard<std::mutex> lock(state->mutex);
+                if (ok && state->winner.empty()) state->winner = url;
+                state->decided++;
+            }
+            state->cond.notify_all();
+        });
+    }
+
+    const size_t total = urls.size();
+    std::unique_lock<std::mutex> lock(state->mutex);
+    state->cond.wait(lock, [&state, total]() { return !state->winner.empty() || state->decided == total; });
+    return state->winner;
+}
+
 std::vector<std::string> rankConnections(const ServerResource& server) {
     // Priority by protocol + reachability: https+local -> https+remote ->
     // https+relay -> http+local -> ... (§2.3)

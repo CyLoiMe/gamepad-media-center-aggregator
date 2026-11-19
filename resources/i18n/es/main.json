@@ -291,7 +291,13 @@
       "host": "Dirección",
       "port": "Puerto",
       "user_agent": "User-Agent personalizado (streams de vídeo)",
-      "user_agent_placeholder": "Valor por defecto si está vacío"
+      "user_agent_placeholder": "Valor por defecto si está vacío",
+      "wan_policy": {
+        "header": "Respaldo WAN",
+        "lan_first": "LAN primero (recomendado)",
+        "lan_only": "Solo LAN (casa)",
+        "race": "La más rápida"
+      }
     },
     "ui": {
       "header": "Interfaz",
@@ -382,6 +388,18 @@
     "prompt": "¿Instalar el icono de SMCA en el menú HOME?\nEl icono inicia la aplicación como aplicación completa (necesario para la reproducción de vídeo).",
     "hint_confirm": "Instalar el NSP forwarder puede resultar en un baneo\nPor favor confirma de nuevo",
     "remove_old": "SMCA está en tu menú HOME. Si aún hay un icono antiguo de pleNx, elimínalo en Configuración del sistema > Gestión de datos > Eliminar software."
+  },
+  "network": {
+    "status": "Estado de la red",
+    "lan": "LAN — red doméstica (sin cuota)",
+    "wan": "WAN — túnel/FRP (con cuota)",
+    "active": "Dirección activa",
+    "local_addr": "Dirección local",
+    "reprobe": "Volver a sondear",
+    "force": "Cambiar de modo",
+    "unreachable": "Ninguna dirección responde",
+    "switched_lan": "Cambiado a la red doméstica",
+    "switched_wan": "Cambiado a la dirección del túnel"
   },
   "plex": {
     "title": "Inicia sesión en tu cuenta de Plex",

@@ -98,6 +98,27 @@ install goes to `ServerList`.
 (`user_id`/`server_url`/`server_token`/backend and the profile iterator) when the
 deleted one was in use; the switcher then goes back to `ServerList`.
 
+**Two addresses (Jellyfin/Emby).** `AppServer::local_url` is an optional home
+address next to the remote candidates in `urls`. `AppConfig::reachableUrl()` builds
+the candidate list from the `wan_policy` setting (Settings → Network) and reports
+which one answered (`lan_mode`, runtime only; `server_url` remains the single active
+address every backend reads through `getUrl()`):
+
+| `wan_policy` | behaviour |
+|---|---|
+| `lan_first` (default) | LAN strictly preferred: the remote address only wins once the LAN probe has FAILED, so a faster tunnel answer never preempts a reachable home address. |
+| `lan_only` | only the LAN address is probed; a home-only console can never spend tunnel quota. Roaming needs the policy changed — Settings is reachable from the logged-out root (Y). |
+| `race` | first answer wins (opt-in): fastest, but at home the tunnel can win the race and burn quota. |
+
+A LAN candidate fails fast (2 s) while a remote one keeps the 5 s budget, so a dead
+home address does not hold up the fallback. `NetworkBadge`
+(`view/network_badge.cpp`, top right) shows LAN/WAN and opens its dialog on **ZR**
+(R is already next-tab); it can re-probe or force the other address.
+
+`AppUser::wan_visible_libraries` is the per-profile WAN allow-list this mode exists
+to enforce — `docs/backlog.md` §WAN bandwidth protection lists the filtering and the
+playback guard that still have to use it.
+
 ## Where things live
 
 | Area | Entry point |

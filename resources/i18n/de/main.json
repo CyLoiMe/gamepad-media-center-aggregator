@@ -291,7 +291,13 @@
       "host": "Host",
       "port": "Port",
       "user_agent": "Eigener User-Agent (Videostreams)",
-      "user_agent_placeholder": "Standard, wenn leer"
+      "user_agent_placeholder": "Standard, wenn leer",
+      "wan_policy": {
+        "header": "WAN-Rückfall",
+        "lan_first": "LAN zuerst (empfohlen)",
+        "lan_only": "Nur LAN (zuhause)",
+        "race": "Schnellste Antwort"
+      }
     },
     "ui": {
       "header": "Oberfläche",
@@ -382,6 +388,18 @@
     "prompt": "Die SMCA-Kachel im HOME-Menü installieren?\nDie Kachel startet die App als vollwertige Anwendung (für die Videowiedergabe erforderlich).",
     "hint_confirm": "Die Installation des NSP-Forwarders kann zu einer Sperre führen\nBitte erneut bestätigen",
     "remove_old": "SMCA ist in deinem HOME-Menü. Falls noch eine alte pleNx-Kachel vorhanden ist, entferne sie über Systemeinstellungen > Datenverwaltung > Software löschen."
+  },
+  "network": {
+    "status": "Netzwerkstatus",
+    "lan": "LAN — Heimnetz (kein Kontingent)",
+    "wan": "WAN — Tunnel/FRP (Kontingent)",
+    "active": "Aktive Adresse",
+    "local_addr": "Heimadresse",
+    "reprobe": "Erneut prüfen",
+    "force": "Modus wechseln",
+    "unreachable": "Keine Adresse antwortet",
+    "switched_lan": "Auf das Heimnetz gewechselt",
+    "switched_wan": "Auf die Tunneladresse gewechselt"
   },
   "plex": {
     "title": "Bei deinem Plex-Konto anmelden",

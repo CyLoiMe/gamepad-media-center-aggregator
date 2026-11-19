@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 
+class NetworkBadge;
+
 /// Main sidebar: the static tabs (home, search, downloads, settings) come
 /// from activity/main.xml, plus one tab per Plex library inserted after
 /// the home tab once /library/sections answers. A server/profile switch
@@ -110,4 +112,7 @@ private:
 
     BRLS_BIND(MainTabFrame, tabFrame, "main/tabFrame");
     BRLS_BIND(brls::AppletFrame, frame, "main/frame");
+
+    /// top-right LAN/WAN pill; null when the connection has no LAN address
+    NetworkBadge* networkBadge = nullptr;
 };

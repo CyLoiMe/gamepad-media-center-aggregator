@@ -291,7 +291,13 @@
       "host": "Anfitrião",
       "port": "Porta",
       "user_agent": "User-Agent personalizado (streams de vídeo)",
-      "user_agent_placeholder": "Padrão quando vazio"
+      "user_agent_placeholder": "Padrão quando vazio",
+      "wan_policy": {
+        "header": "Fallback WAN",
+        "lan_first": "LAN primeiro (recomendado)",
+        "lan_only": "Somente LAN (casa)",
+        "race": "A mais rápida"
+      }
     },
     "ui": {
       "header": "Interface",
@@ -382,6 +388,18 @@
     "prompt": "Instalar o ícone do SMCA no menu HOME?\nO ícone inicia a aplicação como aplicação completa (necessário para a reprodução de vídeo).",
     "hint_confirm": "A instalação do encaminhador NSP pode resultar num banimento\nConfirme novamente",
     "remove_old": "O SMCA está no seu menu HOME. Se ainda houver um ícone antigo do pleNx, remova-o em Config. do sistema > Gestão de dados > Apagar software."
+  },
+  "network": {
+    "status": "Estado da rede",
+    "lan": "LAN — rede local (sem quota)",
+    "wan": "WAN — túnel/FRP (com quota)",
+    "active": "Endereço ativo",
+    "local_addr": "Endereço local",
+    "reprobe": "Sondar novamente",
+    "force": "Mudar de modo",
+    "unreachable": "Nenhum endereço responde",
+    "switched_lan": "Mudado para a rede local",
+    "switched_wan": "Mudado para o endereço do túnel"
   },
   "plex": {
     "title": "Inicie sessão na sua conta Plex",

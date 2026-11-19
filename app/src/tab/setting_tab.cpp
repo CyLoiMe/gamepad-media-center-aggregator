@@ -425,6 +425,20 @@ void SettingTab::onCreate() {
             AppConfig::instance().setItem(AppConfig::REQUEST_TIMEOUT, HTTP::TIMEOUT);
         });
 
+    // LAN vs WAN fallback: "lan_first" (priority, default), "lan_only" (home use,
+    // never touches the tunnel) or "race" (fastest answer wins — may spend quota).
+    auto& wanPolicyOption = conf.getOptions(AppConfig::WAN_POLICY);
+    selectorWanPolicy->init("main/setting/network/wan_policy/header"_i18n,
+        {
+            "main/setting/network/wan_policy/lan_first"_i18n,
+            "main/setting/network/wan_policy/lan_only"_i18n,
+            "main/setting/network/wan_policy/race"_i18n,
+        },
+        conf.getOptionIndex(AppConfig::WAN_POLICY), [&wanPolicyOption](int selected) {
+            AppConfig::wan_policy = wanPolicyOption.options[selected];
+            AppConfig::instance().setItem(AppConfig::WAN_POLICY, AppConfig::wan_policy);
+        });
+
     btnProxy->init("main/setting/network/proxy"_i18n, HTTP::PROXY_STATUS, [this](bool value) {
         inputProxy->setVisibility(value ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
         HTTP::PROXY_STATUS = value;

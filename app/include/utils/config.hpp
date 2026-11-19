@@ -59,8 +59,16 @@ struct AppUser {
     std::string access_token;
     std::string server_id;  // clientIdentifier / Jellyfin server Id / Stremio userId
     std::string thumb;      // avatar URL
+    /// Jellyfin/Emby only: libraries this profile may browse while the connection
+    /// is on its WAN address (tunnel/FRP), where every byte costs quota.
+    /// `nullopt` = never configured, which keeps the historical behaviour
+    /// (everything visible); an engaged list is authoritative, so an empty one
+    /// hides every library on WAN. Stored per PROFILE, because two accounts on one
+    /// server see different libraries.
+    std::optional<std::vector<std::string>> wan_visible_libraries;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(AppUser, id, name, access_token, server_id, thumb);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+    AppUser, id, name, access_token, server_id, thumb, wan_visible_libraries);
 
 /// A known media server. `access_token` is the server access token (Plex: from
 /// /api/v2/resources; Jellyfin/Emby: the AccessToken of the account that
@@ -72,12 +80,16 @@ struct AppServer {
     std::string id;  // clientIdentifier (machine id) / Jellyfin server Id / Stremio account user id
     std::string access_token;
     std::vector<std::string> urls;
+    /// Optional home-network address (Jellyfin/Emby). Probed FIRST: reaching it
+    /// puts the app in LAN mode (no bandwidth quota); falling through to `urls`
+    /// means the WAN address answered instead. Empty = single-address server.
+    std::string local_url;
     std::string type = "plex";  // plex | jellyfin | emby | stremio
     // Stremio only: transport URLs (…/manifest.json) of the installed addons,
     // either entered manually or synced from the account's addon collection.
     std::vector<std::string> addons;
 };
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(AppServer, id, name, access_token, urls, type, addons);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(AppServer, id, name, access_token, urls, local_url, type, addons);
 
 struct AppRemote {
     std::string name;
@@ -148,6 +160,13 @@ public:
         REQUEST_TIMEOUT,
         HTTP_PROXY_STATUS,
         HTTP_PROXY,
+
+        /// Which address wins when a connection declares both a LAN and a WAN one:
+        /// "lan_first" (default — the LAN address is strictly preferred), "lan_only"
+        /// (never touch the tunnel while a LAN address exists) or "race" (first
+        /// answer wins; at home the tunnel can win and spend quota). See
+        /// utils/dual_url.hpp.
+        WAN_POLICY,
 
         /// Library sorts/filters, persisted locally (json object
         /// {itemId: "sortBy,sortOrder,filter"} — /DisplayPreferences does not
@@ -227,7 +246,9 @@ public:
     inline const Option& getOptions(const Item item) const { return settingMap[item]; }
 
     bool addServer(const AppServer& s);
-    void addUser(const AppUser& u, const std::string& url);
+    /// `lan` records which of the server's addresses answered: it drives the
+    /// LAN/WAN badge and the WAN-only library filter (see utils/dual_url.hpp).
+    void addUser(const AppUser& u, const std::string& url, bool lan = false);
     /// Registers a server/connection WITHOUT making it active — no change to the
     /// active url/token/profile or the backend/theme. Used to store the other
     /// servers of a Plex account at link time; addServer/addUser activate one.
@@ -249,6 +270,15 @@ public:
     /// plex.tv token of the active profile (resources, home users).
     const std::string& getAccountToken() const { return this->user->access_token; }
     const std::string& getUrl() const { return this->server_url; }
+    /// True when the active address is the connection's LAN one, i.e. requests do
+    /// not travel through the tunnel (and cost no quota).
+    bool isLanMode() const { return this->lan_mode; }
+    /// LAN address of the active connection, or "" when it declares none.
+    std::string getLocalUrl() const;
+    /// Point the active connection at another of its addresses without
+    /// re-authenticating (re-probe result, or a manual force). The backend reads
+    /// getUrl() live, so the next request uses it.
+    void setActiveUrl(const std::string& url, bool lan);
     /// Stremio only: addon transport URLs of the active server (manifest URLs).
     /// Empty for other backends / when not logged in.
     const std::vector<std::string>& getStremioAddons() const;
@@ -276,13 +306,18 @@ public:
     /// Maps the AppServer::type discriminant to a BackendType (defaults to Plex).
     /// Public so the connection switcher can tint each tile by its backend brand.
     static media::BackendType backendTypeFromString(const std::string& type);
-    /// First of `s.urls` that answers, probed the way its backend expects; ""
-    /// when none does. Blocking: call off the UI thread.
-    static std::string reachableUrl(const AppServer& s);
+    /// First of the connection's addresses that answers, probed the way its
+    /// backend expects; "" when none does. Blocking: call off the UI thread.
+    /// `lan` (optional) reports whether the LAN address was the one that answered.
+    static std::string reachableUrl(const AppServer& s, bool* lan = nullptr);
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT(AppConfig, user_id, device, users, servers, setting, remotes, pins);
 
     inline static bool SYNC = true;
+    /// Live copy of the WAN_POLICY setting ("lan_first" | "lan_only" | "race"),
+    /// read by reachableUrl() on every activation. Kept next to SYNC: a setting
+    /// the network layer consults without going through an instance.
+    inline static std::string wan_policy = "lan_first";
 
 private:
     static std::unordered_map<Item, Option> settingMap;
@@ -305,6 +340,9 @@ private:
     std::string user_id;
     std::string server_url;
     std::string server_token;
+    /// Runtime only (never persisted): did the active address come from the
+    /// connection's LAN field?
+    bool lan_mode = false;
     std::string device;
     std::string device_name;
     std::vector<AppUser> users;

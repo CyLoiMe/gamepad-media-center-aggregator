@@ -124,15 +124,19 @@ static void connectWithUser(const AppUser& u) {
                 }
             }
 
-            std::string base = AppConfig::reachableUrl(target);
+            bool lan = false;
+            std::string base = AppConfig::reachableUrl(target, &lan);
             if (base.empty() && fresh) base = plex::findBestConnection(*fresh);
             if (base.empty()) throw std::runtime_error(unreachable);
 
-            brls::sync([u, target, base]() {
+            brls::sync([u, target, base, lan]() {
                 AppServer s = target;
-                s.urls = {base};
+                // Only a WAN answer refreshes the candidate list: the LAN address
+                // lives in local_url, and writing it into urls would drop the
+                // remote addresses the user configured.
+                if (!lan) s.urls = {base};
                 AppConfig::instance().addServer(s);
-                AppConfig::instance().addUser(u, base);
+                AppConfig::instance().addUser(u, base, lan);
                 // The switcher is reachable from the offline shell too. Connecting
                 // to a reachable server ends offline mode, otherwise the rebuilt
                 // MainActivity takes loadLibraries()' offline branch and keeps

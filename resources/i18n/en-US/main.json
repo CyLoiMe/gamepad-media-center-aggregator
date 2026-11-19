@@ -303,7 +303,13 @@
       "host": "Host",
       "port": "Port",
       "user_agent": "Custom User-Agent (video streams)",
-      "user_agent_placeholder": "App default when empty"
+      "user_agent_placeholder": "App default when empty",
+      "wan_policy": {
+        "header": "WAN fallback",
+        "lan_first": "LAN first (recommended)",
+        "lan_only": "LAN only (home use)",
+        "race": "Fastest wins"
+      }
     },
     "ui": {
       "header": "UI",
@@ -394,6 +400,18 @@
     "prompt": "Install the SMCA tile on the HOME menu?\nThe tile launches the app as a full application (required for video playback).",
     "hint_confirm": "Installing NSP forwarder may result in a ban\nPlease confirm again",
     "remove_old": "SMCA is on your HOME menu. If an old pleNx tile is still there, remove it from System Settings > Data Management > Delete Software."
+  },
+  "network": {
+    "status": "Network status",
+    "lan": "LAN — home network (no quota)",
+    "wan": "WAN — tunnel/FRP (quota)",
+    "active": "Active address",
+    "local_addr": "Home address",
+    "reprobe": "Probe again",
+    "force": "Switch mode",
+    "unreachable": "No address answered",
+    "switched_lan": "Switched to the home network",
+    "switched_wan": "Switched to the tunnel address"
   },
   "plex": {
     "title": "Sign in to your Plex account",

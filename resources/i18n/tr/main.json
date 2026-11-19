@@ -291,7 +291,13 @@
       "host": "Adres",
       "port": "Bağlantı Noktası",
       "user_agent": "Özel User-Agent (video akışları)",
-      "user_agent_placeholder": "Boşsa varsayılan"
+      "user_agent_placeholder": "Boşsa varsayılan",
+      "wan_policy": {
+        "header": "WAN yedeği",
+        "lan_first": "Önce LAN (önerilen)",
+        "lan_only": "Yalnızca LAN (ev)",
+        "race": "En hızlı"
+      }
     },
     "ui": {
       "header": "Arayüz",
@@ -382,6 +388,18 @@
     "prompt": "SMCA kutucuğu HOME menüsüne yüklensin mi?\nKutucuk, uygulamayı tam uygulama olarak başlatır (video oynatma için gereklidir).",
     "hint_confirm": "NSP yönlendiricisini kurmak konsolunuzun çevrim içi özelliklerden yasaklanmasına neden olabilir\n\nLütfen tekrar onaylayın",
     "remove_old": "SMCA, HOME menünüzde. Eski bir pleNx kutucuğu hâlâ varsa Sistem Ayarları > Veri Yönetimi > Yazılım Sil'den kaldırın."
+  },
+  "network": {
+    "status": "Ağ durumu",
+    "lan": "LAN — ev ağı (kota yok)",
+    "wan": "WAN — tünel/FRP (kotalı)",
+    "active": "Etkin adres",
+    "local_addr": "Ev adresi",
+    "reprobe": "Yeniden yokla",
+    "force": "Modu değiştir",
+    "unreachable": "Hiçbir adres yanıt vermedi",
+    "switched_lan": "Ev ağına geçildi",
+    "switched_wan": "Tünel adresine geçildi"
   },
   "plex": {
     "title": "Plex hesabınıza giriş yapın",

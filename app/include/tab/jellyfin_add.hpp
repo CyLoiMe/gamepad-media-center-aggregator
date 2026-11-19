@@ -30,10 +30,12 @@ private:
     /// Validates the URL, authenticates (async + spinner) then saves.
     void submit();
     /// Persists the active server + user and enters the application.
-    void finish(const std::string& url, const jellyfin::LoginResult& r);
+    void finish(const std::string& url, const std::string& local, const jellyfin::LoginResult& r);
 
     BRLS_BIND(brls::Label, header, "jellyfin/add/header");
     BRLS_BIND(brls::InputCell, cellUrl, "jellyfin/add/url");
+    /// Optional LAN address (probed before the remote one). Empty = single address.
+    BRLS_BIND(brls::InputCell, cellLocal, "jellyfin/add/local_url");
     BRLS_BIND(brls::InputCell, cellUser, "jellyfin/add/user");
     BRLS_BIND(brls::InputCell, cellPasswd, "jellyfin/add/passwd");
     BRLS_BIND(brls::Button, btnConnect, "jellyfin/add/connect");

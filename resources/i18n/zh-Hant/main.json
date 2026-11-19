@@ -291,7 +291,13 @@
       "host": "位址",
       "port": "連接埠",
       "user_agent": "自訂 User-Agent（影片播放）",
-      "user_agent_placeholder": "留空則使用預設值"
+      "user_agent_placeholder": "留空則使用預設值",
+      "wan_policy": {
+        "header": "外網回退",
+        "lan_first": "內網優先（推薦）",
+        "lan_only": "僅內網（家用）",
+        "race": "最快者優先"
+      }
     },
     "ui": {
       "header": "介面設定",
@@ -382,6 +388,18 @@
     "prompt": "是否在 HOME 選單安裝 SMCA 圖示？\n此圖示會以完整應用程式啟動本程式（播放影片所需）。",
     "hint_confirm": "安裝 NSP forwarder 可能導致主機被 ban\n請再次確認",
     "remove_old": "SMCA 已在 HOME 選單中。如果舊的 pleNx 磁貼仍然存在，請在 系統設定 > 資料管理 > 刪除軟體 中刪除它。"
+  },
+  "network": {
+    "status": "網路狀態",
+    "lan": "LAN — 區域網路直連（不耗流量）",
+    "wan": "WAN — 穿透/FRP（耗流量）",
+    "active": "目前位址",
+    "local_addr": "區域網路位址",
+    "reprobe": "重新探測",
+    "force": "強制切換",
+    "unreachable": "沒有位址可連通",
+    "switched_lan": "已切換到區域網路",
+    "switched_wan": "已切換到穿透位址"
   },
   "plex": {
     "title": "登入你的 Plex 帳號",

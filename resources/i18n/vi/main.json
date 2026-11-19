@@ -291,7 +291,13 @@
       "host": "Máy chủ",
       "port": "Port",
       "user_agent": "User-Agent tùy chỉnh (luồng video)",
-      "user_agent_placeholder": "Mặc định nếu để trống"
+      "user_agent_placeholder": "Mặc định nếu để trống",
+      "wan_policy": {
+        "header": "Dự phòng WAN",
+        "lan_first": "Ưu tiên LAN (khuyến nghị)",
+        "lan_only": "Chỉ LAN (dùng ở nhà)",
+        "race": "Nhanh nhất"
+      }
     },
     "ui": {
       "header": "Giao diện",
@@ -382,6 +388,18 @@
     "prompt": "Cài biểu tượng SMCA trên menu HOME?\nBiểu tượng khởi chạy ứng dụng như một ứng dụng đầy đủ (cần thiết để phát video).",
     "hint_confirm": "Cài đặt NSP forwarder có thể bị ban\nVui lòng xác nhận lại",
     "remove_old": "SMCA đã ở trên menu HOME. Nếu ô pleNx cũ vẫn còn, hãy xóa nó trong Cài đặt hệ thống > Quản lý dữ liệu > Xóa phần mềm."
+  },
+  "network": {
+    "status": "Trạng thái mạng",
+    "lan": "LAN — mạng nội bộ (không tốn lưu lượng)",
+    "wan": "WAN — đường hầm/FRP (tốn lưu lượng)",
+    "active": "Địa chỉ đang dùng",
+    "local_addr": "Địa chỉ nội bộ",
+    "reprobe": "Dò lại",
+    "force": "Đổi chế độ",
+    "unreachable": "Không địa chỉ nào phản hồi",
+    "switched_lan": "Đã chuyển sang mạng nội bộ",
+    "switched_wan": "Đã chuyển sang địa chỉ đường hầm"
   },
   "plex": {
     "title": "Đăng nhập vào tài khoản Plex của bạn",
