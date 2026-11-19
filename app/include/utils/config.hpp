@@ -39,22 +39,34 @@ public:
     inline static std::string nro_path;
 };
 
-/// A plex.tv profile (account or Plex Home user).
-/// `access_token` is the plex.tv token of THIS profile — it is used for the
-/// plex.tv API (resources, home users), NOT for server requests.
+/// One connection: a server plus the profile that browses it.
+///
+/// The two `access_token` fields mean different things per backend:
+///
+///   - Plex: `AppUser::access_token` is the plex.tv token of THIS profile (used
+///     for the plex.tv API — resources, home users — never for server requests);
+///     `AppServer::access_token` is the PMS token.
+///   - Jellyfin/Emby: every ACCOUNT gets its own AccessToken. Two accounts on one
+///     server share a single `AppServer` entry (keyed by the server Id), so that
+///     entry's `access_token` only ever holds whichever account authenticated
+///     last — `AppUser::access_token` is the per-account token to use there.
+///   - Stremio: the account authKey, stored on both.
+///
+/// `AppConfig::getToken()` resolves this (see utils/connection_token.hpp).
 struct AppUser {
-    std::string id;  // plex.tv uuid
+    std::string id;  // plex.tv uuid / Jellyfin user Id / Stremio userId
     std::string name;
     std::string access_token;
-    std::string server_id;  // clientIdentifier of the last used server
-    std::string thumb;      // avatar (absolute plex.tv URL)
+    std::string server_id;  // clientIdentifier / Jellyfin server Id / Stremio userId
+    std::string thumb;      // avatar URL
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(AppUser, id, name, access_token, server_id, thumb);
 
 /// A known media server. `access_token` is the server access token (Plex: from
-/// /api/v2/resources; Jellyfin: AccessToken from authentication). urls.front()
-/// = last reachable connection. `type` discriminates the backend implementation
-/// (defaults to "plex" for configs written before multi-backend support).
+/// /api/v2/resources; Jellyfin/Emby: the AccessToken of the account that
+/// authenticated last — see AppUser). urls.front() = last reachable connection.
+/// `type` discriminates the backend implementation (defaults to "plex" for
+/// configs written before multi-backend support).
 struct AppServer {
     std::string name;
     std::string id;  // clientIdentifier (machine id) / Jellyfin server Id / Stremio account user id
@@ -228,8 +240,12 @@ public:
     const std::string& getUserName() const { return this->user->name; }
     /// Active profile (name, avatar...) — valid after init()/checkLogin().
     const AppUser& getUser() const { return *this->user; }
-    /// Access token of the active SERVER (X-Plex-Token of PMS requests).
-    const std::string& getToken() const { return this->server_token; }
+    /// Token that authenticates requests against the ACTIVE connection: the
+    /// server token (Plex PMS, Stremio authKey) or, for Jellyfin/Emby, the active
+    /// profile's own AccessToken — those servers issue one token per account, and
+    /// two accounts on one server share an AppServer entry. See
+    /// utils/connection_token.hpp.
+    std::string getToken() const;
     /// plex.tv token of the active profile (resources, home users).
     const std::string& getAccountToken() const { return this->user->access_token; }
     const std::string& getUrl() const { return this->server_url; }
@@ -273,6 +289,12 @@ private:
 
     /// (Re)builds activeBackend from the active server's type on next backend().
     void resetBackend();
+
+    /// AppServer::type of the active connection ("plex" | "jellyfin" | "emby" |
+    /// "stremio"). Resolved through the active profile's server_id: matching on
+    /// server_url is ambiguous when two servers share one URL, and empty in the
+    /// offline shell.
+    std::string activeServerType() const;
 
     /// Writes one palette variant onto the matching borealis Theme singleton.
     void applyThemeVariant(brls::ThemeVariant tv, const plenx::ThemePalette& p);

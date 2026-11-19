@@ -8,6 +8,7 @@
 #include "tab/server_type_choose.hpp"
 #include "tab/media_collection.hpp"
 #include "utils/config.hpp"
+#include "utils/network_state.hpp"
 #include "utils/image.hpp"
 #include "utils/dialog.hpp"
 #include "utils/theme_palette.hpp"
@@ -131,6 +132,11 @@ static void connectWithUser(const AppUser& u) {
                 s.urls = {base};
                 AppConfig::instance().addServer(s);
                 AppConfig::instance().addUser(u, base);
+                // The switcher is reachable from the offline shell too. Connecting
+                // to a reachable server ends offline mode, otherwise the rebuilt
+                // MainActivity takes loadLibraries()' offline branch and keeps
+                // showing the previous catalog.
+                NetworkState::setOffline(false);
                 brls::Application::unblockInputs();
                 brls::Application::clear();
                 brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);

@@ -24,7 +24,7 @@ void AddonEngine::ensureLoaded() {
     // failure (offline, expired key) keep the stored list; an empty collection
     // is ignored too (a live account always has the default addons) rather
     // than wiping a working list.
-    const std::string& authKey = AppConfig::instance().getToken();
+    const std::string authKey = AppConfig::instance().getToken();
     if (!authKey.empty()) {
         try {
             std::vector<std::string> fresh = fetchAddonCollection(authKey);

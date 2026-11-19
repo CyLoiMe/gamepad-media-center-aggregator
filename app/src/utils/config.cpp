@@ -50,6 +50,7 @@ constexpr uint32_t MINIMUM_WINDOW_HEIGHT = 360;
 #include "api/http.hpp"
 #include "utils/atomic_file.hpp"
 #include "utils/config.hpp"
+#include "utils/connection_token.hpp"
 #include "utils/theme_palette.hpp"
 #include "utils/keybind.hpp"
 #include "utils/misc.hpp"
@@ -550,27 +551,39 @@ void AppConfig::resetBackend() {
     this->activeBackend = nullptr;
 }
 
+std::string AppConfig::activeServerType() const {
+    // The active profile names its server; that is unambiguous where the URL is
+    // not (two servers behind one reverse proxy) and still works in the offline
+    // shell, where server_url is empty.
+    auto profile = std::find_if(this->users.begin(), this->users.end(),
+        [this](const AppUser& u) { return u.id == this->user_id; });
+    if (profile != this->users.end()) {
+        auto server = std::find_if(this->servers.begin(), this->servers.end(),
+            [&profile](const AppServer& s) { return s.id == profile->server_id; });
+        if (server != this->servers.end()) return server->type;
+    }
+    // no profile (first launch) or an orphaned one: fall back to the active url
+    for (auto& s : this->servers)
+        if (!this->server_url.empty() && !s.urls.empty() && s.urls.front() == this->server_url) return s.type;
+    return "plex";
+}
+
+std::string AppConfig::getToken() const {
+    // Jellyfin/Emby issue one AccessToken per account, and two accounts on one
+    // server share an AppServer entry — so that entry's token only ever holds the
+    // last account that authenticated. Read the active profile's own token there.
+    // Resolved by id (not through the `user` iterator, which an insert into
+    // `users` can invalidate).
+    const std::string type = this->activeServerType();
+    auto activeUser = std::find_if(this->users.begin(), this->users.end(),
+        [this](const AppUser& u) { return u.id == this->user_id; });
+    const std::string& userToken = activeUser != this->users.end() ? activeUser->access_token : this->server_token;
+    return connection::activeToken(type, this->server_token, userToken);
+}
+
 media::Backend& AppConfig::backend() {
     if (!this->activeBackend) {
-        // active server type = the one whose front URL is the active server_url
-        std::string type = "plex";
-        for (auto& s : this->servers) {
-            if (!this->server_url.empty() && !s.urls.empty() && s.urls.front() == this->server_url) {
-                type = s.type;
-                break;
-            }
-        }
-        // offline server_url is empty (never persisted, and checkLogin found no
-        // reachable endpoint): the active user's server instead
-        if (this->server_url.empty()) {
-            auto u = std::find_if(this->users.begin(), this->users.end(),
-                [this](const AppUser& u) { return u.id == this->user_id; });
-            if (u != this->users.end()) {
-                auto s = std::find_if(this->servers.begin(), this->servers.end(),
-                    [&u](const AppServer& s) { return s.id == u->server_id; });
-                if (s != this->servers.end()) type = s->type;
-            }
-        }
+        std::string type = this->activeServerType();
         switch (backendTypeFromString(type)) {
             case media::BackendType::Jellyfin:
                 this->activeBackend = new jellyfin::JellyfinBackend(media::BackendType::Jellyfin);
