@@ -50,6 +50,70 @@ Backends are selected in `AppConfig::backendTypeFromString()` and built lazily b
 `AppConfig::backend()`; `multi-backend.md` in this directory is the upstream design
 note (French).
 
+## Connections, profiles and tokens
+
+A **connection** is one `AppUser` (a profile) bound to one `AppServer` through
+`AppUser::server_id`. `config.json` stores the two lists; `ConnectionSwitcher`
+(`view/connection_switcher.cpp`) renders one tile per `AppUser`.
+
+| Field | Meaning |
+|---|---|
+| `AppServer::id` | Plex `clientIdentifier` / Jellyfin-Emby server Id / Stremio userId |
+| `AppServer::type` | `plex` \| `jellyfin` \| `emby` \| `stremio` |
+| `AppServer::access_token` | server credential — **only authoritative for Plex** |
+| `AppServer::urls` | connection candidates, `front()` = last reachable |
+| `AppUser::id` | Plex uuid (or `uuid@clientIdentifier`) / Jellyfin user Id / Stremio userId |
+| `AppUser::access_token` | Plex: plex.tv token. Jellyfin/Emby: the account's AccessToken. Stremio: the authKey |
+
+**The token a request must carry is not always the server's.** Jellyfin and Emby
+issue one `AccessToken` per ACCOUNT, and two accounts on one server share a single
+`AppServer` entry — its slot only holds whichever account authenticated last. That
+is why the resolution below exists and why nothing may read `server_token`
+directly:
+
+```
+backend request ──► AppConfig::getToken()                     (utils/config.cpp)
+                      ├─ AppConfig::activeServerType()        type of the active AppUser's server
+                      └─ connection::activeToken(type,        (utils/connection_token.hpp)
+                              serverToken, userToken)
+   Plex / Stremio  ─► server token
+   Jellyfin / Emby ─► AppUser::access_token of the ACTIVE profile
+```
+
+**Switching** (`connectWithUser` in `view/connection_switcher.cpp`): block input +
+loading screen → async: copy the `AppServer`, Plex-only token refresh from plex.tv,
+`AppConfig::reachableUrl()` probe → sync: `addServer()` + `addUser()` (which
+re-seats the active profile, `resetBackend()`, `applyTheme()`), clear the offline
+flag, `Application::clear()` + `pushActivity(new MainActivity())`,
+`MediaCollection::clearPref()`. The rebuild is what re-fetches everything: there is
+no "connection changed" event, so anything cached outside the activity tree survives
+a switch — `docs/backlog.md` §Known sharp edges lists what that is today.
+
+**Startup** (`main.cpp`): `AppConfig::init()` loads `config.json`, then
+`checkLogin()` re-probes the remembered URL of the persisted `user_id`. Failure with
+a remembered server enters the offline shell (`utils/network_state.hpp`); a fresh
+install goes to `ServerList`.
+
+**Deleting** a connection: `AppConfig::removeUser()` drops the active state
+(`user_id`/`server_url`/`server_token`/backend and the profile iterator) when the
+deleted one was in use; the switcher then goes back to `ServerList`.
+
+## Where things live
+
+| Area | Entry point |
+|---|---|
+| process start, args, forwarder | `app/src/main.cpp` |
+| activity stack, sidebar, per-server layout | `app/src/activity/main_activity.cpp` |
+| connection tiles, switching, deleting | `app/src/view/connection_switcher.cpp` |
+| persisted state, active connection, tokens | `app/include/utils/config.hpp`, `app/src/utils/config.cpp` |
+| per-backend token rule (pure, tested) | `app/include/utils/connection_token.hpp` |
+| offline flag / offline shell | `app/include/utils/network_state.hpp`, `app/src/utils/offline_ui.cpp` |
+| provider adapters | `app/src/api/{plex,jellyfin,stremio}/` |
+| playback policy | `app/src/activity/player_view.cpp` → `api/backend.hpp` `resolvePlayback` |
+| downloads / offline catalog | `app/src/utils/download.cpp`, `app/src/utils/offline_library.cpp` |
+| artwork loading + disk cache | `app/src/utils/image.cpp`, `app/include/utils/image_cache.hpp` |
+| app icons / brand art | `brand/logos/logo.jpg` → `scripts/make-icons.py` → `resources/icon/` (`brand/README.md`) |
+
 ## A screen, end to end
 
 ```
@@ -75,6 +139,9 @@ progress reporting and the error dialog.
 | a new backend | implement `media::Backend`, register in `AppConfig::backendTypeFromString` + `BackendType`, add caps |
 | a new playback option | `PlaybackOptions` (`api/backend.hpp`) → backend `resolvePlayback` → `MPVCore` |
 | a new string | `resources/i18n/*/main.json` (all locales) |
+| anything about the active server/profile or its token | `AppConfig::getToken()` / `activeServerType()`; rule in `utils/connection_token.hpp` |
+| a connection tile, switching or deleting | `view/connection_switcher.cpp`, `AppConfig::addUser`/`removeUser` |
+| app icons / brand art | `brand/README.md` + `scripts/make-icons.py` ({Pillow}) |
 
 ## Concurrency and lifetime
 

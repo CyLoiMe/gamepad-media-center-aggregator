@@ -40,6 +40,23 @@ Known work, roughly in the order it should be picked up. Nothing here is a promi
 - [ ] `mpv.conf` is only consulted for `user-agent`. Full support (filters, cache,
       vo tuning) would need the app to stop forcing the options it currently sets.
 
+## Known sharp edges
+
+State that outlives a connection switch. There is no "connection changed" event: the
+switch rebuilds `MainActivity` and everything inside it, but nothing outside.
+
+- [ ] `MediaCollection::customPrefs` (`LIBRARY_SORT`) is keyed by the section
+      `itemId` alone, not by server — two servers emitting the same section key share
+      the stored sort/filter. `MediaCollection::clearPref()` runs only in the
+      switcher's own switch path, not in the Plex/Jellyfin/Stremio add flows.
+- [ ] `ImageCache` keys on the raw artwork path with no server id
+      (`utils/image_cache.hpp`), so a cached poster can answer for another server.
+- [ ] `DownloadManager` resolves the URL and auth headers from the *live* backend at
+      transfer time (`utils/download.cpp`), so a queued item resumes against
+      whichever connection is active.
+- [ ] `AudioPlayer`'s queue is not cleared on a switch — only `player_view` and
+      `remote_view` call `release()`.
+
 ## Product
 
 - [ ] Drop the Plex and Stremio backends if they are not wanted: `media::Backend`

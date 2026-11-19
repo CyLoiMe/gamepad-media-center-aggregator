@@ -14,7 +14,7 @@ see `NOTICE` for the attribution that must stay).
 
 | Document | Read it when you… |
 |---|---|
-| `docs/architecture.md` | need the code map, the backend interface, or how a screen is put together |
+| `docs/architecture.md` | need the code map, the backend interface, connection/token ownership, or how a screen is put together |
 | `docs/build.md` | build, touch CMake/CI, or bump a Switch portlib |
 | `docs/playback.md` | touch anything that ends in libmpv: `resolvePlayback`, User-Agent, remote `.strm` sources |
 | `docs/conventions.md` | write code, commits, tests or translations |
@@ -34,6 +34,9 @@ see `NOTICE` for the attribution that must stay).
 - **Two singletons carry almost everything**: `AppConfig::instance()` (servers,
   settings, the active `media::Backend`) and `MPVCore::instance()` (the player,
   created lazily at the first playback).
+- **A connection is an `AppUser` (server + profile).** Requests carry the token from
+  `AppConfig::getToken()`, never `AppServer::access_token` — Plex and Jellyfin/Emby
+  scope tokens differently (trap 7, `docs/architecture.md`).
 - **Icons and brand art are generated**: `brand/logos/logo.jpg` →
   `scripts/make-icons.py` → `resources/icon/` (`brand/README.md`).
 - **The UI never formats provider URLs**: everything goes through `media::Backend`
@@ -69,6 +72,12 @@ see `NOTICE` for the attribution that must stay).
    `BRLS_BIND` + `init()` in `tab/setting_tab.cpp`, and the i18n key.
 6. **`mpv.conf` is only read for `user-agent`**, once, at startup. Any other option
    there is honoured by mpv itself, but the app cannot see it.
+7. **A connection's token is not always the server's.** Plex server requests use
+   `AppServer::access_token`; Jellyfin/Emby authenticate per ACCOUNT and two
+   accounts on one server share a single `AppServer` entry, so the per-account
+   token in `AppUser::access_token` is the one that must be sent. Always read
+   `AppConfig::getToken()`, never `server_token`/`AppServer::access_token`
+   directly — `utils/connection_token.hpp` holds the rule.
 
 ## Current state
 
