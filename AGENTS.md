@@ -82,6 +82,12 @@ see `NOTICE` for the attribution that must stay).
    `resources/icon/icon.jpg` baked into `control/icon_AmericanEnglish.dat` at build
    time; replacing `SMCA.nro` does not touch it. `docs/build.md` §Two different
    icons, `scripts/inspect-nro.py`.
+9. **`BRLS_BIND` members are proxies, not pointers.** `BoundView<T>` only defines
+   `operator T*()`, so two of them of different `T` have no common type: `cond ?
+   this->btnConnect : this->cellUrl` does not compile, because the conditional
+   operator only tries to convert each operand to the OTHER operand's type. Cast to
+   the base (`static_cast<brls::View*>(...)`) or call `.getView()`. Same trap in any
+   `auto x = cond ? boundA : boundB;`.
 
 ## Current state
 
