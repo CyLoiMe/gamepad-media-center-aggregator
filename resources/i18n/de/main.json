@@ -330,8 +330,8 @@
       "font_a3": "Lege eine beliebige ttf-Datei unter {}/subfont.ttf ab"
     },
     "libraries": {
-      "header": "Seitenleiste",
-      "description": "Ordne die Tabs der Seitenleiste neu an oder blende sie aus. Home und Profil bleiben an ihrem Platz. Diese Einstellung wird pro Server gespeichert.",
+      "header": "Bibliotheken & Seitenleiste",
+      "description": "Seitenleisten-Tabs umsortieren oder ausblenden und je Bibliothek mit X festlegen, ob sie bei WAN-Verbindung sichtbar bleibt. Start und Profil bleiben fix. Pro Server gespeichert.",
       "offline": "Offline werden nur heruntergeladene Bibliotheken angezeigt, die anderen behalten ihren Platz.",
       "grab": "Verschieben",
       "drop": "Ablegen",

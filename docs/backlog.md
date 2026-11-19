@@ -130,13 +130,17 @@ Neither is confirmed as a defect yet — the first checks are listed with each o
       ids differ, `updateConnection` matched the wrong entry and it is a real bug.
       Either way the form should say that the addresses belong to the server, not
       to the account.
-- [ ] **No WAN column in Settings → Libraries.** The visibility matrix is an **X**
-      column that only exists when `LibraryManager::wanEnabled` holds:
-      `activeServerType()` is `jellyfin`/`emby` **and** `getUserId()` is non-empty
-      (`app/src/view/library_manager.cpp:231`). Its row list also comes from
-      `MainTabFrame::getReorderableEntries()`, and the settings cell finds that
-      frame by walking the view parents — if Settings is ever presented outside the
-      tab frame, the click silently does nothing (`tab/setting_tab.cpp:510`).
-      Check, in order: the version sha on the settings screen (a stale NRO has none
-      of this), the backend of the ACTIVE connection, `getUserId()` being non-empty,
-      and whether `rowsBox` is empty because `entries` was empty.
+- [x] **No WAN column in Settings → Libraries.** Cause found: the screen existed but
+      its settings row was still labelled `侧边栏` / "Sidebar" (`setting/libraries/header`),
+      from when the page only reordered the sidebar, so nobody looked for a library
+      manager there. The label is now "Libraries & sidebar" in all 14 locales and the
+      description names the **X** key. The screen is the same one that reorders the
+      sidebar: its rows are the libraries, **A** reorders, **Y** hides a tab and **X**
+      toggles WAN visibility.
+      If the column is STILL missing, the checks remain: `LibraryManager::wanEnabled`
+      needs `activeServerType()` to be `jellyfin`/`emby` **and** `getUserId()` non-empty
+      (`app/src/view/library_manager.cpp:231`); the row list comes from
+      `MainTabFrame::getReorderableEntries()`, so it is empty until the libraries are
+      loaded; and the settings cell finds that frame by walking the view parents, so a
+      Settings screen outside the tab frame makes the click a silent no-op
+      (`tab/setting_tab.cpp:510`).

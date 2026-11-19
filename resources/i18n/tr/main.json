@@ -330,8 +330,8 @@
       "font_a3": "Herhangi bir TTF dosyasını {}/subfont.ttf konumuna yerleştirin."
     },
     "libraries": {
-      "header": "Kenar çubuğu",
-      "description": "Kenar çubuğu sekmelerini yeniden sıralayın ve gizleyin. Ana Sayfa ve profil yerinde kalır. Bu ayar her sunucu için ayrı kaydedilir.",
+      "header": "Kitaplıklar ve kenar çubuğu",
+      "description": "Kenar çubuğu sekmelerini yeniden sıralayın veya gizleyin; bir kitaplık satırında X ile WAN bağlantısında görünürlüğünü seçin. Ana sayfa ve profil sabit kalır. Sunucu başına kaydedilir.",
       "offline": "Çevrimdışıyken yalnızca indirilen kitaplıklar listelenir; diğerleri yerlerini korur.",
       "grab": "Taşı",
       "drop": "Bırak",

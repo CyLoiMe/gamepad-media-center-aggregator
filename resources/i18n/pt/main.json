@@ -330,8 +330,8 @@
       "font_a3": "Coloque qualquer ficheiro ttf em {}/subfont.ttf"
     },
     "libraries": {
-      "header": "Barra lateral",
-      "description": "Reordene e oculte as abas da barra lateral. O Início e o perfil ficam no lugar. Esta definição é guardada por servidor.",
+      "header": "Bibliotecas e barra lateral",
+      "description": "Reordene ou oculte as abas da barra lateral e escolha com X, por biblioteca, o que continua visível na WAN. Início e perfil ficam fixos. Guardado por servidor.",
       "offline": "Offline, só são listadas as bibliotecas transferidas; as restantes mantêm o seu lugar.",
       "grab": "Mover",
       "drop": "Soltar",

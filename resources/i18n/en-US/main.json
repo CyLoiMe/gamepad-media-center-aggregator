@@ -342,8 +342,8 @@
       "font_a3": "Put any ttf file at {}/subfont.ttf"
     },
     "libraries": {
-      "header": "Sidebar",
-      "description": "Reorder and hide the sidebar tabs. Home and the profile stay in place. This setting is saved per server.",
+      "header": "Libraries & sidebar",
+      "description": "Reorder and hide the sidebar tabs, and choose per library whether it stays visible while the connection uses its remote (WAN) address — press X on a library row. Home and the profile stay in place. Saved per server.",
       "offline": "Offline, only downloaded libraries are listed; the others keep their place.",
       "grab": "Move",
       "drop": "Drop",

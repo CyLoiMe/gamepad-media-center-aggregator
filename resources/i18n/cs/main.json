@@ -330,8 +330,8 @@
       "font_a3": "Vložte libovolný soubor ttf do {}/subfont.ttf"
     },
     "libraries": {
-      "header": "Postranní panel",
-      "description": "Změňte pořadí a skryjte karty postranního panelu. Domů a profil zůstávají na svém místě. Toto nastavení se ukládá pro každý server zvlášť.",
+      "header": "Knihovny a postranní panel",
+      "description": "Změňte pořadí nebo skryjte karty postranního panelu; klávesou X zvolte, které knihovny zůstanou viditelné při připojení přes WAN. Domů a profil zůstávají na místě. Ukládá se pro každý server.",
       "offline": "Offline jsou uvedeny jen stažené knihovny, ostatní si ponechají své místo.",
       "grab": "Přesunout",
       "drop": "Položit",
