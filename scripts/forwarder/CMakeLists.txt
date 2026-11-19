@@ -44,7 +44,14 @@ add_custom_target(${PROJECT_NAME}.pfs0 DEPENDS ${PROJECT_NAME}
 # on case-sensitive Linux the upper-case source path is not found.
 string(TOLOWER "${PROJECT_TITLEID}" PROJECT_TITLEID_LOWER)
 
-add_custom_target(${PROJECT_NAME}.nsp DEPENDS ${PROJECT_NAME}.pfs0
+# The HOME tile's icon is baked in here, from the project icon (not from the
+# NRO's own --icon): hacbrewpack packs control/icon_AmericanEnglish.dat into the
+# NSP, and HintActivity installs that NSP from romfs. Depending on the icon makes
+# the intent explicit and keeps a rebuild from reusing a NSP built before the
+# artwork changed (the target is always re-run; the remove guards a stale file
+# left behind by an interrupted build).
+add_custom_target(${PROJECT_NAME}.nsp DEPENDS ${PROJECT_NAME}.pfs0 ${PROJECT_ICON}
+    COMMAND ${CMAKE_COMMAND} -E remove "${PROJECT_RESOURCES}/${PROJECT_NAME}.nsp"
     COMMAND ${CMAKE_COMMAND} -E make_directory "control" "logo"
     COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" "control/control.nacp"
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/icon/logo.png" "logo/NintendoLogo.png"
