@@ -114,6 +114,30 @@ the build is fine — the HOME menu keeps a per-title-ID icon cache and a reinst
 with the same ID does not always refresh it. Reboot the console (the cache is
 rebuilt at boot), then reinstall the tile if it is still stale.
 
+### A tile with the old icon: check three things, in this order
+
+1. **Which NRO is running.** The tile is installed from the romfs of the NRO you
+   launch, so an old binary installs an old NSP. Settings prints
+   `v<version>-<commit> (<platform>)` — compare the commit with `git rev-parse
+   --short HEAD`. Remember the two install paths (`§Installing`).
+2. **A leftover tile from an older title ID.** SMCA's ID changed twice before
+   release:
+
+   | ID | Era |
+   |---|---|
+   | `0104474D43410000` | pleNx |
+   | `0500474D43410000` | GMCA |
+   | `0500534D43410000` | SMCA (current) |
+
+   An installed tile is a *title*, so the GMCA/pleNx tiles are different titles
+   that reinstalling SMCA never touches — and they keep the artwork of their own
+   build. System Settings → Data Management → Software lists every installed
+   title: delete the old ones (the app's own install dialog says so too, `remove_old`).
+3. **Same-ID, same-version reinstall.** The NACP version has been `0.1.0` for
+   every build, so the system sees no new version and can keep its cached entry.
+   Changing `VERSION_ALTER` (or the title ID) is the experiment that separates a
+   cache problem from a build problem.
+
 ## Verifying on hardware
 
 ```sh
