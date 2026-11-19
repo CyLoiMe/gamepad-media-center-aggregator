@@ -4,7 +4,10 @@
 
 #include "view/library_manager.hpp"
 #include "view/svg_image.hpp"
+#include "utils/config.hpp"
 #include "utils/network_state.hpp"
+#include <algorithm>
+#include <optional>
 
 using namespace brls::literals;  // for _i18n
 
@@ -100,6 +103,26 @@ public:
         this->label->setGrow(1.0f);
         this->addView(this->label);
 
+        // WAN column (Jellyfin/Emby only): a library switched off here is hidden
+        // from the app whenever the connection is on its tunnel address.
+        this->wanApplicable = mgr->wanCapable() && e.library;
+        this->wanOn = this->wanApplicable && mgr->wanShown(e.id);
+        if (this->wanApplicable) {
+            this->wanTag = new brls::Label();
+            this->wanTag->setText("main/setting/libraries/wan"_i18n);
+            this->wanTag->setFontSize(14);
+            this->wanTag->setMarginRight(18);
+            this->addView(this->wanTag);
+
+            // X: allow / hide on WAN (ignored while a row is grabbed, like Y)
+            this->registerAction(
+                "main/setting/libraries/wan_toggle"_i18n, brls::BUTTON_X, [mgr, index](brls::View*) {
+                    if (mgr->anyGrabbed()) return true;
+                    mgr->toggleWan(index);
+                    return true;
+                });
+        }
+
         this->tag = new brls::Label();
         this->tag->setText(this->shown ? "main/setting/libraries/visible"_i18n
                                         : "main/setting/libraries/hidden"_i18n);
@@ -179,16 +202,20 @@ private:
 
         this->label->setTextColor(lift ? this->accent : this->text);
         this->tag->setTextColor(this->shown ? this->accent : this->grey);
+        if (this->wanTag) this->wanTag->setTextColor(this->wanOn ? this->accent : this->grey);
     }
 
     LibraryManager* mgr;
     int index;
     bool shown;
+    bool wanApplicable = false;
+    bool wanOn = false;
 
     NVGcolor accent {}, surface {}, text {}, grey {};
     SVGImage* icon = nullptr;
     brls::Label* label = nullptr;
     brls::Label* tag = nullptr;
+    brls::Label* wanTag = nullptr;
 };
 
 }  // namespace
@@ -197,11 +224,20 @@ LibraryManager::LibraryManager(MainTabFrame* frame) : frame(frame) {
     this->inflateFromXMLString(managerXML);
     this->entries = frame->getReorderableEntries();
 
+    // The WAN column only exists where something enforces it: the Jellyfin/Emby
+    // backend filters and the playback guard checks. Without a connection there
+    // is no profile to write the list to either.
+    const std::string type = AppConfig::activeServerType();
+    this->wanEnabled = (type == "jellyfin" || type == "emby") && !AppConfig::instance().getUserId().empty();
+    if (this->wanEnabled) this->wanLibs = AppConfig::instance().getWanVisibleLibraries();
+
     this->rowsBox = dynamic_cast<brls::Box*>(this->getView("lib_manager/rows"));
     if (auto* desc = dynamic_cast<brls::Label*>(this->getView("lib_manager/desc"))) {
         desc->setTextColor(brls::Application::getTheme().getColor("font/grey"));
-        if (NetworkState::isOffline())
-            desc->setText("main/setting/libraries/description"_i18n + "\n" + "main/setting/libraries/offline"_i18n);
+        std::string text = "main/setting/libraries/description"_i18n;
+        if (this->wanEnabled) text += "\n" + "main/setting/libraries/wan_hint"_i18n;
+        if (NetworkState::isOffline()) text += "\n" + "main/setting/libraries/offline"_i18n;
+        desc->setText(text);
     }
 
     this->rebuild();
@@ -271,6 +307,51 @@ void LibraryManager::toggleVisible(int index) {
     this->pendingFocus = index;
 
     this->commit();
+    this->rebuild();
+}
+
+bool LibraryManager::wanShown(const std::string& id) const {
+    if (!this->wanLibs) return true;  // never configured: everything visible
+    const std::string key = id.rfind("lib/", 0) == 0 ? id.substr(4) : id;
+    return std::find(this->wanLibs->begin(), this->wanLibs->end(), key) != this->wanLibs->end();
+}
+
+void LibraryManager::toggleWan(int index) {
+    if (!this->wanEnabled) return;
+    if (index < 0 || index >= (int)this->entries.size()) return;
+    if (!this->entries[index].library) return;
+    const std::string key = this->entries[index].id.substr(4);
+
+    // Materialise the list first: switching one library off while nothing is
+    // configured must state the others explicitly, otherwise "not configured"
+    // would keep meaning "all visible".
+    std::vector<std::string> libs;
+    if (this->wanLibs) {
+        libs = *this->wanLibs;
+    } else {
+        for (auto& e : this->entries)
+            if (e.library) libs.push_back(e.id.substr(4));
+    }
+
+    auto it = std::find(libs.begin(), libs.end(), key);
+    if (it == libs.end())
+        libs.push_back(key);
+    else
+        libs.erase(it);
+
+    // Everything allowed again == nothing configured: store nullopt so a library
+    // added to the server later is visible on WAN without a second visit.
+    const bool all = std::all_of(this->entries.begin(), this->entries.end(), [&libs](const MainTabFrame::SidebarEntry& e) {
+        return !e.library ||
+               std::find(libs.begin(), libs.end(), e.id.substr(4)) != libs.end();
+    });
+    if (all)
+        this->wanLibs = std::nullopt;
+    else
+        this->wanLibs = libs;
+    AppConfig::instance().setWanVisibleLibraries(this->wanLibs);
+
+    this->pendingFocus = index;
     this->rebuild();
 }
 

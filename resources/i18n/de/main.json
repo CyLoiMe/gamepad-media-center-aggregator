@@ -25,6 +25,7 @@
     "repo_header": "Repository"
   },
   "player": {
+    "wan_block": "Datenverkehrsschutz: über die Tunnel-Adresse (FRP) ist die Bibliothek dieses Videos ausgeblendet. Wiedergabe gestoppt, um Ihr Kontingent zu schonen.",
     "subtitle": "Untertitel",
     "none": "Keine",
     "audio": "Tonspur",
@@ -337,6 +338,9 @@
       "toggle": "Anzeigen / Ausblenden",
       "visible": "Sichtbar",
       "hidden": "Ausgeblendet",
+      "wan": "WAN",
+      "wan_toggle": "WAN-Sichtbarkeit",
+      "wan_hint": "WAN: hier deaktivierte Bibliotheken bleiben ausgeblendet, solange die Verbindung über den Tunnel läuft, und werden dort nicht abgespielt.",
       "empty": "Keine Tabs zum Anordnen"
     },
     "others": {

@@ -25,6 +25,7 @@
     "repo_header": "Repositório"
   },
   "player": {
+    "wan_block": "Proteção de tráfego: no endereço do túnel (FRP) esta biblioteca está oculta. Reprodução interrompida para poupar sua cota.",
     "subtitle": "Legendas",
     "none": "Nenhuma",
     "audio": "Faixa de áudio",
@@ -337,6 +338,9 @@
       "toggle": "Mostrar / Ocultar",
       "visible": "Visível",
       "hidden": "Oculta",
+      "wan": "WAN",
+      "wan_toggle": "Visibilidade WAN",
+      "wan_hint": "WAN: as bibliotecas desativadas aqui ficam ocultas quando a conexão usa o túnel e não são reproduzidas nele.",
       "empty": "Nenhuma aba para organizar"
     },
     "others": {

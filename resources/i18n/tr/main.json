@@ -25,6 +25,7 @@
     "repo_header": "Kaynak kodu"
   },
   "player": {
+    "wan_block": "Trafik koruması: tünel (FRP) adresinde bu kitaplık gizli. Kotanızı korumak için oynatma durduruldu.",
     "subtitle": "Alt yazı",
     "none": "Hiçbiri",
     "audio": "Ses parçası",
@@ -337,6 +338,9 @@
       "toggle": "Göster / Gizle",
       "visible": "Görünür",
       "hidden": "Gizli",
+      "wan": "WAN",
+      "wan_toggle": "WAN görünürlüğü",
+      "wan_hint": "WAN: burada kapatılan kitaplıklar tünel bağlantısında gizli kalır ve oynatılamaz.",
       "empty": "Düzenlenecek sekme yok"
     },
     "others": {

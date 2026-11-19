@@ -29,6 +29,7 @@
     "empty": "Changelog indisponible"
   },
   "player": {
+    "wan_block": "Protection du trafic : sur l'adresse tunnel (FRP), la bibliothèque de cette vidéo est masquée. Lecture arrêtée pour préserver votre quota.",
     "subtitle": "Sous-titres",
     "none": "Ne pas afficher",
     "audio": "Pistes audio",
@@ -349,6 +350,9 @@
       "toggle": "Afficher / Masquer",
       "visible": "Affiché",
       "hidden": "Masqué",
+      "wan": "WAN",
+      "wan_toggle": "Visibilité WAN",
+      "wan_hint": "WAN : les bibliothèques désactivées ici sont masquées quand la connexion passe par le tunnel, et leur lecture y est refusée.",
       "empty": "Aucun onglet à organiser"
     },
     "others": {

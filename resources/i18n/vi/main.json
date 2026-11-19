@@ -25,6 +25,7 @@
     "repo_header": "Kho lưu trữ"
   },
   "player": {
+    "wan_block": "Bảo vệ lưu lượng: trên địa chỉ đường hầm (FRP), thư viện này bị ẩn. Đã dừng phát để bảo vệ lưu lượng.",
     "subtitle": "Phụ đề",
     "none": "Không",
     "audio": "Bản âm thanh",
@@ -337,6 +338,9 @@
       "toggle": "Hiện / Ẩn",
       "visible": "Hiển thị",
       "hidden": "Đã ẩn",
+      "wan": "WAN",
+      "wan_toggle": "Hiển thị trên WAN",
+      "wan_hint": "WAN: thư viện tắt ở đây sẽ bị ẩn khi kết nối qua đường hầm và không thể phát.",
       "empty": "Không có thẻ nào để sắp xếp"
     },
     "others": {

@@ -280,6 +280,13 @@ public:
     /// configured a WAN allow-list). Snapshot it on the UI thread before going
     /// async and filter with `wanfilter::allows()` (utils/wan_filter.hpp).
     std::optional<std::vector<std::string>> allowedLibraries() const;
+    /// The active profile's STORED allow-list, ignoring the current LAN/WAN mode:
+    /// this is the setting the visibility manager edits. `nullopt` = never
+    /// configured, i.e. every library is visible on WAN.
+    std::optional<std::vector<std::string>> getWanVisibleLibraries() const;
+    /// Replace that list and persist it. Passing `nullopt` returns the profile to
+    /// "everything visible", so a library added later needs no second visit.
+    void setWanVisibleLibraries(std::optional<std::vector<std::string>> libs);
     /// Point the active connection at another of its addresses without
     /// re-authenticating (re-probe result, or a manual force). The backend reads
     /// getUrl() live, so the next request uses it.

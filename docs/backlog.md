@@ -73,19 +73,28 @@ is the part that actually protects the quota.
 - [ ] The personal list (favorites) and playlists are still cross-library: they can
       still surface an item from a hidden library. Both need an item's owning
       library, which is the `librarySectionID` item below.
-- [ ] **Playback guard.** Before `resolvePlayback` hands a URL to mpv, refuse it
-      when the mode is WAN and the item's library is hidden, or when the resolved
-      URL still points at the server host (i.e. the bytes go through the tunnel).
-      `api/jellyfin/playback_info.hpp` already distinguishes a server-internal host
-      from an external CDN link.
-- [ ] **Library visibility matrix + editing a connection.** One screen for both:
-      the matrix writes `wan_visible_libraries`, and editing re-enters the sign-in
-      form pre-filled (`JellyfinAdd`). Editing has to survive a re-login that
+- [x] **Playback guard.** `player_view.cpp` snapshots the allow-list, resolves the
+      item's library (its `librarySectionID`, else `sectionOfSync` → Ancestors) and
+      refuses to hand mpv a URL that would spend quota: a hidden library always
+      blocks; an unresolved library blocks unless the resolved URL is an external
+      CDN link. A library the user explicitly allowed on WAN stays playable even
+      when its bytes come from the server. `utils/wan_guard.hpp` holds the rule,
+      `tests/test_wan_guard.cpp` covers it.
+- [x] **Library visibility matrix.** The sidebar manager (Settings → Libraries)
+      already lists exactly the connection's libraries, so it carries the matrix as
+      an **X** column instead of a second screen: X allows/hides the focused library
+      on WAN and writes `AppUser::wan_visible_libraries`. Turning everything back on
+      stores `nullopt`, so a library added to the server later starts visible.
+- [ ] **Edit an existing connection.** Re-enter the sign-in form pre-filled
+      (`JellyfinAdd`) for an existing profile. It has to survive a re-login that
       changes the Jellyfin user Id: migrate the profile entry and keep its
       visibility list and sidebar layout.
-- [ ] `librarySectionID` is not populated by the Jellyfin/Emby mapper, so an item
-      cannot say which library it belongs to. Needed by the playback guard; prefer
-      `Ancestors`, since `ParentId` is the season for an episode, not the library.
+- [ ] `librarySectionID` is not populated by the Jellyfin/Emby mapper, so a listed
+      item cannot say which library it belongs to. The playback guard resolves it on
+      demand (`sectionOfSync` → Ancestors), which is exact but costs a request per
+      guarded playback; filling it in the mapper would let favorites and playlists
+      be filtered without that call. Prefer `Ancestors` — `ParentId` is the season
+      for an episode, not the library.
 
 ## Product
 

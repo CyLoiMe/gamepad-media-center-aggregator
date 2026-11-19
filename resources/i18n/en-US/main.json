@@ -29,6 +29,7 @@
     "empty": "Changelog unavailable"
   },
   "player": {
+    "wan_block": "Traffic guard: this video's library is hidden on the tunnel (FRP) address. Playback stopped to protect your quota.",
     "subtitle": "Subtitle",
     "none": "None",
     "audio": "Audio track",
@@ -349,6 +350,9 @@
       "toggle": "Show / Hide",
       "visible": "Shown",
       "hidden": "Hidden",
+      "wan": "WAN",
+      "wan_toggle": "WAN visibility",
+      "wan_hint": "WAN: libraries switched off here stay hidden while the connection uses the tunnel address, and are refused for playback there.",
       "empty": "No tabs to organize"
     },
     "others": {

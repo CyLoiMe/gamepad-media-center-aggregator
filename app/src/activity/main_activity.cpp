@@ -358,6 +358,7 @@ std::vector<MainTabFrame::SidebarEntry> MainTabFrame::getReorderableEntries() {
         SidebarEntry e;
         e.id = id;
         e.visible = hidden.count(id) == 0;
+        e.library = id.rfind("lib/", 0) == 0;
         if (id == "tab/playlists") {
             e.label = brls::getStr("main/playlist/title");
             e.icon = "@res/icon/ico-playlist.svg";

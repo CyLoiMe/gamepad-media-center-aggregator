@@ -40,6 +40,10 @@ public:
         std::string label;  // section title (server) or i18n label (personal)
         std::string icon;   // @res svg path
         bool visible;
+        /// True for "lib/<sectionKey>" entries, false for the personal tabs
+        /// (Playlists, Watchlist, Search, Files). Only a real library has a
+        /// section key, so only those can carry a WAN visibility flag.
+        bool library = false;
     };
 
     /// fetch the server libraries and insert their sidebar tabs

@@ -25,6 +25,7 @@
     "repo_header": "리포지토리"
   },
   "player": {
+    "wan_block": "트래픽 보호: 터널(FRP) 주소에서는 이 라이브러리가 숨겨져 있습니다. 사용량 보호를 위해 재생을 중단했습니다.",
     "subtitle": "자막",
     "none": "표시 안 함",
     "audio": "오디오",
@@ -337,6 +338,9 @@
       "toggle": "표시 / 숨기기",
       "visible": "표시됨",
       "hidden": "숨김",
+      "wan": "WAN",
+      "wan_toggle": "WAN 표시",
+      "wan_hint": "WAN: 여기서 끈 라이브러리는 터널 연결 시 숨겨지고 재생도 차단됩니다.",
       "empty": "정리할 탭이 없습니다"
     },
     "others": {

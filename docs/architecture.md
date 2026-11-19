@@ -120,8 +120,14 @@ to enforce. `AppConfig::allowedLibraries()` snapshots it on the UI thread (nullo
 not configured = nothing hidden) and the Jellyfin/Emby backend then queries per
 VISIBLE library — sidebar, home rows, Continue Watching, Recently Added, search —
 so a hidden library costs neither a request nor its artwork. The rule itself is
-`utils/wan_filter.hpp`; `docs/backlog.md` lists the surfaces still to cover and the
-playback guard.
+`utils/wan_filter.hpp`; `docs/backlog.md` lists the surfaces still to cover.
+
+The lists are not the last word: an item can still reach the player from a
+cross-library surface (favorites, playlist, deep link). `player_view.cpp` therefore
+guards the handoff to mpv — it resolves the item's library (`librarySectionID`, else
+`sectionOfSync` → Ancestors) and refuses playback from a hidden library, or from an
+unresolved one unless the resolved URL leaves the server host. `utils/wan_guard.hpp`
+holds that rule, and it is the only place that decides it.
 
 ## Where things live
 
@@ -135,6 +141,9 @@ playback guard.
 | offline flag / offline shell | `app/include/utils/network_state.hpp`, `app/src/utils/offline_ui.cpp` |
 | provider adapters | `app/src/api/{plex,jellyfin,stremio}/` |
 | playback policy | `app/src/activity/player_view.cpp` → `api/backend.hpp` `resolvePlayback` |
+| WAN filter + playback guard rules (pure, tested) | `app/include/utils/wan_filter.hpp`, `app/include/utils/wan_guard.hpp` |
+| WAN library visibility (X column) | `app/src/view/library_manager.cpp` |
+| LAN/WAN badge + status dialog | `app/src/view/network_badge.cpp` |
 | downloads / offline catalog | `app/src/utils/download.cpp`, `app/src/utils/offline_library.cpp` |
 | artwork loading + disk cache | `app/src/utils/image.cpp`, `app/include/utils/image_cache.hpp` |
 | app icons / brand art | `brand/logos/logo.jpg` → `scripts/make-icons.py` → `resources/icon/` (`brand/README.md`) |
@@ -153,7 +162,8 @@ view/mpv_core.cpp            mpv loadfile + render into the borealis frame
 
 `activity/player_view.cpp` is where playback policy lives: which media version,
 transcode or direct play, the fallback to direct play when a transcode fails,
-progress reporting and the error dialog.
+progress reporting, the WAN guard that can refuse the playback outright, and the
+error dialog.
 
 ## Where to add things
 

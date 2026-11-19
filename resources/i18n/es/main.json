@@ -25,6 +25,7 @@
     "repo_header": "Repositorio"
   },
   "player": {
+    "wan_block": "Protección de tráfico: en la dirección de túnel (FRP) esta biblioteca está oculta. Reproducción detenida para proteger tu cuota.",
     "subtitle": "Subtítulos",
     "none": "Ninguno",
     "audio": "Pista de audio",
@@ -337,6 +338,9 @@
       "toggle": "Mostrar / Ocultar",
       "visible": "Visible",
       "hidden": "Oculta",
+      "wan": "WAN",
+      "wan_toggle": "Visibilidad WAN",
+      "wan_hint": "WAN: las bibliotecas desactivadas aquí se ocultan cuando la conexión usa el túnel y no se reproducen en ella.",
       "empty": "No hay pestañas que organizar"
     },
     "others": {

@@ -25,6 +25,7 @@
     "repo_header": "Repozitář"
   },
   "player": {
+    "wan_block": "Ochrana provozu: na adrese tunelu (FRP) je tato knihovna skrytá. Přehrávání zastaveno, aby se šetřila kvóta.",
     "subtitle": "Titulky",
     "none": "Žádné",
     "audio": "Audio stopa",
@@ -337,6 +338,9 @@
       "toggle": "Zobrazit / Skrýt",
       "visible": "Zobrazeno",
       "hidden": "Skryto",
+      "wan": "WAN",
+      "wan_toggle": "Viditelnost ve WAN",
+      "wan_hint": "WAN: knihovny zde vypnuté zůstávají skryté, když připojení jde tunelem, a nelze je tam přehrát.",
       "empty": "Žádné karty k uspořádání"
     },
     "others": {

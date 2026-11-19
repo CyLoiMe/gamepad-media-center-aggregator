@@ -13,6 +13,8 @@
 #include "api/media/resolution.hpp"
 #include "utils/dialog.hpp"
 #include "utils/misc.hpp"
+#include "utils/wan_filter.hpp"
+#include "utils/wan_guard.hpp"
 #include "view/mpv_core.hpp"
 #include "view/player_setting.hpp"
 #include "view/video_view.hpp"
@@ -334,16 +336,40 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
     media::Item item = this->item;
     media::Media version = this->stream;
 
+    // Traffic guard input, snapshotted on the UI thread: the WAN allow-list in
+    // force right now (nullopt = nothing filtered). See utils/wan_guard.hpp.
+    auto allow = AppConfig::instance().allowedLibraries();
+
     ASYNC_RETAIN
-    brls::async([ASYNC_TOKEN, item, version, opts]() {
+    brls::async([ASYNC_TOKEN, item, version, opts, allow]() {
         try {
             // resolvePlayback runs the transcode decision synchronously and
             // throws on failure; the direct-play fallback is internal. The Plex
             // universal-transcoder request (incl. the Vita 1080p height cap) is
             // built here — see PlexBackend::resolvePlayback.
             media::PlaybackSource src = AppConfig::instance().backend().resolvePlayback(item, version, opts);
-            brls::sync([ASYNC_TOKEN, src]() {
+
+            // Traffic guard: on the metered address, an item whose library is not
+            // allowed there — or that cannot prove it is — must never reach mpv.
+            // Cross-library surfaces (favorites, playlist, deep link) are the ways
+            // around the list filtering, and a few seconds of playback is enough
+            // to burn the day's quota.
+            bool blocked = false;
+            if (allow) {
+                std::string libraryId = item.librarySectionID;
+                if (libraryId.empty() && !item.ratingKey.empty())
+                    libraryId = AppConfig::instance().backend().sectionOfSync(item.ratingKey).key;
+                blocked = wanguard::blocksPlayback(true, !libraryId.empty(),
+                    wanfilter::allows(&*allow, libraryId),
+                    wanguard::isTunnelUrl(AppConfig::instance().getUrl(), src.url));
+            }
+
+            brls::sync([ASYNC_TOKEN, src, blocked]() {
                 ASYNC_RELEASE
+                if (blocked) {
+                    Dialog::show("main/player/wan_block"_i18n, []() { VideoView::close(); });
+                    return;
+                }
                 // A backend may report "nothing playable" with an empty url
                 // (e.g. Stremio with no direct/debrid stream) instead of throwing
                 // across the async/TU boundary; surface it as a player error.
