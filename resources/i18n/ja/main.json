@@ -452,7 +452,10 @@
       "url": "サーバーアドレス",
       "username": "ユーザー名",
       "password": "パスワード",
-      "connect": "接続"
+      "connect": "接続",
+      "edit_hint": "編集",
+      "edit_title": "この接続を編集",
+      "password_required": "再ログインにはパスワードが必要です（アドレスだけを変える場合はユーザー名を変えずパスワードを空欄にしてください）。"
     },
     "stremio": {
       "title": "Stremio にサインイン",

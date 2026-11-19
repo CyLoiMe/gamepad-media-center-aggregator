@@ -452,7 +452,10 @@
       "url": "Sunucu adresi",
       "username": "Kullanıcı adı",
       "password": "Şifre",
-      "connect": "Bağlan"
+      "connect": "Bağlan",
+      "edit_hint": "Düzenle",
+      "edit_title": "Bu bağlantıyı düzenle",
+      "password_required": "Yeniden oturum açmak için parola gerekli (yalnızca adresleri değiştirmek için kullanıcı adını aynı bırakıp parolayı boş bırakın)."
     },
     "stremio": {
       "title": "Stremio'ya Giriş Yap",

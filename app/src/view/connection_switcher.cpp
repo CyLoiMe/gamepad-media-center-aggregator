@@ -7,7 +7,9 @@
 #include "activity/server_list.hpp"
 #include "activity/loading_activity.hpp"
 #include "tab/server_type_choose.hpp"
+#include "tab/jellyfin_add.hpp"
 #include "tab/media_collection.hpp"
+#include "view/auto_tab_frame.hpp"
 #include "utils/config.hpp"
 #include "utils/network_state.hpp"
 #include "utils/image.hpp"
@@ -211,6 +213,20 @@ public:
             return true;
         });
         this->addGestureRecognizer(new brls::TapGestureRecognizer(this));
+        // Y: edit this connection in place (addresses, credentials, and from the
+        // sidebar manager its WAN visibility). Never delete-and-re-add: that would
+        // cost the user the WAN allow-list and the sidebar layout.
+        this->registerAction("main/server/jellyfin/edit_hint"_i18n, brls::BUTTON_Y, [u, srv, parent](brls::View* view) {
+            // Only the backends this form can re-authenticate exist here.
+            if (srv.type != "jellyfin" && srv.type != "emby") return false;
+            // Detail view, not present(): on a logged-in console the switcher
+            // lives in the sidebar frame, and pushContentView would replace the
+            // whole tab container. presentDetail stacks it over the content area
+            // with the sidebar visible; B pops it.
+            ui::presentDetail(
+                view, new JellyfinAdd(srv.type, u, srv, [parent]() { parent->rebuild(); }));
+            return true;
+        });
         this->registerAction("hints/delete"_i18n, brls::BUTTON_X, [u, parent](brls::View*) {
             Dialog::cancelable("main/setting/server/delete"_i18n, [u, parent]() {
                 // removeUser() drops the active connection when that is the one

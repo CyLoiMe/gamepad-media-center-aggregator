@@ -447,7 +447,10 @@
       "url": "Adresse du serveur",
       "username": "Nom d'utilisateur",
       "password": "Mot de passe",
-      "connect": "Se connecter"
+      "connect": "Se connecter",
+      "edit_hint": "Modifier",
+      "edit_title": "Modifier cette connexion",
+      "password_required": "Le mot de passe est requis pour se reconnecter (laissez le nom d'utilisateur et le mot de passe vides pour ne changer que les adresses)."
     },
     "stremio": {
       "title": "Connexion à Stremio",

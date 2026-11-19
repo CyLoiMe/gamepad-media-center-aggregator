@@ -85,10 +85,17 @@ is the part that actually protects the quota.
       an **X** column instead of a second screen: X allows/hides the focused library
       on WAN and writes `AppUser::wan_visible_libraries`. Turning everything back on
       stores `nullopt`, so a library added to the server later starts visible.
-- [ ] **Edit an existing connection.** Re-enter the sign-in form pre-filled
-      (`JellyfinAdd`) for an existing profile. It has to survive a re-login that
-      changes the Jellyfin user Id: migrate the profile entry and keep its
-      visibility list and sidebar layout.
+- [x] **Edit an existing connection.** The pencil on a connection tile (**Y**, the
+      tab switcher owns R) re-opens the sign-in form pre-filled and saves in place
+      through `AppConfig::updateConnection` — never delete-and-re-add. A blank
+      password with an unchanged username rewrites only the addresses and reuses
+      the stored token, so a typo in the URL costs nothing else. A real re-login
+      keeps what belongs to the PROFILE even when the server or user Id comes back
+      different: the WAN allow-list (on the profile) and the sidebar layout (keyed
+      by server id) are migrated, the stale server entry is dropped only when no
+      other account still points at it, and the shell is rebuilt when the edited
+      connection was the one being browsed. Rule: `utils/connection_edit.hpp`,
+      covered by `tests/test_connection_edit.cpp`.
 - [ ] `librarySectionID` is not populated by the Jellyfin/Emby mapper, so a listed
       item cannot say which library it belongs to. The playback guard resolves it on
       demand (`sectionOfSync` → Ancestors), which is exact but costs a request per

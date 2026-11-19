@@ -452,7 +452,10 @@
       "url": "Địa chỉ máy chủ",
       "username": "Tên người dùng",
       "password": "Mật khẩu",
-      "connect": "Kết nối"
+      "connect": "Kết nối",
+      "edit_hint": "Sửa",
+      "edit_title": "Sửa kết nối này",
+      "password_required": "Cần mật khẩu để đăng nhập lại (để chỉ đổi địa chỉ, hãy giữ nguyên tên người dùng và để trống mật khẩu)."
     },
     "stremio": {
       "title": "Đăng nhập vào Stremio",

@@ -452,7 +452,10 @@
       "url": "Endereço do servidor",
       "username": "Nome de utilizador",
       "password": "Palavra-passe",
-      "connect": "Ligar"
+      "connect": "Ligar",
+      "edit_hint": "Editar",
+      "edit_title": "Editar esta conexão",
+      "password_required": "A senha é necessária para entrar de novo (mantenha o usuário e deixe a senha vazia para alterar apenas os endereços)."
     },
     "stremio": {
       "title": "Iniciar sessão no Stremio",

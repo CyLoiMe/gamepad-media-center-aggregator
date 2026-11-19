@@ -447,7 +447,10 @@
       "url": "Server address",
       "username": "Username",
       "password": "Password",
-      "connect": "Connect"
+      "connect": "Connect",
+      "edit_hint": "Edit",
+      "edit_title": "Edit this connection",
+      "password_required": "Enter the password to sign in again (or keep the username to change only the addresses)."
     },
     "stremio": {
       "title": "Sign in to Stremio",

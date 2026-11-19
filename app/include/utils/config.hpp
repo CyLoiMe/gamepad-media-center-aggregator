@@ -254,6 +254,20 @@ public:
     /// servers of a Plex account at link time; addServer/addUser activate one.
     void upsertServer(const AppServer& s);
     void upsertUser(const AppUser& u);
+    /// Replace a stored connection IN PLACE — the edit flow, never a
+    /// delete-and-re-add. `oldServerId`/`oldUserId` identify the entry being
+    /// edited; empty `oldUserId` means "not stored yet" and falls back to adding.
+    ///
+    /// A re-login can hand back a different identity (a restored Jellyfin server
+    /// issues a new server Id, an account can be recreated with a new user Id).
+    /// The connection then keeps what belongs to the PROFILE, not to the id: its
+    /// WAN allow-list, its sidebar layout and its place in the list. The old
+    /// server entry is dropped only when nothing else still references it.
+    ///
+    /// Makes the connection active when it was the active one (`url`/`lan` are
+    /// then applied), and leaves the active connection alone otherwise.
+    void updateConnection(const std::string& oldServerId, const std::string& oldUserId,
+        const AppServer& server, const AppUser& user, const std::string& url, bool lan);
     bool removeServer(const std::string& id);
     bool removeUser(const std::string& id);
     const std::string& getDeviceId() { return this->device; }

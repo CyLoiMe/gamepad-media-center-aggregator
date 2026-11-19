@@ -50,6 +50,7 @@ constexpr uint32_t MINIMUM_WINDOW_HEIGHT = 360;
 #include "api/http.hpp"
 #include "utils/atomic_file.hpp"
 #include "utils/config.hpp"
+#include "utils/connection_edit.hpp"
 #include "utils/connection_token.hpp"
 #include "utils/dual_url.hpp"
 #include "utils/theme_palette.hpp"
@@ -885,6 +886,114 @@ void AppConfig::upsertUser(const AppUser& u) {
         this->users.push_back(u);
         this->user = std::find_if(this->users.begin(), this->users.end(),
             [this](const AppUser& o) { return o.id == this->user_id; });
+    }
+    this->save();
+}
+
+namespace {
+
+/// Move the per-PROFILE settings of a connection from `oldServerId` to
+/// `newServerId`. They are the things a re-login must never cost the user: the
+/// sidebar layout is stored per server id. Nothing is created when there was
+/// nothing to move, so a first-time save stays clean. The old key is dropped: the
+/// entry is gone after this edit, and leaving it would resurrect a stale layout
+/// under a stale id.
+void migrateSidebarLayout(AppConfig& conf, const std::string& oldServerId, const std::string& newServerId) {
+    if (!connection_edit::dropOldEntry(oldServerId, newServerId, false)) return;
+
+    // SIDEBAR_LAYOUT is one JSON object keyed by server id.
+    auto all = conf.getItem(AppConfig::SIDEBAR_LAYOUT, nlohmann::json::object());
+    if (all.is_object() && all.contains(oldServerId) && !all.contains(newServerId)) {
+        all[newServerId] = all.at(oldServerId);
+        all.erase(oldServerId);
+        conf.setItem(AppConfig::SIDEBAR_LAYOUT, all);
+    }
+}
+
+/// `AppUser::wan_visible_libraries` in the shape the pure rule expects (engaged
+/// flag + list), so the production path and tests/test_connection_edit.cpp run
+/// the same decision.
+struct AllowList {
+    bool hasLibraries;
+    std::vector<std::string> libraries;
+    explicit AllowList(bool has = false, const std::vector<std::string>& libs = {})
+        : hasLibraries(has), libraries(libs) {}
+};
+AllowList allowListOf(const AppUser& u) {
+    if (!u.wan_visible_libraries) return AllowList();
+    return AllowList(true, *u.wan_visible_libraries);
+}
+
+}  // namespace
+
+void AppConfig::updateConnection(const std::string& oldServerId, const std::string& oldUserId,
+    const AppServer& server, const AppUser& user, const std::string& url, bool lan) {
+    // Was this the connection being browsed? Everything active (url, token,
+    // backend, theme) then has to follow the edited entry.
+    const bool wasActive = !oldUserId.empty() && oldUserId == this->user_id;
+    // The profile's own settings survive a re-login that changed its ids.
+    migrateSidebarLayout(*this, oldServerId, server.id);
+
+    // --- the server entry -------------------------------------------------------
+    // The edited server: an existing entry (the same id, possibly refreshed) or a
+    // brand new one. Either way the addresses the user just entered are the truth.
+    auto target = std::find_if(this->servers.begin(), this->servers.end(),
+        [&server](const AppServer& s) { return s.id == server.id; });
+    if (target != this->servers.end()) {
+        target->name = server.name;
+        target->access_token = server.access_token;
+        target->local_url = server.local_url;
+        target->type = server.type;
+        target->urls = server.urls;
+    } else {
+        this->servers.push_back(server);
+    }
+
+    // A re-login that changed the server Id (restored instance, new front) leaves
+    // the old entry behind. Drop it only when no OTHER profile still points at it:
+    // the one being edited is rewritten below, so it must not count as a user (its
+    // iterator still holds the old id at this point).
+    {
+        std::vector<AppUser> others;
+        for (auto& u : this->users)
+            if (u.id != oldUserId) others.push_back(u);
+        const bool referenced = connection_edit::serverStillReferenced(others, oldServerId);
+        if (connection_edit::dropOldEntry(oldServerId, server.id, referenced))
+            this->servers.erase(std::remove_if(this->servers.begin(), this->servers.end(),
+                                    [&oldServerId](const AppServer& s) { return s.id == oldServerId; }),
+                this->servers.end());
+    }
+
+    // --- the profile entry ------------------------------------------------------
+    // Locate by the OLD id: the edited entry is the one we must rewrite.
+    auto profile = std::find_if(this->users.begin(), this->users.end(),
+        [&oldUserId](const AppUser& u) { return !oldUserId.empty() && u.id == oldUserId; });
+    if (profile != this->users.end()) {
+        // The form carries no allow-list, but losing the stored one here would
+        // silently reopen every hidden library on the tunnel. A list the caller
+        // did set (a future settings screen) wins: nullopt means "not
+        // configured", not "clear it".
+        AppUser merged = user;
+        AllowList edited = allowListOf(merged);
+        connection_edit::keepProfileSettings(edited, allowListOf(*profile));
+        if (edited.hasLibraries)
+            merged.wan_visible_libraries = edited.libraries;
+        *profile = merged;
+    } else {
+        this->users.push_back(user);
+        this->user = std::find_if(this->users.begin(), this->users.end(),
+            [this](const AppUser& u) { return u.id == this->user_id; });
+    }
+
+    if (wasActive) {
+        this->user_id = user.id;
+        this->server_url = url;
+        this->server_token = server.access_token;
+        this->lan_mode = lan;
+        this->user = std::find_if(this->users.begin(), this->users.end(),
+            [this](const AppUser& u) { return u.id == this->user_id; });
+        this->resetBackend();
+        this->applyTheme(backendTypeFromString(server.type));
     }
     this->save();
 }

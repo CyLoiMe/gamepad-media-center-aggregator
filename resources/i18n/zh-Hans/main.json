@@ -452,7 +452,10 @@
       "url": "服务器地址",
       "username": "用户名",
       "password": "密码",
-      "connect": "连接"
+      "connect": "连接",
+      "edit_hint": "编辑",
+      "edit_title": "编辑此连接",
+      "password_required": "重新登录需要密码（若只改地址，请保持用户名不变并留空密码）。"
     },
     "stremio": {
       "title": "登录 Stremio",

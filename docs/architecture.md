@@ -136,6 +136,7 @@ holds that rule, and it is the only place that decides it.
 | process start, args, forwarder | `app/src/main.cpp` |
 | activity stack, sidebar, per-server layout | `app/src/activity/main_activity.cpp` |
 | connection tiles, switching, deleting | `app/src/view/connection_switcher.cpp` |
+| editing a connection in place | tile **Y** → `app/src/tab/jellyfin_add.cpp` → `AppConfig::updateConnection` (`utils/connection_edit.hpp`) |
 | persisted state, active connection, tokens | `app/include/utils/config.hpp`, `app/src/utils/config.cpp` |
 | per-backend token rule (pure, tested) | `app/include/utils/connection_token.hpp` |
 | offline flag / offline shell | `app/include/utils/network_state.hpp`, `app/src/utils/offline_ui.cpp` |

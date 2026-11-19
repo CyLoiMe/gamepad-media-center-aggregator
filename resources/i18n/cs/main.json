@@ -452,7 +452,10 @@
       "url": "Adresa serveru",
       "username": "Uživatelské jméno",
       "password": "Heslo",
-      "connect": "Připojit"
+      "connect": "Připojit",
+      "edit_hint": "Upravit",
+      "edit_title": "Upravit toto připojení",
+      "password_required": "Pro nové přihlášení je nutné heslo (chcete-li změnit jen adresy, ponechte uživatelské jméno a heslo prázdné)."
     },
     "stremio": {
       "title": "Přihlásit se do Stremio",

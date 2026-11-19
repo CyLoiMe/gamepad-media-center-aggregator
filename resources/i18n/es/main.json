@@ -452,7 +452,10 @@
       "url": "Dirección del servidor",
       "username": "Usuario",
       "password": "Contraseña",
-      "connect": "Conectar"
+      "connect": "Conectar",
+      "edit_hint": "Editar",
+      "edit_title": "Editar esta conexión",
+      "password_required": "Hace falta la contraseña para volver a iniciar sesión (deja el usuario igual y la contraseña vacía para cambiar solo las direcciones)."
     },
     "stremio": {
       "title": "Inicia sesión en Stremio",
