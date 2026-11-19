@@ -4,8 +4,9 @@ Known work, roughly in the order it should be picked up. Nothing here is a promi
 
 ## Before the first public release
 
-- [ ] **Replace the icon.** `resources/icon/icon.jpg` is still GMCA's artwork; so is
-      the NACP name it lands in. Needed for both branding and licence hygiene.
+- [x] **Replace the icon.** SMCA's own artwork now lives in `brand/logos/logo.jpg`
+      and `scripts/make-icons.py` derives the NRO icon, the HOME tile and the in-app
+      logos from it (`brand/README.md`). The NACP name it lands in is already SMCA's.
 - [ ] **Create the GitHub repository the updater reads.** `AppVersion::git_repo`
       (`app/include/utils/config.hpp`) points at
       `CyLoiMe/switch-media-center-aggregator`; the in-app update check 404s until

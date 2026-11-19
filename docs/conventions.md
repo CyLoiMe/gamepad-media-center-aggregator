@@ -79,5 +79,10 @@ an mpv-level option changes, and only if it already exists — `MPVCore::created
   (`setting/network/user_agent`) bound with `BRLS_BIND`.
 - Icons are SVG, registered by name (`icon/ico-play.svg` → `setImageFromSVGRes`);
   fonts are the Nintendo system fonts under `resources/font`.
+- The app icons and splash logo (`resources/icon/icon.{jpg,png}`,
+  `icon-rounded.png`, `logo-ghost.png`) are generated from `brand/logos/logo.jpg` by
+  `scripts/make-icons.py` — regenerate, never hand-edit. `icon.jpg` must stay a
+  256×256 baseline JPEG with no metadata: the HOME menu refuses anything else for the
+  forwarder tile (`brand/README.md`).
 - Anything the app reads at runtime from the NRO is packed as romfs by the
   `elf2nro --romfsdir` step in `CMakeLists.txt`.

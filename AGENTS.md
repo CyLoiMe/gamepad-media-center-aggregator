@@ -34,6 +34,8 @@ see `NOTICE` for the attribution that must stay).
 - **Two singletons carry almost everything**: `AppConfig::instance()` (servers,
   settings, the active `media::Backend`) and `MPVCore::instance()` (the player,
   created lazily at the first playback).
+- **Icons and brand art are generated**: `brand/logos/logo.jpg` →
+  `scripts/make-icons.py` → `resources/icon/` (`brand/README.md`).
 - **The UI never formats provider URLs**: everything goes through `media::Backend`
   (`app/include/api/backend.hpp`) and its neutral `media::*` models.
 - **One platform**: there is no PS Vita/PS4/desktop/Android code left. Do not add

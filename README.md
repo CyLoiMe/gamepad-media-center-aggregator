@@ -72,6 +72,7 @@ covers the rest. Two files next to it are read at startup:
 | `app/src`, `app/include` | the app: activities, tabs, views, API backends, utils |
 | `resources/` | XML layouts, i18n, fonts, SVG icons, romfs payload |
 | `library/borealis`, `library/lunasvg`, `library/miniz` | submodules (UI, SVG, inflate) |
+| `brand/` | source artwork; `scripts/make-icons.py` derives `resources/icon/` from it |
 | `scripts/switch` | PKGBUILDs of the Switch portlibs this build pins |
 | `scripts/patches` | borealis fixes applied at build time |
 | `tests/` | standalone logic tests (`./tests/run.sh`, no CMake wiring) |
