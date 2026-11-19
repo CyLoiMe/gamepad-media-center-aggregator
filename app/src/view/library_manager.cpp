@@ -227,7 +227,7 @@ LibraryManager::LibraryManager(MainTabFrame* frame) : frame(frame) {
     // The WAN column only exists where something enforces it: the Jellyfin/Emby
     // backend filters and the playback guard checks. Without a connection there
     // is no profile to write the list to either.
-    const std::string type = AppConfig::activeServerType();
+    const std::string type = AppConfig::instance().activeServerType();
     this->wanEnabled = (type == "jellyfin" || type == "emby") && !AppConfig::instance().getUserId().empty();
     if (this->wanEnabled) this->wanLibs = AppConfig::instance().getWanVisibleLibraries();
 
