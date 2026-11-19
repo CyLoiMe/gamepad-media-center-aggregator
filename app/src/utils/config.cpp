@@ -659,6 +659,16 @@ std::string AppConfig::getLocalUrl() const {
     return server == this->servers.end() ? std::string() : server->local_url;
 }
 
+std::optional<std::vector<std::string>> AppConfig::allowedLibraries() const {
+    // Nothing to filter on the home network.
+    if (this->lan_mode) return std::nullopt;
+    auto profile = std::find_if(this->users.begin(), this->users.end(),
+        [this](const AppUser& u) { return u.id == this->user_id; });
+    if (profile == this->users.end()) return std::nullopt;
+    // Never configured: keep the historical "everything visible" behaviour.
+    return profile->wan_visible_libraries;
+}
+
 void AppConfig::setActiveUrl(const std::string& url, bool lan) {
     if (url.empty()) return;
     this->server_url = url;

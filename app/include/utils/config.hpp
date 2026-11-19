@@ -275,6 +275,11 @@ public:
     bool isLanMode() const { return this->lan_mode; }
     /// LAN address of the active connection, or "" when it declares none.
     std::string getLocalUrl() const;
+    /// Libraries the active connection may browse on its CURRENT address, or
+    /// `nullopt` when nothing is filtered (LAN mode, or the profile never
+    /// configured a WAN allow-list). Snapshot it on the UI thread before going
+    /// async and filter with `wanfilter::allows()` (utils/wan_filter.hpp).
+    std::optional<std::vector<std::string>> allowedLibraries() const;
     /// Point the active connection at another of its addresses without
     /// re-authenticating (re-probe result, or a manual force). The backend reads
     /// getUrl() live, so the next request uses it.

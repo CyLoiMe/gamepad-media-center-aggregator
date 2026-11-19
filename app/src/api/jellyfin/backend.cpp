@@ -13,8 +13,11 @@
 #include "api/media/resolution.hpp"
 #include "utils/config.hpp"
 #include "utils/misc.hpp"
+#include "utils/wan_filter.hpp"
 #include <borealis/core/logger.hpp>
 #include <borealis/core/i18n.hpp>
+#include <algorithm>
+#include <optional>
 #include <sstream>
 
 using namespace brls::literals;  // hub titles localized like the rest of the UI
@@ -26,6 +29,30 @@ namespace {
 std::string userId() { return AppConfig::instance().getUserId(); }
 std::string base() { return AppConfig::instance().getUrl(); }
 std::string token() { return AppConfig::instance().getToken(); }
+
+/// A library whose contents this app browses (movie/show/artist/mixed).
+bool browsableLibrary(const std::string& type) {
+    return type == media::mediaTypeMovie || type == media::mediaTypeShow ||
+           type == media::mediaTypeArtist || type == media::mediaTypeMixed;
+}
+
+/// Tri-state (nullopt = no filtering) -> the pure predicate's pointer form.
+bool allowsLibrary(const std::optional<std::vector<std::string>>& allow, const std::string& libraryId) {
+    return wanfilter::allows(allow ? &*allow : nullptr, libraryId);
+}
+
+/// The account's browsable libraries, minus the ones the WAN allow-list excludes.
+/// Blocking: call inside brls::async. `allow` is a UI-thread snapshot
+/// (AppConfig::allowedLibraries) — the backend never decides policy itself.
+std::vector<media::Section> visibleLibraries(const std::string& b, const std::string& tok,
+    const std::string& uid, const std::optional<std::vector<std::string>>& allow) {
+    auto views = parseContainer<media::Section>(
+        getSync(b + fmt::format(fmt::runtime(apiViews), uid), tok), parseSection);
+    std::vector<media::Section> out;
+    for (auto& v : views.Items)
+        if (browsableLibrary(v.type) && allowsLibrary(allow, v.key)) out.push_back(v);
+    return out;
+}
 
 /// Plex-style sort token -> Jellyfin SortBy field
 std::string mapSort(const std::string& f) {
@@ -156,7 +183,19 @@ const media::Capabilities& JellyfinBackend::caps() const {
 
 void JellyfinBackend::listSections(media::Then<media::Container<media::Section>> then, media::OnError error) {
     std::string url = base() + fmt::format(fmt::runtime(apiViews), userId());
-    fetchContainer<media::Section>(url, parseSection, then, error);
+    // The sidebar is where a hidden library would first show up; drop it before
+    // the tabs are built (and before any of its artwork can be fetched).
+    auto allow = AppConfig::instance().allowedLibraries();
+    fetchContainer<media::Section>(url, parseSection,
+        [allow, then](const media::Container<media::Section>& c) {
+            media::Container<media::Section> out = c;
+            out.Items.erase(std::remove_if(out.Items.begin(), out.Items.end(),
+                                [&allow](const media::Section& s) { return !allowsLibrary(allow, s.key); }),
+                out.Items.end());
+            out.TotalRecordCount = (long)out.Items.size();
+            if (then) then(std::move(out));
+        },
+        error);
 }
 
 void JellyfinBackend::getHomeHubs(
@@ -172,31 +211,36 @@ void JellyfinBackend::getHomeHubs(
     // titles resolved on the UI thread (i18n map lookup) before going async
     std::string nextupTitle = "main/home/nextup"_i18n;
     std::string latestLabel = "main/home/latest"_i18n;
-    brls::async([b, tok, uid, cnt, nextupTitle, latestLabel, then, error]() {
+    // WAN allow-list snapshot (nullopt = no filtering). Every row below is built
+    // from `visibleLibraries()`, so a hidden library contributes neither a row nor
+    // the artwork its row would have fetched.
+    auto allow = AppConfig::instance().allowedLibraries();
+    brls::async([b, tok, uid, cnt, nextupTitle, latestLabel, allow, then, error]() {
         try {
             media::Container<media::Hub> out;
+            std::vector<media::Section> visible = visibleLibraries(b, tok, uid, allow);
 
-            // Next Up (next episode of shows already started)
+            // Next Up, per SHOW library: one global call would happily return an
+            // episode from a hidden one.
             {
-                HTTP::Form f = {{"userId", uid}, {"Limit", std::to_string(cnt)}, {"Fields", itemFieldsValue}};
-                auto c = parseContainer<media::Item>(
-                    getSync(b + fmt::format(fmt::runtime(apiNextUp), HTTP::encode_form(f)), tok), parseItem);
-                if (!c.Items.empty()) {
-                    media::Hub h;
-                    h.title = nextupTitle;
-                    h.hubIdentifier = "home.nextup";  // not "home.ondeck": home_tab skips that one
-                    h.items = std::move(c.Items);
-                    out.Items.push_back(std::move(h));
+                media::Hub h;
+                h.title = nextupTitle;
+                h.hubIdentifier = "home.nextup";  // not "home.ondeck": home_tab skips that one
+                for (auto& v : visible) {
+                    int remaining = cnt - (int)h.items.size();
+                    if (remaining <= 0) break;
+                    if (v.type != media::mediaTypeShow && v.type != media::mediaTypeMixed) continue;
+                    HTTP::Form f = {{"userId", uid}, {"ParentId", v.key}, {"Limit", std::to_string(remaining)},
+                        {"Fields", itemFieldsValue}};
+                    auto c = parseContainer<media::Item>(
+                        getSync(b + fmt::format(fmt::runtime(apiNextUp), HTTP::encode_form(f)), tok), parseItem);
+                    for (auto& it : c.Items) h.items.push_back(std::move(it));
                 }
+                if (!h.items.empty()) out.Items.push_back(std::move(h));
             }
 
-            // Recently Added, one row per movie/show/music/mixed library
-            auto views = parseContainer<media::Section>(
-                getSync(b + fmt::format(fmt::runtime(apiViews), uid), tok), parseSection);
-            for (auto& v : views.Items) {
-                if (v.type != media::mediaTypeMovie && v.type != media::mediaTypeShow &&
-                    v.type != media::mediaTypeArtist && v.type != media::mediaTypeMixed)
-                    continue;
+            // Recently Added, one row per visible library
+            for (auto& v : visible) {
                 HTTP::Form f = {{"ParentId", v.key}, {"Limit", std::to_string(cnt)}, {"Fields", itemFieldsValue}};
                 auto c = parseContainer<media::Item>(
                     getSync(b + fmt::format(fmt::runtime(apiLatest), uid, HTTP::encode_form(f)), tok), parseItem);
@@ -225,13 +269,39 @@ void JellyfinBackend::getSectionHubs(
 
 void JellyfinBackend::getContinueWatching(
     int count, media::Then<media::Container<media::Hub>> then, media::OnError error) {
-    HTTP::Form form = {
-        {"Limit", std::to_string(count)},
-        {"MediaTypes", "Video"},
-        {"Fields", itemFieldsValue},
-    };
-    std::string url = base() + fmt::format(fmt::runtime(apiResume), userId(), HTTP::encode_form(form));
-    fetchHub(url, "main/home/resume"_i18n, "home.continue", then, error);
+    std::string b = base(), tok = token(), uid = userId();
+    int cnt = count;
+    std::string title = "main/home/resume"_i18n;
+    auto allow = AppConfig::instance().allowedLibraries();
+    // Per-library, not one global Resume call: that call returns episodes of any
+    // library, and a hidden one must not contribute a row entry (its poster would
+    // then be fetched over the tunnel).
+    brls::async([b, tok, uid, cnt, title, allow, then, error]() {
+        try {
+            media::Container<media::Hub> out;
+            media::Hub hub;
+            hub.title = title;
+            hub.hubIdentifier = "home.continue";
+            for (auto& v : visibleLibraries(b, tok, uid, allow)) {
+                int remaining = cnt - (int)hub.items.size();
+                if (remaining <= 0) break;
+                HTTP::Form form = {
+                    {"ParentId", v.key},
+                    {"Limit", std::to_string(remaining)},
+                    {"MediaTypes", "Video"},
+                    {"Fields", itemFieldsValue},
+                };
+                auto c = parseContainer<media::Item>(
+                    getSync(b + fmt::format(fmt::runtime(apiResume), uid, HTTP::encode_form(form)), tok), parseItem);
+                for (auto& it : c.Items) hub.items.push_back(std::move(it));
+            }
+            if (!hub.items.empty()) out.Items.push_back(std::move(hub));
+            out.TotalRecordCount = (long)out.Items.size();
+            brls::sync(std::bind(then, std::move(out)));
+        } catch (const std::exception& ex) {
+            if (error) brls::sync(std::bind(error, std::string(ex.what())));
+        }
+    });
 }
 
 void JellyfinBackend::getLibraryGrid(const std::string& sectionId, const media::GridQuery& q, size_t start,
@@ -423,22 +493,88 @@ void JellyfinBackend::getPersonMedia(const std::string& personId, int count,
 
 void JellyfinBackend::search(const std::string& query, media::MediaKind kind, int limit,
     media::Then<media::Container<media::Item>> then, media::OnError error) {
-    HTTP::Form form = {
-        {"searchTerm", query},
-        {"Recursive", "true"},
-        {"IncludeItemTypes", kindTypes(kind)},
-        {"Limit", std::to_string(limit)},
-        {"Fields", itemFieldsValue},
-    };
-    std::string url = base() + fmt::format(fmt::runtime(apiItems), userId(), HTTP::encode_form(form));
-    fetchContainer<media::Item>(url, parseItem, then, error);
+    auto allow = AppConfig::instance().allowedLibraries();
+    if (!allow) {
+        HTTP::Form form = {
+            {"searchTerm", query},
+            {"Recursive", "true"},
+            {"IncludeItemTypes", kindTypes(kind)},
+            {"Limit", std::to_string(limit)},
+            {"Fields", itemFieldsValue},
+        };
+        std::string url = base() + fmt::format(fmt::runtime(apiItems), userId(), HTTP::encode_form(form));
+        fetchContainer<media::Item>(url, parseItem, then, error);
+        return;
+    }
+
+    // WAN allow-list active: one query per visible library. A single response
+    // cannot be split by library afterwards — an episode's ParentId is its season,
+    // not the library it lives in — so asking per library is the exact filter.
+    std::string b = base(), tok = token(), uid = userId();
+    std::string types = kindTypes(kind);
+    brls::async([b, tok, uid, query, types, limit, allow, then, error]() {
+        try {
+            media::Container<media::Item> out;
+            for (auto& v : visibleLibraries(b, tok, uid, allow)) {
+                int remaining = limit - (int)out.Items.size();
+                if (remaining <= 0) break;
+                HTTP::Form form = {
+                    {"searchTerm", query},
+                    {"Recursive", "true"},
+                    {"ParentId", v.key},
+                    {"IncludeItemTypes", types},
+                    {"Limit", std::to_string(remaining)},
+                    {"Fields", itemFieldsValue},
+                };
+                auto c = parseContainer<media::Item>(
+                    getSync(b + fmt::format(fmt::runtime(apiItems), uid, HTTP::encode_form(form)), tok), parseItem);
+                for (auto& it : c.Items) out.Items.push_back(std::move(it));
+            }
+            out.TotalRecordCount = (long)out.Items.size();
+            brls::sync(std::bind(then, std::move(out)));
+        } catch (const std::exception& ex) {
+            if (error) brls::sync(std::bind(error, std::string(ex.what())));
+        }
+    });
 }
 
 void JellyfinBackend::getRecentlyAdded(
     size_t start, size_t size, media::Then<media::Container<media::Item>> then, media::OnError error) {
-    HTTP::Form form = {{"Limit", std::to_string(size)}, {"Fields", itemFieldsValue}};
-    std::string url = base() + fmt::format(fmt::runtime(apiLatest), userId(), HTTP::encode_form(form));
-    fetchContainer<media::Item>(url, parseItem, then, error);
+    auto allow = AppConfig::instance().allowedLibraries();
+    if (!allow) {
+        HTTP::Form form = {{"Limit", std::to_string(size)}, {"Fields", itemFieldsValue}};
+        std::string url = base() + fmt::format(fmt::runtime(apiLatest), userId(), HTTP::encode_form(form));
+        fetchContainer<media::Item>(url, parseItem, then, error);
+        return;
+    }
+
+    // Filtered: merged across the visible libraries (Latest has no cross-library
+    // filter). `start` indexes the server's global ordering, which a merge cannot
+    // reproduce; callers ask for the first page, so the list is truncated to
+    // `size` instead.
+    (void)start;
+    std::string b = base(), tok = token(), uid = userId();
+    size_t want = size;
+    brls::async([b, tok, uid, want, allow, then, error]() {
+        try {
+            media::Container<media::Item> out;
+            for (auto& v : visibleLibraries(b, tok, uid, allow)) {
+                if (out.Items.size() >= want) break;
+                HTTP::Form form = {
+                    {"ParentId", v.key},
+                    {"Limit", std::to_string(want - out.Items.size())},
+                    {"Fields", itemFieldsValue},
+                };
+                auto c = parseContainer<media::Item>(
+                    getSync(b + fmt::format(fmt::runtime(apiLatest), uid, HTTP::encode_form(form)), tok), parseItem);
+                for (auto& it : c.Items) out.Items.push_back(std::move(it));
+            }
+            out.TotalRecordCount = (long)out.Items.size();
+            brls::sync(std::bind(then, std::move(out)));
+        } catch (const std::exception& ex) {
+            if (error) brls::sync(std::bind(error, std::string(ex.what())));
+        }
+    });
 }
 
 void JellyfinBackend::getGenres(const std::string& sectionId, media::MediaKind kind,

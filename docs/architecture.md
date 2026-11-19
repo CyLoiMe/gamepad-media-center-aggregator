@@ -116,8 +116,12 @@ home address does not hold up the fallback. `NetworkBadge`
 (R is already next-tab); it can re-probe or force the other address.
 
 `AppUser::wan_visible_libraries` is the per-profile WAN allow-list this mode exists
-to enforce — `docs/backlog.md` §WAN bandwidth protection lists the filtering and the
-playback guard that still have to use it.
+to enforce. `AppConfig::allowedLibraries()` snapshots it on the UI thread (nullopt =
+not configured = nothing hidden) and the Jellyfin/Emby backend then queries per
+VISIBLE library — sidebar, home rows, Continue Watching, Recently Added, search —
+so a hidden library costs neither a request nor its artwork. The rule itself is
+`utils/wan_filter.hpp`; `docs/backlog.md` lists the surfaces still to cover and the
+playback guard.
 
 ## Where things live
 

@@ -64,12 +64,15 @@ behind a metered tunnel. The dual-address probe, the LAN/WAN badge and the ZR
 status dialog exist (`utils/dual_url.hpp`, `view/network_badge.cpp`); what remains
 is the part that actually protects the quota.
 
-- [ ] **Enforce `AppUser::wan_visible_libraries`.** The field is persisted but
-      nothing reads it yet. `nullopt` means "never configured" (everything
-      visible); an engaged list must be authoritative. Filter at REQUEST time —
-      `listSections`, and the per-library `Latest`/`Resume`/`NextUp` loops in
-      `getHomeHubs`/`getContinueWatching` — because dropping items after parsing
-      breaks `TotalRecordCount` and the page sizes.
+- [x] **Enforce `AppUser::wan_visible_libraries`.** The sidebar (`listSections`),
+      the home rows (`Next Up` and `Latest` per library), `Continue Watching`,
+      `Recently Added` and `search` now query per VISIBLE library, so a hidden one
+      contributes neither a row nor the artwork its row would have fetched.
+      Filtering responses instead would have broken `TotalRecordCount` and the page
+      sizes, and `ParentId` is the season for an episode, not its library.
+- [ ] The personal list (favorites) and playlists are still cross-library: they can
+      still surface an item from a hidden library. Both need an item's owning
+      library, which is the `librarySectionID` item below.
 - [ ] **Playback guard.** Before `resolvePlayback` hands a URL to mpv, refuse it
       when the mode is WAN and the item's library is hidden, or when the resolved
       URL still points at the server host (i.e. the bytes go through the tunnel).
