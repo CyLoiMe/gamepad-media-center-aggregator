@@ -16,7 +16,8 @@ by thcolin (Apache-2.0), rebuilt as a Switch-only project. See `NOTICE`.
   when needed, resume positions, audio/subtitle track selection, speed, aspect.
 - **Remote `.strm` libraries**: items stored on a cloud drive and fronted by a
   302 proxy (TgtoDrive and similar) play through the URL the server hands out in
-  `PlaybackInfo` — see `docs/emby-remote-playback.md`.
+  `PlaybackInfo`, and are never sent to the transcoder — those front-ends have no
+  encoder behind them.
 - **Offline**: download to the SD card and play local files, with an offline
   catalog for Jellyfin/Emby sources as well.
 - **Files**: browse the SD card, a WebDAV/HTTP share or a USB drive (UMS).
@@ -77,11 +78,12 @@ covers the rest. Two files next to it are read at startup:
 | `scripts/patches` | borealis fixes applied at build time |
 | `tests/` | standalone logic tests (`./tests/run.sh`, no CMake wiring) |
 
-## Docs
+## Where to start
 
-`AGENTS.md` is the entry point for anyone working on the code (humans and AI
-assistants alike): it indexes `docs/` — architecture, build, playback, conventions,
-backlog, releasing.
+`app/include/api/backend.hpp` is the backend interface and the neutral `media::*`
+models; `app/src/api/{plex,jellyfin,stremio}/` are its three implementations;
+`app/src/activity/main_activity.cpp` builds the screens, and
+`app/src/activity/player_view.cpp` owns playback. Everything else follows from those.
 
 ## License
 

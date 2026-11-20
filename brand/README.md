@@ -35,5 +35,6 @@ The script writes it with `progressive=False` and strips metadata for that reaso
 tile. The tile is a separate installed title — the forwarder NSP — whose icon
 `scripts/forwarder/CMakeLists.txt` copies into `control/icon_AmericanEnglish.dat`
 at build time. Replacing `SMCA.nro` therefore does not touch an already installed
-tile; it must be reinstalled from a build that regenerated `forwarder.nsp`. See
-`docs/build.md` §Two different icons and `scripts/inspect-nro.py`.
+tile; it must be reinstalled from a build that regenerated `forwarder.nsp`.
+`app/src/utils/forwarder.cpp` verifies that the console kept the new artwork, and
+`scripts/inspect-nro.py` prints the NSP a built NRO carries.

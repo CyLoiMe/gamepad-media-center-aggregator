@@ -4,8 +4,10 @@ Copyright 2026 CyLoiMe
 Based on GMCA by thcolin — https://github.com/thcolin/gamepad-media-center-aggregator
 (formerly pleNx) — licensed under the Apache License, Version 2.0.
 Changes made for SMCA: renamed and rebranded, Nintendo Switch build only, the other
-platforms and their packaging removed, and the playback / User-Agent changes
-described in docs/emby-remote-playback.md.
+platforms and their packaging removed, remote (.strm / cloud drive) sources played
+and downloaded through the URL the server hands out in PlaybackInfo instead of an
+assembled stream URL, and one User-Agent for the whole app (server requests and
+player alike).
 
 This product includes software developed as part of the Switchfin project
 (https://github.com/dragonflylee/switchfin), licensed under the Apache License,
