@@ -439,6 +439,18 @@ void SettingTab::onCreate() {
             AppConfig::instance().setItem(AppConfig::WAN_POLICY, AppConfig::wan_policy);
         });
 
+    // How long the home address gets to answer before the tunnel is used. The
+    // labels carry the unit; the stored value is milliseconds, so a slow Wi-Fi
+    // can be given more room than the 2 s default.
+    auto& probeOption = conf.getOptions(AppConfig::WAN_PROBE_MS);
+    // Default index 1 = "2 s", which is what AppConfig::wan_probe_ms falls back
+    // to when the key is absent: the selector must show the value in force.
+    selectorProbeTimeout->init("main/setting/network/probe_timeout"_i18n, probeOption.options,
+        conf.getValueIndex(AppConfig::WAN_PROBE_MS, 1), [&probeOption](int selected) {
+            AppConfig::wan_probe_ms = probeOption.values[selected];
+            AppConfig::instance().setItem(AppConfig::WAN_PROBE_MS, AppConfig::wan_probe_ms);
+        });
+
     btnProxy->init("main/setting/network/proxy"_i18n, HTTP::PROXY_STATUS, [this](bool value) {
         inputProxy->setVisibility(value ? brls::Visibility::VISIBLE : brls::Visibility::GONE);
         HTTP::PROXY_STATUS = value;

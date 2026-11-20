@@ -8,6 +8,10 @@
   (`AppServer::local_url`) is probed before the remote one; Settings → Network
   picks the policy (`lan_first` / `lan_only` / `race`). The top-right badge shows
   LAN or WAN and its dialog (**ZR**) can re-probe or force the other address.
+- **Home-address probe budget.** Settings → Network now sets how long the home
+  address gets before the tunnel is used (1.5 s – 5 s, default 2 s), so a slow
+  home Wi-Fi is not read as "away" and does not fall through to the metered
+  address. The sign-in form probes with the same value.
 - **WAN library allow-list.** Settings → Libraries gained an **X** column that
   decides, per library, whether it exists on the metered address; the Jellyfin/Emby
   backend then queries only the visible libraries. Playback is guarded too: an item

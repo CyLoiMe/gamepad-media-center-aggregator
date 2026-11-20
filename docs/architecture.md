@@ -118,8 +118,13 @@ address every backend reads through `getUrl()`):
 | `lan_only` | only the LAN address is probed; a home-only console can never spend tunnel quota. Roaming needs the policy changed — Settings is reachable from the logged-out root (Y). |
 | `race` | first answer wins (opt-in): fastest, but at home the tunnel can win the race and burn quota. |
 
-A LAN candidate fails fast (2 s) while a remote one keeps the 5 s budget, so a dead
-home address does not hold up the fallback. `NetworkBadge`
+A LAN candidate fails within the budget in Settings → Network (`WAN_PROBE_MS`,
+1.5–5 s, default 2 s) while a remote one keeps the 5 s budget, so a dead home
+address does not hold up the fallback. The default is deliberately above the
+~1.2 s a healthy probe needs: a slow home Wi-Fi read as "away" falls through to
+the metered address, so the timeout is the user's trade-off, not a constant. The
+sign-in form probes with the same value, so connecting judges the home address
+exactly like every later activation. `NetworkBadge`
 (`view/network_badge.cpp`, top right) shows LAN/WAN and opens its dialog on **ZR**
 (R is already next-tab); it can re-probe or force the other address.
 

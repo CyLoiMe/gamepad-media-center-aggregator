@@ -298,7 +298,8 @@
         "lan_first": "Önce LAN (önerilen)",
         "lan_only": "Yalnızca LAN (ev)",
         "race": "En hızlı"
-      }
+      },
+      "probe_timeout": "Ev adresi yoklama süresi"
     },
     "ui": {
       "header": "Arayüz",

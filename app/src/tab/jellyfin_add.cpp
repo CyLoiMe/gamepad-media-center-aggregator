@@ -186,10 +186,13 @@ void JellyfinAdd::submit() {
 
         // Pick the address to activate: the LAN one when it answers (no tunnel
         // quota), otherwise the remote one. Probed off the UI thread, so the
-        // badge is right as soon as the app opens.
+        // badge is right as soon as the app opens. Same budget as the runtime
+        // probe (Settings → Network): signing in must not judge the home address
+        // more harshly than every later activation does.
         bool lan = false;
         std::string active = url;
-        if (ok && !local.empty() && jellyfin::probeConnection(local, 1500, 1200)) {
+        const long budget = AppConfig::wan_probe_ms;
+        if (ok && !local.empty() && jellyfin::probeConnection(local, budget, budget)) {
             active = local;
             lan = true;
         }

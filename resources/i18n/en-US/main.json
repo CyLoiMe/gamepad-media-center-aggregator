@@ -310,7 +310,8 @@
         "lan_first": "LAN first (recommended)",
         "lan_only": "LAN only (home use)",
         "race": "Fastest wins"
-      }
+      },
+      "probe_timeout": "Home address probe timeout"
     },
     "ui": {
       "header": "UI",

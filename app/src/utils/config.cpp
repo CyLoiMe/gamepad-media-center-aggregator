@@ -125,6 +125,7 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
     {HTTP_PROXY_STATUS, {"http_proxy_status"}},
     {HTTP_PROXY, {"http_proxy"}},
     {WAN_POLICY, {"wan_policy", {"lan_first", "lan_only", "race"}}},
+    {WAN_PROBE_MS, {"wan_probe_ms", {"1.5 s", "2 s", "3.5 s", "5 s"}, {1500, 2000, 3500, 5000}}},
 
     {LIBRARY_SORT, {"library_sort"}},
     {SIDEBAR_LAYOUT, {"sidebar_layout"}},
@@ -348,6 +349,10 @@ bool AppConfig::init() {
     // to the strictly-priority behaviour: a reachable LAN address is never
     // preempted by a faster tunnel answer (utils/dual_url.hpp).
     AppConfig::wan_policy = this->getItem(WAN_POLICY, std::string("lan_first"));
+    // How long the home address may take before the remote one is used. Longer
+    // than the 1.2 s the protocol would need on a good day, because being wrong
+    // here costs tunnel quota (see reachableUrl).
+    AppConfig::wan_probe_ms = this->getItem(WAN_PROBE_MS, 2000L);
 
     // 初始化是否全屏，必须在创建窗口前设置此值
     VideoContext::FULLSCREEN = this->getItem(FULLSCREEN, false);
@@ -628,12 +633,16 @@ std::string AppConfig::reachableUrl(const AppServer& s, bool* lan) {
             return s.urls.empty() ? std::string() : s.urls.front();
         case media::BackendType::Jellyfin:
         case media::BackendType::Emby: {
-            // A LAN candidate fails fast (2 s): a dead home address must not hold
-            // up the remote one. A remote candidate keeps the usual budget — it
-            // may have to cross a tunnel where 2 s is not enough for TLS.
+            // A LAN candidate fails within the budget the user picked in
+            // Settings → Network (WAN_PROBE_MS): the default is generous on
+            // purpose, because a slow home Wi-Fi read as "away" falls through to
+            // the metered address and spends quota. A remote candidate keeps the
+            // larger budget — it may have to cross a tunnel where 2 s is not
+            // enough for TLS.
             auto probe = [&s](const std::string& url) {
                 const bool home = dualurl::isLan(url, s.local_url);
-                return jellyfin::probeConnection(url, home ? 2000 : 5000, home ? 2000 : 2000);
+                return jellyfin::probeConnection(
+                    url, home ? AppConfig::wan_probe_ms : 5000, home ? AppConfig::wan_probe_ms : 2000);
             };
             const dualurl::Policy policy = dualurl::policyOf(AppConfig::wan_policy);
             const std::vector<std::string> candidates = dualurl::candidates(policy, s.local_url, s.urls);

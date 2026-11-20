@@ -298,7 +298,8 @@
         "lan_first": "Nejprve LAN (doporučeno)",
         "lan_only": "Pouze LAN (doma)",
         "race": "Nejrychlejší"
-      }
+      },
+      "probe_timeout": "Časový limit domovské adresy"
     },
     "ui": {
       "header": "Rozhraní",

@@ -310,7 +310,8 @@
         "lan_first": "LAN prioritaire (recommandé)",
         "lan_only": "LAN uniquement (maison)",
         "race": "Le plus rapide"
-      }
+      },
+      "probe_timeout": "Délai de sondage de l'adresse locale"
     },
     "ui": {
       "header": "Paramètres de l'interface",

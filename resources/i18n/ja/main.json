@@ -298,7 +298,8 @@
         "lan_first": "LAN 優先（推奨）",
         "lan_only": "LAN のみ（自宅用）",
         "race": "最速優先"
-      }
+      },
+      "probe_timeout": "自宅アドレスの確認タイムアウト"
     },
     "ui": {
       "header": "UI",

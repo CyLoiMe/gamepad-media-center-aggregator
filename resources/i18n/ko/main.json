@@ -298,7 +298,8 @@
         "lan_first": "LAN 우선 (권장)",
         "lan_only": "LAN 전용 (가정용)",
         "race": "가장 빠른 응답"
-      }
+      },
+      "probe_timeout": "홈 주소 확인 제한 시간"
     },
     "ui": {
       "header": "UI",

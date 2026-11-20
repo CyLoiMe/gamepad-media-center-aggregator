@@ -201,6 +201,13 @@ public:
         /// utils/dual_url.hpp.
         WAN_POLICY,
 
+        /// How long the HOME address gets to answer before the WAN one is used
+        /// (ms). The trade-off is the user's: a short budget keeps the app from
+        /// feeling stuck, a longer one keeps a slow home Wi-Fi from being read as
+        /// "away" and falling through to the metered address. See
+        /// AppConfig::reachableUrl().
+        WAN_PROBE_MS,
+
         /// Library sorts/filters, persisted locally (json object
         /// {itemId: "sortBy,sortOrder,filter"} — /DisplayPreferences does not
         /// exist in Plex, cf. PLEX_MIGRATION.md §2.5)
@@ -384,6 +391,10 @@ public:
     /// read by reachableUrl() on every activation. Kept next to SYNC: a setting
     /// the network layer consults without going through an instance.
     inline static std::string wan_policy = "lan_first";
+    /// Live copy of WAN_PROBE_MS: the budget (ms) the home address gets to
+    /// answer before reachableUrl() falls through to the remote one. A setting
+    /// the probe consults without going through an instance, like wan_policy.
+    inline static long wan_probe_ms = 2000;
 
 private:
     static std::unordered_map<Item, Option> settingMap;

@@ -298,7 +298,8 @@
         "lan_first": "LAN zuerst (empfohlen)",
         "lan_only": "Nur LAN (zuhause)",
         "race": "Schnellste Antwort"
-      }
+      },
+      "probe_timeout": "Zeitlimit für die Heimadresse"
     },
     "ui": {
       "header": "Oberfläche",

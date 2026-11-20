@@ -298,7 +298,8 @@
         "lan_first": "LAN primeiro (recomendado)",
         "lan_only": "Somente LAN (casa)",
         "race": "A mais rápida"
-      }
+      },
+      "probe_timeout": "Tempo limite do endereço local"
     },
     "ui": {
       "header": "Interface",

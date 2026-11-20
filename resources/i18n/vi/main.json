@@ -298,7 +298,8 @@
         "lan_first": "Ưu tiên LAN (khuyến nghị)",
         "lan_only": "Chỉ LAN (dùng ở nhà)",
         "race": "Nhanh nhất"
-      }
+      },
+      "probe_timeout": "Thời gian chờ địa chỉ nội bộ"
     },
     "ui": {
       "header": "Giao diện",

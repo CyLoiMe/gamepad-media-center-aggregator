@@ -105,6 +105,10 @@
                      addresses (utils/dual_url.hpp). -->
                 <brls:SelectorCell
                     id="setting/network/wan_policy" />
+                <!-- How long the home address may take to answer before the
+                     metered one is used (WAN_PROBE_MS). -->
+                <brls:SelectorCell
+                    id="setting/network/probe_timeout" />
                 <brls:BooleanCell
                     id="setting/network/proxy_status" />
                 <brls:InputCell
