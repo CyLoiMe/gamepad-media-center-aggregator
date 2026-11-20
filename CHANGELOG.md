@@ -40,6 +40,11 @@
 
 ### Fixed
 
+- Downloading a cloud source works again. The transfer used to assemble
+  `/Videos/{id}/stream`, which the front-ends serving those sources refuse (403,
+  missing user context); it now asks PlaybackInfo for the link the server actually
+  hands out, the way direct play does. A download whose link leaves the server host
+  no longer carries the server's auth headers — a CDN has no business receiving them.
 - A cloud source playing behind a 302 front-end is now always played as-is. On the
   Switch the 1080p resolution limit derived a bitrate cap for any 4K item, which
   routed it into a server-side transcode — the server pulling the whole cloud file

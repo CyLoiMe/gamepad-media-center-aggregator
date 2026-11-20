@@ -868,6 +868,23 @@ std::string JellyfinBackend::downloadUrl(const std::string& partKey) const {
     return withToken(base() + partKey, token());
 }
 
+std::string JellyfinBackend::offlineFileUrl(const std::string& itemId, const std::string& partKey,
+    const std::string& sourceId, bool remote) const {
+    // A remote source (.strm on a cloud drive) may only be served through the URL
+    // PlaybackInfo hands out: the front-ends that serve it reject the assembled
+    // /Videos/{id}/stream this falls back to with a 403 (docs/playback.md). One
+    // request, and it is what makes the download possible at all.
+    if (remote && !sourceId.empty()) {
+        const std::string direct = playbackInfoUrl(itemId, sourceId, token());
+        if (!direct.empty()) {
+            brls::Logger::info("jellyfin: remote download, using the server's DirectStreamUrl");
+            return direct;
+        }
+        brls::Logger::info("jellyfin: no usable DirectStreamUrl for the download, keeping the built stream URL");
+    }
+    return this->downloadUrl(partKey);
+}
+
 HTTP::Header JellyfinBackend::authHeaders() const { return headers(token()); }
 
 // ---- personal list: Jellyfin/Emby favorites -----------------------------------

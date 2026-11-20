@@ -41,12 +41,14 @@ Known work, roughly in the order it should be picked up. Nothing here is a promi
       failed, may still ask for one), and the quality menu is hidden — every tier of
       it is a transcode. `main/player/quality_remote` explains if the bound key is
       pressed anyway.
-- [ ] **`downloadUrl()` still assembles `/Videos/{id}/stream`** for a remote item,
-      which those front-ends refuse (403, missing user context) — the same failure
-      direct play had before it moved to PlaybackInfo. Downloads need the item's
-      `remote` + `sourceId` carried on the `DownloadItem` (like `serverId` now is) so
-      the transfer can ask PlaybackInfo for `DirectStreamUrl` first, and fall back to
-      the assembled URL only for non-remote items.
+- [x] **`downloadUrl()` assembled `/Videos/{id}/stream`** for a remote item, which
+      those front-ends refuse (403, missing user context) — the same failure direct
+      play had before it moved to PlaybackInfo. `DownloadItem` now carries the
+      source's `remote` + `sourceId` (stamped in `enqueue()` from the Media the part
+      belongs to), and `Backend::offlineFileUrl()` — Jellyfin/Emby override it — asks
+      PlaybackInfo at TRANSFER time, because that link is signed and short-lived. The
+      request's auth headers are dropped when the link leaves the server host: mpv
+      never sends a token to a CDN either.
 - [ ] A server that does not report `IsRemote` keeps the old path. Widening the
       trigger to "always ask PlaybackInfo on direct play" is a one-line change, at
       the cost of one extra request per playback.

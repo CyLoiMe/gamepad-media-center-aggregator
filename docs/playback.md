@@ -65,6 +65,13 @@ The one exception is `tryTranscodeFallback()`: it only runs after a direct play 
 already failed, and a transcode that might be slow is still better than a guaranteed
 error.
 
+**An offline download follows the same route.** `DownloadManager` asks
+`Backend::offlineFileUrl()` at TRANSFER time (the link is signed and short-lived),
+which for a remote item is the PlaybackInfo `DirectStreamUrl` and for everything else
+the assembled stream URL. The transfer's auth headers are dropped when that link
+leaves the server host: a CDN has no business receiving the server token, and mpv
+never sends one on the playback path either.
+
 ## User-Agent: one value, for the whole app
 
 Cloud-drive front-ends **sign the CDN link against the User-Agent of the request

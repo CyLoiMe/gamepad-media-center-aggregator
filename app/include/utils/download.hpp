@@ -43,6 +43,12 @@ struct DownloadItem {
     /// those stay transferable, there is nothing better to compare them with.
     std::string serverId;
     std::string userId;
+    /// The Media this part came from, as far as the transfer needs it: a remote
+    /// source (.strm on a cloud drive) is only served through the URL PlaybackInfo
+    /// hands out, and `sourceId` is what selects it there. Both are resolved at
+    /// transfer time — the link is signed and short-lived (Backend::offlineFileUrl).
+    bool remote = false;
+    std::string sourceId;
     DownloadStatus status = DownloadStatus::Queued;
     std::string filePath;
     int64_t totalBytes = 0;
@@ -51,7 +57,7 @@ struct DownloadItem {
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(DownloadItem, itemId, name, type, seriesName,
     seasonIndex, episodeIndex, productionYear, durationMs, thumb, partKey, sectionKey, sectionTitle, serverId,
-    userId, status, filePath, totalBytes, downloadedBytes, errorMessage);
+    userId, remote, sourceId, status, filePath, totalBytes, downloadedBytes, errorMessage);
 
 class DownloadManager : public brls::Singleton<DownloadManager> {
 public:
@@ -110,7 +116,6 @@ private:
     /// cache is lock-guarded, http.cpp).
     void captureOfflineSync(const std::string& itemId);
     std::string downloadDir() const;
-    std::string buildDownloadUrl(const DownloadItem& item) const;
 
     mutable std::mutex mutex;
     std::vector<DownloadItem> items;

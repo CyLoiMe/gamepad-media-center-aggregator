@@ -16,6 +16,20 @@
 
 using namespace brls::literals;  // for _i18n
 
+namespace {
+
+/// The Media `partKey` belongs to, or nullptr when nothing matches (a Stremio
+/// release URL, say). Its `remote`/`sourceId` decide how the transfer URL is
+/// resolved — see Backend::offlineFileUrl.
+const media::Media* mediaOf(const media::Item& item, const std::string& partKey) {
+    for (auto& m : item.media)
+        for (auto& p : m.parts)
+            if (p.key == partKey) return &m;
+    return nullptr;
+}
+
+}  // namespace
+
 std::string DownloadManager::downloadDir() const { return AppConfig::instance().configDir() + "/downloads"; }
 
 void DownloadManager::init() {
@@ -118,7 +132,12 @@ void DownloadManager::queueGuarded(const media::Item& item, const std::string& p
     // Resolving the item's library can cost one Ancestors request — off the UI
     // thread, like the guard in player_view.
     brls::async([this, item, partKey, allow]() {
-        const std::string url = AppConfig::instance().backend().downloadUrl(partKey);
+        // The URL the transfer would really use: for a cloud source that is the
+        // CDN link PlaybackInfo hands out, not the server-hosted stream URL — so
+        // the tunnel test below answers the same question the transfer will.
+        const media::Media* source = mediaOf(item, partKey);
+        const std::string url = AppConfig::instance().backend().offlineFileUrl(item.ratingKey, partKey,
+            source ? source->sourceId : "", source && source->remote);
         std::string library = item.librarySectionID;
         if (library.empty() && !item.ratingKey.empty())
             library = AppConfig::instance().backend().sectionOfSync(item.ratingKey).key;
@@ -168,6 +187,13 @@ void DownloadManager::enqueue(const media::Item& item, const std::string& partKe
                    ? (!item.parentThumb.empty() ? item.parentThumb : item.grandparentThumb)
                    : item.thumb;
     dl.partKey = partKey;
+    // The Media this part came from: `remote`/`sourceId` are what let the transfer
+    // ask PlaybackInfo for a cloud source's signed link instead of assembling a
+    // stream URL those front-ends refuse (Backend::offlineFileUrl).
+    if (const media::Media* source = mediaOf(item, partKey)) {
+        dl.remote = source->remote;
+        dl.sourceId = source->sourceId;
+    }
     // The connection that asked for this file. Everything needed to fetch it —
     // URL, token, part id, library — is that server's, and it is resolved live
     // at transfer time.
@@ -323,11 +349,6 @@ bool DownloadManager::onActiveConnection(const DownloadItem& item) const {
            item.userId == AppConfig::instance().getUserId();
 }
 
-std::string DownloadManager::buildDownloadUrl(const DownloadItem& item) const {
-    // original-quality file (PLEX_MIGRATION.md D2 — no transcoded download in v1)
-    return AppConfig::instance().backend().downloadUrl(item.partKey);
-}
-
 // Runs on the download worker thread AFTER the file transfer, synchronously and
 // serially — one capture at a time on the queue worker, a deliberate simplicity
 // choice (not a concurrency requirement: the shared curl DNS cache is lock-
@@ -386,7 +407,12 @@ void DownloadManager::doDownload(DownloadItem& item) {
     std::string itemId = item.itemId;
     std::string thumb = item.thumb;
     std::string partKey = item.partKey;
-    std::string url = this->buildDownloadUrl(item);
+    // Where the bytes come from, and how it is resolved, belong to the Media the
+    // part was taken from (see enqueue()): a remote source is only served through
+    // the URL the server hands out in PlaybackInfo, and asking for it costs a
+    // request — so the URL is resolved on the worker below, not here.
+    std::string sourceId = item.sourceId;
+    const bool remote = item.remote;
     std::string itemDir = this->downloadDir() + "/" + itemId;
 
     this->saveIndex();
@@ -405,7 +431,7 @@ void DownloadManager::doDownload(DownloadItem& item) {
     // per-worker HTTP session and open a fresh one below: this transfer installs
     // a progress callback + cancel token that would otherwise linger on the
     // shared session and leak into the next image/version task on that worker.
-    ThreadPool::instance().submit([this, itemId, thumb, partKey, url, itemDir, cancel, allow, blockedMsg](HTTP&) {
+    auto transfer = [this, itemId, thumb, partKey, sourceId, remote, itemDir, cancel, allow, blockedMsg](HTTP&) {
         auto resetQueue = [this, itemId](const std::string& error) {
             brls::sync([this, itemId, error]() {
                 {
@@ -428,6 +454,14 @@ void DownloadManager::doDownload(DownloadItem& item) {
                 }
             });
         };
+
+        // The transfer URL, resolved HERE rather than when the item was queued: a
+        // cloud-drive front-end only serves a remote source through the URL
+        // PlaybackInfo hands out (it refuses the assembled /Videos/{id}/stream with
+        // a 403), and that link is signed and short-lived. Costs one request for a
+        // remote source, none for anything else.
+        const std::string url =
+            AppConfig::instance().backend().offlineFileUrl(itemId, partKey, sourceId, remote);
 
         // Checked again here, not only when it was queued: an item can wait in
         // the queue while the address or the allow-list changes, and this is the
@@ -452,6 +486,10 @@ void DownloadManager::doDownload(DownloadItem& item) {
         }
 
         HTTP::Header header = AppConfig::instance().backend().authHeaders();
+        // A CDN link lives on another host: the server token has no business
+        // there, and mpv never sends one on the playback path either. Same host =
+        // the bytes cross the tunnel, so the headers are the server's own.
+        if (!wanguard::isTunnelUrl(AppConfig::instance().getUrl(), url)) header.clear();
 
         if (cancel->load()) {
             resetQueue("Cancelled");
@@ -651,5 +689,7 @@ void DownloadManager::doDownload(DownloadItem& item) {
                 this->processQueue();
             }
         });
-    });
+    };
+
+    ThreadPool::instance().submit(transfer);
 }

@@ -74,6 +74,8 @@ public:
 
     std::string imageUrl(const std::string& path, int width = 0, int height = 0) const override;
     std::string downloadUrl(const std::string& partKey) const override;
+    std::string offlineFileUrl(const std::string& itemId, const std::string& partKey,
+        const std::string& sourceId, bool remote) const override;
     HTTP::Header authHeaders() const override;
 
     // ---- personal list: Jellyfin/Emby favorites ------------------------------
