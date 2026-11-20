@@ -456,7 +456,8 @@
       "connect": "Verbinden",
       "edit_hint": "Bearbeiten",
       "edit_title": "Diese Verbindung bearbeiten",
-      "password_required": "Zum erneuten Anmelden ist das Passwort nötig (Benutzername unverändert lassen und das Passwort leer lassen, um nur die Adressen zu ändern)."
+      "password_required": "Zum erneuten Anmelden ist das Passwort nötig (Benutzername unverändert lassen und das Passwort leer lassen, um nur die Adressen zu ändern).",
+      "addr_shared": "Beide Adressen gehören zum Server – alle Konten darauf teilen sie."
     },
     "stremio": {
       "title": "In Stremio anmelden",

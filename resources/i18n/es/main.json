@@ -456,7 +456,8 @@
       "connect": "Conectar",
       "edit_hint": "Editar",
       "edit_title": "Editar esta conexión",
-      "password_required": "Hace falta la contraseña para volver a iniciar sesión (deja el usuario igual y la contraseña vacía para cambiar solo las direcciones)."
+      "password_required": "Hace falta la contraseña para volver a iniciar sesión (deja el usuario igual y la contraseña vacía para cambiar solo las direcciones).",
+      "addr_shared": "Ambas direcciones pertenecen al servidor: todas las cuentas de ese servidor las comparten."
     },
     "stremio": {
       "title": "Inicia sesión en Stremio",

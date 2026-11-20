@@ -456,7 +456,8 @@
       "connect": "連線",
       "edit_hint": "編輯",
       "edit_title": "編輯此連線",
-      "password_required": "重新登入需要密碼（若只改位址，請保持使用者名稱不變並留空密碼）。"
+      "password_required": "重新登入需要密碼（若只改位址，請保持使用者名稱不變並留空密碼）。",
+      "addr_shared": "兩個位址都屬於伺服器，同一伺服器上的所有帳號共用。"
     },
     "stremio": {
       "title": "登入 Stremio",

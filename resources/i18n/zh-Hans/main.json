@@ -456,7 +456,8 @@
       "connect": "连接",
       "edit_hint": "编辑",
       "edit_title": "编辑此连接",
-      "password_required": "重新登录需要密码（若只改地址，请保持用户名不变并留空密码）。"
+      "password_required": "重新登录需要密码（若只改地址，请保持用户名不变并留空密码）。",
+      "addr_shared": "两个地址都属于服务器，同一服务器上的所有账号共用。"
     },
     "stremio": {
       "title": "登录 Stremio",

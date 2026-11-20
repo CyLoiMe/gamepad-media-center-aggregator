@@ -114,22 +114,21 @@ is the part that actually protects the quota.
 
 ## Reported on hardware, 2026-11-19 (to investigate)
 
-Two symptoms reported after the first build that contains the dual-address work.
-Neither is confirmed as a defect yet — the first checks are listed with each one.
+Two symptoms were reported after the first build that contains the dual-address
+work. Both are answered; each entry says what the cause actually was.
 
-- [ ] **Two Emby accounts end up sharing one LAN address.** Both entries originally
-      carried only the remote address; after the LAN address was filled in on one,
-      both show the same value.
-      *Expected by design, needs confirming:* the addresses live on `AppServer`,
-      which is keyed by the **server Id** — two accounts on the SAME server share
-      one entry, and `updateConnection()` (`app/src/utils/config.cpp`, the "server
-      entry" block) writes `urls`/`local_url` there. What is per PROFILE is the WAN
-      allow-list (`AppUser::wan_visible_libraries`). Verify with
-      `sdmc:/switch/SMCA/config.json`: if both users have the same `server_id`, one
-      `AppServer` entry is correct and only the UI wording is misleading; if the
-      ids differ, `updateConnection` matched the wrong entry and it is a real bug.
-      Either way the form should say that the addresses belong to the server, not
-      to the account.
+- [x] **Two Emby accounts end up sharing one LAN address.** Confirmed by design: the
+      addresses live on `AppServer`, keyed by the **server Id**, so two accounts on
+      the same server share one entry and one pair of addresses. One real defect was
+      hiding in it — `AppConfig::addServer()`, the path that adds the SECOND account
+      to a known server, skipped `local_url` when it found the existing entry, so a
+      home address typed on that form was silently dropped. It now adopts a
+      non-empty address (a blank one never clears it; the edit form does that). The
+      sign-in form also states, in all 14 locales
+      (`main/server/jellyfin/addr_shared`), that the addresses belong to the server.
+      If a config still shows *different* `server_id` values with one shared
+      address, that is not this bug — check `updateConnection()` in
+      `app/src/utils/config.cpp`.
 - [x] **No WAN column in Settings → Libraries.** Cause found: the screen existed but
       its settings row was still labelled `侧边栏` / "Sidebar" (`setting/libraries/header`),
       from when the page only reordered the sidebar, so nobody looked for a library

@@ -456,7 +456,8 @@
       "connect": "Bağlan",
       "edit_hint": "Düzenle",
       "edit_title": "Bu bağlantıyı düzenle",
-      "password_required": "Yeniden oturum açmak için parola gerekli (yalnızca adresleri değiştirmek için kullanıcı adını aynı bırakıp parolayı boş bırakın)."
+      "password_required": "Yeniden oturum açmak için parola gerekli (yalnızca adresleri değiştirmek için kullanıcı adını aynı bırakıp parolayı boş bırakın).",
+      "addr_shared": "Her iki adres de sunucuya aittir; o sunucudaki tüm hesaplar bunları paylaşır."
     },
     "stremio": {
       "title": "Stremio'ya Giriş Yap",

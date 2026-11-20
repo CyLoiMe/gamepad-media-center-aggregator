@@ -129,7 +129,11 @@ server share one entry — filling the LAN address while editing either account
 writes that one field, and both accounts then report the same address. That is the
 intended shape (an address is a property of the machine, not of the login). What is
 per-account is `AppUser::wan_visible_libraries`, because two accounts on one server
-see different libraries. Any UI that shows or edits the address should say so.
+see different libraries. The sign-in form says so in both modes
+(`main/server/jellyfin/addr_shared`). One consequence worth knowing: signing a
+SECOND account in on a server whose entry already exists is the other way that field
+gets filled, so `AppConfig::addServer()` adopts a non-empty `local_url` from the form
+and never clears one with a blank.
 
 `AppUser::wan_visible_libraries` is the per-profile WAN allow-list this mode exists
 to enforce. `AppConfig::allowedLibraries()` snapshots it on the UI thread (nullopt =

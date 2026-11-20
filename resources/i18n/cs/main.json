@@ -456,7 +456,8 @@
       "connect": "Připojit",
       "edit_hint": "Upravit",
       "edit_title": "Upravit toto připojení",
-      "password_required": "Pro nové přihlášení je nutné heslo (chcete-li změnit jen adresy, ponechte uživatelské jméno a heslo prázdné)."
+      "password_required": "Pro nové přihlášení je nutné heslo (chcete-li změnit jen adresy, ponechte uživatelské jméno a heslo prázdné).",
+      "addr_shared": "Obě adresy patří serveru – sdílejí je všechny účty na něm."
     },
     "stremio": {
       "title": "Přihlásit se do Stremio",

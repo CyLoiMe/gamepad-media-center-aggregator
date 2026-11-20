@@ -42,6 +42,19 @@
         <brls:InputCell
             id="jellyfin/add/local_url" />
 
+        <!-- The two addresses are stored on the server entry, not on the
+             account, so a server with two profiles has one pair of addresses.
+             Say so here: otherwise editing one tile looks like it rewrote the
+             other for no reason. -->
+        <brls:Label
+            width="100%"
+            height="auto"
+            marginTop="8"
+            marginBottom="12"
+            fontSize="13"
+            textColor="@theme/font/grey"
+            text="@i18n/main/server/jellyfin/addr_shared" />
+
         <brls:InputCell
             id="jellyfin/add/user" />
 

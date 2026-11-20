@@ -456,7 +456,8 @@
       "connect": "Ligar",
       "edit_hint": "Editar",
       "edit_title": "Editar esta conexão",
-      "password_required": "A senha é necessária para entrar de novo (mantenha o usuário e deixe a senha vazia para alterar apenas os endereços)."
+      "password_required": "A senha é necessária para entrar de novo (mantenha o usuário e deixe a senha vazia para alterar apenas os endereços).",
+      "addr_shared": "Ambos os endereços pertencem ao servidor: todas as contas nele partilham-nos."
     },
     "stremio": {
       "title": "Iniciar sessão no Stremio",

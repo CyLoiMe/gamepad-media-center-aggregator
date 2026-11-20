@@ -804,6 +804,12 @@ bool AppConfig::addServer(const AppServer& s) {
         if (s.id == o.id) {
             if (!s.name.empty()) o.name = s.name;
             if (!s.access_token.empty()) o.access_token = s.access_token;
+            // The addresses belong to the SERVER, not to the account: a second
+            // account signed in on the same server may be the first to know the
+            // home address, so a non-empty one is adopted. A blank field must not
+            // clear it — clearing is the edit form's job, and updateConnection()
+            // writes the address unconditionally.
+            if (!s.local_url.empty()) o.local_url = s.local_url;
             this->server_token = o.access_token;
             // remove old url
             for (auto it = o.urls.begin(); it != o.urls.end(); ++it) {

@@ -19,6 +19,10 @@
 
 ### Fixed
 
+- Adding a second account on a server that already exists no longer drops the home
+  address typed on that form: the address lives on the server entry, so it is
+  adopted there. The sign-in form now says the addresses belong to the server, which
+  is why two accounts on one server always show the same pair.
 - Installing the HOME tile (Settings → Home menu icon) now reports a failure
   instead of showing "done": the install result was ignored and the title ID read
   afterwards was undefined, so a failed install launched the previously installed
