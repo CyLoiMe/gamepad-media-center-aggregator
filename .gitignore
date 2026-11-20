@@ -33,3 +33,7 @@ plezy/
 # Local dev tooling hook (points at an untracked .github/skills/)
 /.github/hooks/
 
+# Local agent state: notes/scratch of the editor assistants, never part of the build
+/.workbuddy/
+/.commandcode/
+
