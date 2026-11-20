@@ -48,6 +48,21 @@ int main() {
     // "Allow everything" explicitly is the same as unset for every id.
     for (auto& id : all) CHECK(wanfilter::allows(&all, id));
 
+    // Whose ParentId can be compared with a library id. A movie or a show names
+    // its library directly; a hierarchy does not, and neither does music, whose
+    // mapper rewrites ParentId to the artist/album.
+    CHECK(wanfilter::libraryLookupId("movie", "m1", "lib-1", "").empty());
+    CHECK(wanfilter::libraryLookupId("show", "s1", "lib-1", "").empty());
+    CHECK(wanfilter::libraryLookupId("clip", "c1", "lib-1", "").empty());
+    CHECK(wanfilter::libraryLookupId("episode", "e1", "season-1", "show-1") == "show-1");
+    CHECK(wanfilter::libraryLookupId("season", "se1", "show-1", "") == "show-1");
+    CHECK(wanfilter::libraryLookupId("artist", "ar1", "", "") == "ar1");
+    CHECK(wanfilter::libraryLookupId("album", "al1", "artist-1", "") == "al1");
+    CHECK(wanfilter::libraryLookupId("track", "t1", "album-1", "") == "t1");
+    // An episode without a SeriesId names nothing that could be resolved: its
+    // ParentId is its season, so it must not be compared with a library id.
+    CHECK(wanfilter::libraryLookupId("episode", "e1", "season-1", "").empty());
+
     if (failures == 0) printf("test_wan_filter: OK\n");
     return failures == 0 ? 0 : 1;
 }

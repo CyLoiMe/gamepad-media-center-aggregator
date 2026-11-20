@@ -12,6 +12,10 @@
   decides, per library, whether it exists on the metered address; the Jellyfin/Emby
   backend then queries only the visible libraries. Playback is guarded too: an item
   from a hidden library is refused before it reaches mpv.
+- **Favorites and playlists obey the allow-list.** Neither endpoint takes a library
+  scope, so their pages are filtered as they arrive: a movie or a show names its
+  library in `ParentId`, an episode is resolved through its show once per page, and
+  a page that is entirely hidden is skipped instead of ending the list early.
 - **Edit a connection in place** (Y on a connection tile): addresses and
   credentials without delete-and-re-add, so the allow-list and the sidebar layout
   survive. An unchanged username with a blank password only rewrites the addresses

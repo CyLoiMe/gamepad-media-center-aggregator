@@ -142,12 +142,24 @@ VISIBLE library — sidebar, home rows, Continue Watching, Recently Added, searc
 so a hidden library costs neither a request nor its artwork. The rule itself is
 `utils/wan_filter.hpp`; `docs/backlog.md` lists the surfaces still to cover.
 
-The lists are not the last word: an item can still reach the player from a
-cross-library surface (favorites, playlist, deep link). `player_view.cpp` therefore
-guards the handoff to mpv — it resolves the item's library (`librarySectionID`, else
-`sectionOfSync` → Ancestors) and refuses playback from a hidden library, or from an
-unresolved one unless the resolved URL leaves the server host. `utils/wan_guard.hpp`
-holds that rule, and it is the only place that decides it.
+Two surfaces cannot be queried that way: favorites (`Filters=IsFavorite`) and
+playlist items take no library scope, and asking once per library would break the
+server-side sort and the page offsets. Those pages are filtered after the fact
+instead (`WanPage`/`filterPage` in the backend): an item's library is its
+`ParentId` when that is the library, and one `Ancestors` request per unresolved id
+otherwise — an episode's `ParentId` is its season and a season's is its show, so
+`wanfilter::libraryLookupId()` decides which. The cache is per page, so a page of
+episodes costs one request per SHOW. A page that is entirely hidden is skipped
+rather than shown as the end of the list.
+
+The lists are still not the last word: an item can reach the player from a deep
+link or a search result that predates a visibility change. `player_view.cpp`
+therefore guards the handoff to mpv — it resolves the item's library
+(`librarySectionID`, else `sectionOfSync` → Ancestors) and refuses playback from a
+hidden library, or from an unresolved one unless the resolved URL leaves the server
+host. `utils/wan_guard.hpp` holds that rule, and it is the only place that decides
+it. Items that came through a filtered page already carry their library, so the
+guard costs no request there.
 
 ## Where things live
 

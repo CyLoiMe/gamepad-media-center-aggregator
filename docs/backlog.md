@@ -70,9 +70,15 @@ is the part that actually protects the quota.
       contributes neither a row nor the artwork its row would have fetched.
       Filtering responses instead would have broken `TotalRecordCount` and the page
       sizes, and `ParentId` is the season for an episode, not its library.
-- [ ] The personal list (favorites) and playlists are still cross-library: they can
-      still surface an item from a hidden library. Both need an item's owning
-      library, which is the `librarySectionID` item below.
+- [x] **Favorites and playlists.** Both pages are filtered after the fact, because
+      neither endpoint takes a library scope and one query per library would break
+      the server-side sort and the offsets (`WanPage`/`filterPage` in
+      `api/jellyfin/backend.cpp`). An item's library is its `ParentId` when that IS
+      the library; a hierarchy is resolved through one `Ancestors` request per show
+      (`wanfilter::libraryLookupId()` decides which ids those are, covered by
+      `tests/test_wan_filter.cpp`). A page that is entirely hidden is skipped, so it
+      does not read as the end of the list — `PlaylistView` follows the offset the
+      backend reports for the page it actually returned.
 - [x] **Playback guard.** `player_view.cpp` snapshots the allow-list, resolves the
       item's library (its `librarySectionID`, else `sectionOfSync` → Ancestors) and
       refuses to hand mpv a URL that would spend quota: a hidden library always
@@ -96,12 +102,13 @@ is the part that actually protects the quota.
       other account still points at it, and the shell is rebuilt when the edited
       connection was the one being browsed. Rule: `utils/connection_edit.hpp`,
       covered by `tests/test_connection_edit.cpp`.
-- [ ] `librarySectionID` is not populated by the Jellyfin/Emby mapper, so a listed
-      item cannot say which library it belongs to. The playback guard resolves it on
-      demand (`sectionOfSync` → Ancestors), which is exact but costs a request per
-      guarded playback; filling it in the mapper would let favorites and playlists
-      be filtered without that call. Prefer `Ancestors` — `ParentId` is the season
-      for an episode, not the library.
+- [ ] `librarySectionID` is still not populated by the Jellyfin/Emby mapper, so an
+      item listed by a per-library query cannot say which library it belongs to —
+      those surfaces are exact by construction, so nothing needs it there. Filtered
+      pages (favorites, playlists) set it as they filter. Everything else falls back
+      to the guard's `sectionOfSync` → Ancestors, exact at the cost of one request
+      per guarded playback. Filling it in the mapper is not possible: `ParentId` is
+      the season for an episode, not the library.
 
 ## Product
 

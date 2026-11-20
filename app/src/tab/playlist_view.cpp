@@ -65,13 +65,17 @@ void PlaylistView::updateMeta(int64_t count, int64_t durationMs) {
 
 void PlaylistView::doRequest() {
     ASYNC_RETAIN
-    // requested offset, not r.StartIndex: Jellyfin/Emby omit StartIndex on an
-    // empty past-the-end page (it parses to 0) and would wipe a filled grid
+    // the requested offset, for the empty-page case below
     size_t reqStart = this->startIndex;
     AppConfig::instance().backend().getPlaylistItems(this->playlistId, this->startIndex, this->pageSize,
         [ASYNC_TOKEN, reqStart](const media::Container<media::Item>& r) {
             ASYNC_RELEASE
-            this->startIndex = reqStart + this->pageSize;
+            // The requested offset, not r.StartIndex: Jellyfin/Emby omit StartIndex
+            // on an empty past-the-end page (it parses to 0) and would wipe a filled
+            // grid. A filtered page may report a LATER offset though (whole pages
+            // hidden on the metered address are skipped), and then the next page is
+            // the one after the page actually consumed.
+            this->startIndex = ((size_t)r.StartIndex > reqStart ? (size_t)r.StartIndex : reqStart) + this->pageSize;
             if (r.TotalRecordCount == 0 && reqStart == 0) {
                 this->recycler->setEmpty();
             } else if (reqStart == 0) {

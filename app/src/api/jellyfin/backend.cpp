@@ -17,6 +17,7 @@
 #include <borealis/core/logger.hpp>
 #include <borealis/core/i18n.hpp>
 #include <algorithm>
+#include <map>
 #include <optional>
 #include <sstream>
 
@@ -51,6 +52,77 @@ std::vector<media::Section> visibleLibraries(const std::string& b, const std::st
     std::vector<media::Section> out;
     for (auto& v : views.Items)
         if (browsableLibrary(v.type) && allowsLibrary(allow, v.key)) out.push_back(v);
+    return out;
+}
+
+/// A page filter for the lists that are NOT built per library — favorites and
+/// playlist items mix libraries and their endpoints take no library scope. The
+/// page is therefore filtered after the fact, exactly, so a hidden library still
+/// contributes neither a row nor its artwork. Asking per library instead would
+/// break the server-side sort and the page offsets.
+struct WanPage {
+    std::optional<std::vector<std::string>> allow;  // never nullopt: filtering only
+    std::string b, tok, uid;
+    std::map<std::string, std::string> shows;  // show id -> library id ("" = none)
+};
+
+/// Library of an arbitrary id, resolved from its Ancestors. Cached per show so a
+/// page of episodes costs one request per SHOW, not per episode. Blocking: call
+/// inside brls::async.
+std::string libraryOf(WanPage& w, const std::string& id) {
+    auto cached = w.shows.find(id);
+    if (cached != w.shows.end()) return cached->second;
+    std::string lib;
+    try {
+        auto j = getSync(w.b + fmt::format(fmt::runtime(apiAncestors), id, w.uid), w.tok);
+        if (j.is_array())
+            for (auto& a : j)
+                if (jstr(a, "Type") == "CollectionFolder") {
+                    lib = jstr(a, "Id");
+                    break;
+                }
+    } catch (const std::exception& ex) {
+        brls::Logger::warning("JellyfinBackend: no library for {} ({})", id, ex.what());
+    }
+    w.shows.emplace(id, lib);
+    return lib;
+}
+
+/// Keep the items whose library the allow-list admits. Survivors carry that
+/// library, so the playback guard does not have to ask again when they play.
+std::vector<media::Item> filterPage(WanPage& w, std::vector<media::Item> items) {
+    std::vector<media::Item> out;
+    out.reserve(items.size());
+    for (auto& it : items) {
+        const std::string lookup = wanfilter::libraryLookupId(
+            it.type, it.ratingKey, it.parentRatingKey, it.grandparentRatingKey);
+        const std::string lib = lookup.empty() ? it.parentRatingKey : libraryOf(w, lookup);
+        if (!allowsLibrary(w.allow, lib)) continue;
+        it.librarySectionID = lib;
+        out.push_back(std::move(it));
+    }
+    return out;
+}
+
+/// Walk the pages of `urlAt` until one keeps something or the list ends. A page
+/// that is entirely hidden must not read as the end of the list: the callers
+/// drive their "is there more" from the items they receive.
+template <typename Fn>
+media::Container<media::Item> fetchFiltered(WanPage& w, size_t start, size_t size, Fn urlAt) {
+    media::Container<media::Item> out;
+    size_t off = start;
+    for (;;) {
+        auto c = parseContainer<media::Item>(getSync(urlAt(off), w.tok), parseItem);
+        out.TotalRecordCount = c.TotalRecordCount;
+        const bool rawEmpty = c.Items.empty();
+        for (auto& it : filterPage(w, std::move(c.Items))) out.Items.push_back(std::move(it));
+        if (!out.Items.empty() || rawEmpty || size == 0 || off + size >= (size_t)c.TotalRecordCount) break;
+        off += size;
+    }
+    // Offset of the page that produced these items — not the requested one. A
+    // caller whose pages were consumed but emptied must continue AFTER them, or
+    // it would ask for a hidden page again on the next round.
+    out.StartIndex = (long)off;
     return out;
 }
 
@@ -617,14 +689,39 @@ void JellyfinBackend::getPlaylists(
 
 void JellyfinBackend::getPlaylistItems(const std::string& playlistId, size_t start, size_t size,
     media::Then<media::Container<media::Item>> then, media::OnError error) {
-    HTTP::Form form = {
-        {"userId", userId()},
-        {"StartIndex", std::to_string(start)},
-        {"Limit", std::to_string(size)},
-        {"Fields", itemFieldsValue},
-    };
-    std::string url = base() + fmt::format(fmt::runtime(apiPlaylistItems), playlistId, HTTP::encode_form(form));
-    fetchContainer<media::Item>(url, parseItem, then, error);
+    auto allow = AppConfig::instance().allowedLibraries();
+    std::string b = base(), tok = token(), uid = userId();
+    if (!allow) {
+        HTTP::Form form = {
+            {"userId", uid},
+            {"StartIndex", std::to_string(start)},
+            {"Limit", std::to_string(size)},
+            {"Fields", itemFieldsValue},
+        };
+        std::string url = b + fmt::format(fmt::runtime(apiPlaylistItems), playlistId, HTTP::encode_form(form));
+        fetchContainer<media::Item>(url, parseItem, then, error);
+        return;
+    }
+
+    // A playlist is user-made and spans libraries by nature, and its items
+    // endpoint takes no library scope — so the page is filtered afterwards.
+    brls::async([b, tok, uid, playlistId, start, size, allow, then, error]() {
+        try {
+            WanPage page{allow, b, tok, uid, {}};
+            auto out = fetchFiltered(page, start, size, [&b, &uid, &playlistId, size](size_t off) {
+                HTTP::Form form = {
+                    {"userId", uid},
+                    {"StartIndex", std::to_string(off)},
+                    {"Limit", std::to_string(size)},
+                    {"Fields", itemFieldsValue},
+                };
+                return b + fmt::format(fmt::runtime(apiPlaylistItems), playlistId, HTTP::encode_form(form));
+            });
+            brls::sync(std::bind(then, std::move(out)));
+        } catch (const std::exception& ex) {
+            if (error) brls::sync(std::bind(error, std::string(ex.what())));
+        }
+    });
 }
 
 // ---- item actions --------------------------------------------------------------
@@ -783,17 +880,48 @@ bool JellyfinBackend::canList(const media::Item& item) const {
 
 void JellyfinBackend::listWatchlist(const std::string& sortField, media::MediaKind kind, size_t start, size_t size,
     media::Then<media::Container<media::Item>> then, media::OnError error) {
-    HTTP::Form form = {
-        {"Filters", "IsFavorite"},
-        {"Recursive", "true"},
-        {"IncludeItemTypes", kindTypes(kind)},
-        {"SortBy", mapSort(sortField)},
-        {"StartIndex", std::to_string(start)},
-        {"Limit", std::to_string(size)},
-        {"Fields", itemFieldsValue},
-    };
-    std::string url = base() + fmt::format(fmt::runtime(apiItems), userId(), HTTP::encode_form(form));
-    fetchContainer<media::Item>(url, parseItem, then, error);
+    auto allow = AppConfig::instance().allowedLibraries();
+    std::string b = base(), tok = token(), uid = userId();
+    std::string sort = mapSort(sortField);
+    std::string types = kindTypes(kind);
+    if (!allow) {
+        HTTP::Form form = {
+            {"Filters", "IsFavorite"},
+            {"Recursive", "true"},
+            {"IncludeItemTypes", types},
+            {"SortBy", sort},
+            {"StartIndex", std::to_string(start)},
+            {"Limit", std::to_string(size)},
+            {"Fields", itemFieldsValue},
+        };
+        std::string url = b + fmt::format(fmt::runtime(apiItems), uid, HTTP::encode_form(form));
+        fetchContainer<media::Item>(url, parseItem, then, error);
+        return;
+    }
+
+    // Favorites are cross-library — `Filters=IsFavorite` has no library scope —
+    // so on the metered address the page is filtered afterwards. Keeps the
+    // server-side sort and the offsets intact, unlike one query per library.
+    brls::async([b, tok, uid, sort, types, start, size, allow, then, error]() {
+        try {
+            WanPage page{allow, b, tok, uid, {}};
+            auto out = fetchFiltered(page, start, size, [&b, &uid, &sort, &types, size](size_t off) {
+                HTTP::Form form = {
+                    {"Filters", "IsFavorite"},
+                    {"Recursive", "true"},
+                    {"IncludeItemTypes", types},
+                    {"SortBy", sort},
+                    {"StartIndex", std::to_string(off)},
+                    {"Limit", std::to_string(size)},
+                    {"Fields", itemFieldsValue},
+                };
+                return b + fmt::format(fmt::runtime(apiItems), uid, HTTP::encode_form(form));
+            });
+            brls::sync(std::bind(then, std::move(out)));
+        } catch (const std::exception& ex) {
+            if (error) brls::sync(std::bind(error, std::string(ex.what())));
+        }
+    });
 }
 
 void JellyfinBackend::getWatchlistState(const media::Item& item, media::Then<bool> then, media::OnError error) {

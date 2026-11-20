@@ -32,4 +32,21 @@ inline bool allows(const std::vector<std::string>* allow, const std::string& lib
     return std::find(allow->begin(), allow->end(), libraryId) != allow->end();
 }
 
+/// The id that has to be resolved to reach the item's library, or "" when the
+/// item's own ParentId already IS the library.
+///
+/// Jellyfin/Emby never put the library in ParentId for a hierarchy: an episode's
+/// ParentId is its SEASON and a season's is its SHOW, and the mappers rewrite
+/// ParentId to the artist (album) or the album (track) for music. Comparing any
+/// of those with a library id would silently mismatch. The caller resolves the
+/// returned id — /Items/{id}/Ancestors ends with the CollectionFolder that is the
+/// library — so pass the item's own id as `id` for the self cases.
+inline std::string libraryLookupId(const std::string& type, const std::string& id,
+    const std::string& parentId, const std::string& seriesId) {
+    if (type == "episode") return seriesId;  // ParentId is the season
+    if (type == "season") return parentId;   // ParentId is the show
+    if (type == "artist" || type == "album" || type == "track") return id;  // virtual / remapped parent
+    return "";  // movie, show, clip, collection: ParentId IS the library
+}
+
 }  // namespace wanfilter
