@@ -102,6 +102,14 @@ is the part that actually protects the quota.
       other account still points at it, and the shell is rebuilt when the edited
       connection was the one being browsed. Rule: `utils/connection_edit.hpp`,
       covered by `tests/test_connection_edit.cpp`.
+- [ ] **Downloads are not guarded.** `DownloadManager` streams through whatever
+      address is active (`utils/download.cpp`), so queueing an item from a hidden
+      library while on the metered address spends exactly what the playback guard
+      refuses to spend — and worse, because the whole file crosses the tunnel, not
+      a few minutes of it. The rule is the same (`wanguard` + the resolved
+      library), but it has to be checked twice: when the item is queued, and again
+      when a transfer starts, since the address and the allow-list can change in
+      between.
 - [ ] `librarySectionID` is still not populated by the Jellyfin/Emby mapper, so an
       item listed by a per-library query cannot say which library it belongs to —
       those surfaces are exact by construction, so nothing needs it there. Filtered
