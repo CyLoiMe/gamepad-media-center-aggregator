@@ -44,6 +44,16 @@ add_custom_target(${PROJECT_NAME}.pfs0 DEPENDS ${PROJECT_NAME}
 # on case-sensitive Linux the upper-case source path is not found.
 string(TOLOWER "${PROJECT_TITLEID}" PROJECT_TITLEID_LOWER)
 
+# The tile's NACP version is the HOME menu's cache key for its artwork. Stamped
+# 0.1.0 for every build, the console can keep the icon of the FIRST install, and a
+# reinstall then changes nothing — which is exactly the "always the old icon, even
+# after delete and reinstall" report. Stamp the git build count instead, so every
+# build is a version the console has not seen (one byte per component, hence % 256).
+set(TILE_VERSION_MICRO 0)
+if (VERSION_BUILD MATCHES "^[0-9]+$")
+    math(EXPR TILE_VERSION_MICRO "${VERSION_BUILD} % 256")
+endif ()
+
 # The HOME tile's icon is baked in here, from the project icon (not from the
 # NRO's own --icon): hacbrewpack packs control/icon_AmericanEnglish.dat into the
 # NSP, and HintActivity installs that NSP from romfs. Depending on the icon makes
@@ -53,7 +63,7 @@ string(TOLOWER "${PROJECT_TITLEID}" PROJECT_TITLEID_LOWER)
 add_custom_target(${PROJECT_NAME}.nsp DEPENDS ${PROJECT_NAME}.pfs0 ${PROJECT_ICON}
     COMMAND ${CMAKE_COMMAND} -E remove "${PROJECT_RESOURCES}/${PROJECT_NAME}.nsp"
     COMMAND ${CMAKE_COMMAND} -E make_directory "control" "logo"
-    COMMAND ${NX_NACPTOOL_EXE} --create "${PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_ALTER}" "control/control.nacp"
+    COMMAND ${NX_NACPTOOL_EXE} --create "${CMAKE_PROJECT_NAME}" "${PROJECT_AUTHOR}" "${VERSION_MAJOR}.${VERSION_MINOR}.${TILE_VERSION_MICRO}" "control/control.nacp"
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/icon/logo.png" "logo/NintendoLogo.png"
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/icon/logo.gif" "logo/StartupMovie.gif"
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_ICON}" "control/icon_AmericanEnglish.dat"

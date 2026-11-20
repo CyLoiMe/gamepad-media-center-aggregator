@@ -98,58 +98,80 @@ Check what a build actually carries, offline:
 python scripts/inspect-nro.py build/SMCA.nro build/check
 ```
 
-It prints the NRO's icon size, the NACP name/author/version, and whether the
-current commit's short tag is in the binary; `build/check-icon.jpg` is the artwork
-to diff against `resources/icon/icon.jpg`. Note what it *cannot* show: the tile
-icon itself lives in the forwarder NSP's control NCA, encrypted by hacbrewpack with
-the build keyset, so it is not readable offline. The NRO's icon and the tile icon
-come from the same `resources/icon/icon.jpg` at build time, so an up-to-date NRO
-icon is the available proxy.
+It prints the NRO's icon size, the NACP name/author/version, whether the current
+commit's short tag is in the binary, and — the useful part for a tile question —
+what the forwarder NSP **inside the NRO's romfs** contains:
+
+```
+  embedded NSP: 0x1ac160f, 3 file(s), 1184776 B, NSP contents
+    0500534d43410000.cnmt.nca  1234 B
+    0500534d43410000.cnmt.xml  512 B
+    0500534d43410000.nca       1183030 B
+    sha256 3f9c…
+    resources/forwarder.nsp (1184776 B): IDENTICAL
+```
+
+`IDENTICAL` means the NRO carries a current tile installer, so a stale tile is a
+console-side problem (§A tile with the old icon). `DIFFERENT` means the NRO you are
+running installs an old tile — either it is an older build than
+`resources/forwarder.nsp`, or the binary you launch is not the one you built.
+
+When there is no `resources/forwarder.nsp` to compare with (builds made in CI, or a
+cleaned tree), run the tool on two NROs instead and compare the **size and sha256**
+lines: same values mean the payload never changed, so the build is not the variable.
+
+`--extract forwarder.nsp` writes the archive out. Install that file with a
+known-good installer (DBI, Goldleaf) and look at the tile: if it shows the right
+icon, the payload is fine and the app's own install is what to look at; if it does
+not, the build packed the wrong artwork — the two answers need opposite fixes, and
+this is the only way to separate them without trusting the app under suspicion.
+
+`build/check-icon.jpg` is the NRO's own artwork, to diff against
+`resources/icon/icon.jpg`. Note what the tool *cannot* show: the tile icon itself
+lives in the forwarder NSP's control NCA, encrypted by hacbrewpack with the build
+keyset, so it is not readable offline. The NRO icon and the tile icon come from the
+same `resources/icon/icon.jpg` at build time, so an up-to-date NRO icon plus a
+matching NSP is the available proof.
 
 To force a clean NSP, delete `resources/forwarder.nsp` (and
 `build/resources/forwarder.nsp`) before rebuilding.
 
-If the NRO icon already is the new artwork but the tile still renders the old one,
-the build is fine — the HOME menu keeps a per-title-ID icon cache and a reinstall
-with the same ID does not always refresh it. Reboot the console (the cache is
-rebuilt at boot), then reinstall the tile if it is still stale.
+### A tile with the old icon
 
-### A tile with the old icon: check three things, in this order
+A tile is a separate installed TITLE, so its artwork is decided by the control NCA
+the console ended up with — not by the NRO you build. Two mechanisms produced the
+"old icon for ever, even after delete and reinstall" report, and both are handled in
+code now rather than diagnosed by hand.
 
-1. **Which NRO is running.** The tile is installed from the romfs of the NRO you
-   launch, so an old binary installs an old NSP. Settings prints
-   `v<version>-<commit> (<platform>)` — compare the commit with `git rev-parse
-   --short HEAD`. Remember the two install paths (`§Installing`).
-2. **A leftover tile from an older title ID.** SMCA's ID changed twice before
-   release:
+**1. The payload.** `resources/forwarder.nsp` is packed from
+`resources/icon/icon.jpg` at build time. `scripts/inspect-nro.py` prints the NSP
+inside a built NRO (members, size, sha256) and can `--extract` it, so what a given
+NRO would install is a number instead of a guess; installing that file with DBI or
+Goldleaf tests the payload without the app in the way.
 
-   | ID | Era |
-   |---|---|
-   | `0104474D43410000` | pleNx |
-   | `0500474D43410000` | GMCA |
-   | `0500534D43410000` | SMCA (current) |
+**2. The version.** The HOME menu keys its icon cache on the title's version, and
+every build used to be stamped `0.1.0` — so a reinstall could look like "same title,
+nothing changed" and keep the first artwork. The forwarder NACP now carries the git
+build count (`0.1.<build mod 256>`, `scripts/forwarder/CMakeLists.txt`), so each
+build is a version the console has not seen before.
 
-   An installed tile is a *title*, so the GMCA/pleNx tiles are different titles
-   that reinstalling SMCA never touches — and they keep the artwork of their own
-   build. System Settings → Data Management → Software lists every installed
-   title: delete the old ones (the app's own install dialog says so too, `remove_old`).
-3. **Same-ID, same-version reinstall.** The NACP version has been `0.1.0` for
-   every build, so the system sees no new version and can keep its cached entry.
-   Changing `VERSION_ALTER` (or the title ID) is the experiment that separates a
-   cache problem from a build problem.
+**3. The install no longer trusts the write.** `HintActivity` used to call
+`mini::InstallSD()` and call it done — and even with its return value checked, "the
+write happened" says nothing about what was written. `forwarder::install()`
+(`utils/forwarder.cpp`) now reads the icon THIS build carries out of the running
+NRO's ASET section (the same artwork `elf2nro --icon` gave hbmenu), installs, then
+reads the installed title's control data back with `nsGetApplicationControlData()`
+and compares the two. The dialog follows the verdict:
 
-### Installing the tile used to fail silently
+| Outcome | Dialog | Meaning |
+|---|---|---|
+| `Failed` | `main/hints/install_failed` | nothing was written (SD space, ncm refused) |
+| `IconStale` | `main/hints/icon_stale` | written, but the console kept other artwork — said out loud instead of launching a tile the user will find wrong again |
+| `Installed` | `main/hints/remove_old` | written and verified; the tile is launched |
 
-`HintActivity` called `mini::InstallSD()` and dropped its return value, then read
-`mini::GetTitleID()` — which returns the **last element of a vector filled during
-the install**, i.e. an empty vector when the install threw. A failed install
-therefore looked like a success: "done" dialog, then a launch of the tile that was
-already installed (with the old icon), and nothing in the UI said so.
-
-The button now checks the result, logs the failure and stops; `install_failed`
-(`main/hints/install_failed`, 14 locales) tells the user the tile was NOT written.
-Seeing that dialog means the artwork question is moot — fix the install first
-(SD space, or delete the existing SMCA title in System Settings > Data Management).
+A tile from an older title ID is a different title and none of this touches it:
+pleNx `0104474D43410000`, GMCA `0500474D43410000`, SMCA `0500534D43410000`. System
+Settings → Data Management → Software lists them all.
 
 ## Verifying on hardware
 

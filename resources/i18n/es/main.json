@@ -396,7 +396,8 @@
     "prompt": "¿Instalar el icono de SMCA en el menú HOME?\nEl icono inicia la aplicación como aplicación completa (necesario para la reproducción de vídeo).",
     "hint_confirm": "Instalar el NSP forwarder puede resultar en un baneo\nPor favor confirma de nuevo",
     "remove_old": "SMCA está en tu menú HOME. Si aún hay un icono antiguo de pleNx, elimínalo en Configuración del sistema > Gestión de datos > Eliminar software.",
-    "install_failed": "Error de instalación: no se pudo escribir el icono del menú HOME. Puede que falte espacio en la tarjeta SD o que exista un icono SMCA antiguo; revisa Configuración de la consola > Gestión de datos y vuelve a intentarlo."
+    "install_failed": "Error de instalación: no se pudo escribir el icono del menú HOME. Puede que falte espacio en la tarjeta SD o que exista un icono SMCA antiguo; revisa Configuración de la consola > Gestión de datos y vuelve a intentarlo.",
+    "icon_stale": "El icono se escribió, pero la consola conservó la imagen anterior, así que seguirá viéndose mal. Elimina el icono en Configuración de la consola > Gestión de datos > Eliminar software, reinicia y vuelve a instalarlo desde aquí."
   },
   "network": {
     "status": "Estado de la red",

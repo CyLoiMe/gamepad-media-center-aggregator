@@ -408,7 +408,8 @@
     "prompt": "Installer la tuile SMCA sur le menu HOME ?\nLa tuile lance l'application en session complète (indispensable pour la lecture vidéo).",
     "hint_confirm": "L'installation du forwarder NSP peut entraîner un bannissement de la console. Veuillez confirmer à nouveau",
     "remove_old": "SMCA est sur ton menu HOME. Si une ancienne tuile pleNx y figure encore, supprime-la depuis Réglages système > Gestion des données > Supprimer un logiciel.",
-    "install_failed": "Échec de l'installation : l'icône du menu HOME n'a pas pu être écrite. La carte SD est peut-être pleine ou une ancienne icône SMCA subsiste — vérifiez Paramètres de la console > Gestion des données, puis réessayez."
+    "install_failed": "Échec de l'installation : l'icône du menu HOME n'a pas pu être écrite. La carte SD est peut-être pleine ou une ancienne icône SMCA subsiste — vérifiez Paramètres de la console > Gestion des données, puis réessayez.",
+    "icon_stale": "L'icône a été écrite, mais la console a conservé l'ancienne image : elle restera donc incorrecte. Supprimez l'icône dans Paramètres de la console > Gestion des données > Supprimer un logiciel, redémarrez, puis réinstallez-la depuis ici."
   },
   "network": {
     "status": "État du réseau",

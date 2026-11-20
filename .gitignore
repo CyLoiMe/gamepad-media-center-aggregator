@@ -37,3 +37,6 @@ plezy/
 /.workbuddy/
 /.commandcode/
 
+# A built NRO dropped at the root to run scripts/inspect-nro.py against
+/*.nro
+

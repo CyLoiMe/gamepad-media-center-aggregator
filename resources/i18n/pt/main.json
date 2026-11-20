@@ -396,7 +396,8 @@
     "prompt": "Instalar o ícone do SMCA no menu HOME?\nO ícone inicia a aplicação como aplicação completa (necessário para a reprodução de vídeo).",
     "hint_confirm": "A instalação do encaminhador NSP pode resultar num banimento\nConfirme novamente",
     "remove_old": "O SMCA está no seu menu HOME. Se ainda houver um ícone antigo do pleNx, remova-o em Config. do sistema > Gestão de dados > Apagar software.",
-    "install_failed": "Falha na instalação: não foi possível gravar o ícone do menu HOME. Pode faltar espaço no cartão SD ou existir um ícone SMCA antigo — verifique Configurações do Console > Gerenciamento de Dados e tente novamente."
+    "install_failed": "Falha na instalação: não foi possível gravar o ícone do menu HOME. Pode faltar espaço no cartão SD ou existir um ícone SMCA antigo — verifique Configurações do Console > Gerenciamento de Dados e tente novamente.",
+    "icon_stale": "O ícone foi gravado, mas o console manteve a imagem anterior, por isso continuará a parecer errado. Elimine o ícone em Configurações do Console > Gerenciamento de Dados > Eliminar software, reinicie e volte a instalá-lo a partir daqui."
   },
   "network": {
     "status": "Estado da rede",

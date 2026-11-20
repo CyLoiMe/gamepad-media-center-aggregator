@@ -396,7 +396,8 @@
     "prompt": "Nainstalovat dlaždici SMCA do nabídky HOME?\nDlaždice spustí aplikaci jako plnou aplikaci (nutné pro přehrávání videa).",
     "hint_confirm": "Instalace NSP forwarderu může vést k banu\nProsím potvrďte znovu",
     "remove_old": "SMCA je ve vaší nabídce HOME. Pokud tam ještě je stará dlaždice pleNx, odstraňte ji v Nastavení systému > Správa dat > Odstranit software.",
-    "install_failed": "Instalace selhala: ikonu HOME se nepodařilo zapsat. Možná na SD kartě chybí místo nebo zůstala stará ikona SMCA — zkontrolujte Nastavení systému > Správa dat a zkuste to znovu."
+    "install_failed": "Instalace selhala: ikonu HOME se nepodařilo zapsat. Možná na SD kartě chybí místo nebo zůstala stará ikona SMCA — zkontrolujte Nastavení systému > Správa dat a zkuste to znovu.",
+    "icon_stale": "Ikona byla zapsána, ale konzole si ponechala předchozí obrázek, takže bude stále vypadat špatně. Smažte ikonu v Nastavení systému > Správa dat > Odstranit software, restartujte a nainstalujte ji odtud znovu."
   },
   "network": {
     "status": "Stav sítě",

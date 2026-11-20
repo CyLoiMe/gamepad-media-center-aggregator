@@ -396,7 +396,8 @@
     "prompt": "Die SMCA-Kachel im HOME-Menü installieren?\nDie Kachel startet die App als vollwertige Anwendung (für die Videowiedergabe erforderlich).",
     "hint_confirm": "Die Installation des NSP-Forwarders kann zu einer Sperre führen\nBitte erneut bestätigen",
     "remove_old": "SMCA ist in deinem HOME-Menü. Falls noch eine alte pleNx-Kachel vorhanden ist, entferne sie über Systemeinstellungen > Datenverwaltung > Software löschen.",
-    "install_failed": "Installation fehlgeschlagen: Das HOME-Symbol konnte nicht geschrieben werden. Die SD-Karte ist vielleicht voll oder ein älteres SMCA-Symbol ist noch vorhanden — prüfe Systemeinstellungen > Datenverwaltung und versuche es erneut."
+    "install_failed": "Installation fehlgeschlagen: Das HOME-Symbol konnte nicht geschrieben werden. Die SD-Karte ist vielleicht voll oder ein älteres SMCA-Symbol ist noch vorhanden — prüfe Systemeinstellungen > Datenverwaltung und versuche es erneut.",
+    "icon_stale": "Das Symbol wurde geschrieben, aber die Konsole behält das vorherige Bild — es sieht also weiterhin falsch aus. Lösche das Symbol unter Systemeinstellungen > Datenverwaltung > Software löschen, starte neu und installiere es hier erneut."
   },
   "network": {
     "status": "Netzwerkstatus",

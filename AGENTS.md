@@ -81,7 +81,9 @@ see `NOTICE` for the attribution that must stay).
 8. **The HOME tile icon is not the NRO icon.** The tile is the forwarder NSP, with
    `resources/icon/icon.jpg` baked into `control/icon_AmericanEnglish.dat` at build
    time; replacing `SMCA.nro` does not touch it. `docs/build.md` §Two different
-   icons, `scripts/inspect-nro.py`.
+   icons, `scripts/inspect-nro.py` — it also says whether the NSP **inside** the
+   NRO is the one this tree just built, which is the difference between "stale
+   payload" and "the console kept its cached icon".
 9. **`BRLS_BIND` members are proxies, not pointers.** `BoundView<T>` only defines
    `operator T*()`, so two of them of different `T` have no common type: `cond ?
    this->btnConnect : this->cellUrl` does not compile, because the conditional

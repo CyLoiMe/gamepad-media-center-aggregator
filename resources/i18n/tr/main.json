@@ -396,7 +396,8 @@
     "prompt": "SMCA kutucuğu HOME menüsüne yüklensin mi?\nKutucuk, uygulamayı tam uygulama olarak başlatır (video oynatma için gereklidir).",
     "hint_confirm": "NSP yönlendiricisini kurmak konsolunuzun çevrim içi özelliklerden yasaklanmasına neden olabilir\n\nLütfen tekrar onaylayın",
     "remove_old": "SMCA, HOME menünüzde. Eski bir pleNx kutucuğu hâlâ varsa Sistem Ayarları > Veri Yönetimi > Yazılım Sil'den kaldırın.",
-    "install_failed": "Kurulum başarısız: HOME simgesi yazılamadı. SD kartta yer kalmamış olabilir veya eski bir SMCA simgesi duruyor olabilir — Sistem Ayarları > Veri Yönetimi'ni kontrol edip yeniden deneyin."
+    "install_failed": "Kurulum başarısız: HOME simgesi yazılamadı. SD kartta yer kalmamış olabilir veya eski bir SMCA simgesi duruyor olabilir — Sistem Ayarları > Veri Yönetimi'ni kontrol edip yeniden deneyin.",
+    "icon_stale": "Simge yazıldı ancak konsol önceki görseli korudu, bu yüzden hâlâ yanlış görünecek. Sistem Ayarları > Veri Yönetimi > Yazılımı Sil bölümünden bu simgeyi silin, yeniden başlatın ve buradan tekrar kurun."
   },
   "network": {
     "status": "Ağ durumu",

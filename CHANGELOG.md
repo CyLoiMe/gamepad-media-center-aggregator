@@ -40,6 +40,15 @@
 
 ### Fixed
 
+- Installing the HOME tile now verifies what it wrote instead of trusting the write.
+  The room for this bug was structural: the tile's artwork lives in the control NCA
+  the console ends up with, so "InstallSD returned true" said nothing about the
+  icon. `forwarder::install()` reads this build's icon out of the running NRO's ASET
+  section, installs, reads the installed title's control data back and compares the
+  two; `main/hints/icon_stale` reports a console that kept other artwork instead of
+  launching a tile that will look wrong again. The forwarder NACP also stopped being
+  stamped `0.1.0` for every build — the HOME menu keys its icon cache on the title's
+  version, so each build now carries the git build count.
 - Downloading a cloud source works again. The transfer used to assemble
   `/Videos/{id}/stream`, which the front-ends serving those sources refuse (403,
   missing user context); it now asks PlaybackInfo for the link the server actually
