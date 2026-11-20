@@ -175,6 +175,12 @@ removing it because "it was already checked when queued" would reopen the hole. 
 sites reach `reportWanBlock()`, which shows the refusal once per batch instead of
 once per episode of a season.
 
+`AudioPlayer` (`view/audio_player.cpp`) is the third caller, and the one that was
+missing until now: it asks the rule in `resolveAndPlay()`, on the resolve worker,
+before `setUrl`. Music is minutes of streamed audio, not a rounding error. A refusal
+releases the queue rather than leaving it loaded, because a loaded queue would
+advance at the end of the track and be refused again, track by track.
+
 ## Where things live
 
 | Area | Entry point |

@@ -111,12 +111,15 @@ is the part that actually protects the quota.
       holds. A refusal at queue time is a `main/download/wan_block` dialog;
       `reportWanBlock()` is the one shot behind it, so "Download season" does not
       stack one modal per episode.
-- [ ] **The audio player is not guarded.** `view/audio_player.cpp` hands mpv a
-      track's part key, and the `resolvePlayback` result, with no `wanguard` check,
-      so an album from a hidden library plays on the metered address exactly what
-      the video path refuses. Same rule, different shape: a music queue is built
-      ahead of time, so the decision belongs where the queue is built rather than
-      per track, or the refusal arrives as a mid-album interruption.
+- [x] **The audio player is guarded.** `AudioPlayer::resolveAndPlay()` asks the same
+      rule as the video and download paths before handing mpv a track URL, and a
+      refusal releases the queue: left loaded, it would auto-advance at the end of
+      that track and be refused again, one track at a time, with silence in between.
+      The resolution costs one `sectionOfSync` → Ancestors request per track start
+      when `librarySectionID` is empty — music from Jellyfin/Emby always is, which
+      `wanfilter::libraryLookupId()` cannot fix (a track's `ParentId` is its album) —
+      and only while an allow-list is in force: `AppConfig::allowedLibraries()`
+      returns nullopt on the home network, so a LAN queue pays nothing.
 - [ ] `librarySectionID` is still not populated by the Jellyfin/Emby mapper, so an
       item listed by a per-library query cannot say which library it belongs to —
       those surfaces are exact by construction, so nothing needs it there. Filtered

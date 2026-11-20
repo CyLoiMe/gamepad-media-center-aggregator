@@ -2,7 +2,10 @@
 #include "view/mpv_core.hpp"
 #include "api/backend.hpp"
 #include "utils/config.hpp"
+#include "utils/dialog.hpp"
 #include "utils/misc.hpp"
+#include "utils/wan_filter.hpp"
+#include "utils/wan_guard.hpp"
 #include <algorithm>
 #include <chrono>
 #include <random>
@@ -128,14 +131,46 @@ void AudioPlayer::resolveAndPlay(const media::Item& track) {
     std::string wantId = track.ratingKey;
     media::Item item = track;
     media::Media version = *chosen;
-    brls::async([this, wantId, item, version, opts]() {
+
+    // Traffic guard input, snapshotted on the UI thread: the WAN allow-list in
+    // force right now (nullopt on the home network or when none is configured).
+    auto allow = AppConfig::instance().allowedLibraries();
+
+    brls::async([this, wantId, item, version, opts, allow]() {
         try {
             media::PlaybackSource src = AppConfig::instance().backend().resolvePlayback(item, version, opts);
-            brls::sync([this, wantId, src]() {
+
+            // The same rule a video and a download ask (utils/wan_guard.hpp): on
+            // the metered address, a track whose library is hidden there — or that
+            // cannot prove it is allowed — must not reach mpv. Music is not a
+            // smaller leak than video: an album is minutes of streamed audio.
+            bool blocked = false;
+            if (allow) {
+                std::string library = item.librarySectionID;
+                if (library.empty() && !wantId.empty())
+                    library = AppConfig::instance().backend().sectionOfSync(wantId).key;
+                blocked = wanguard::blocksTransfer(true, !library.empty(), wanfilter::allows(&*allow, library),
+                    wanguard::isTunnelUrl(AppConfig::instance().getUrl(), src.url));
+            }
+
+            brls::sync([this, wantId, src, blocked]() {
                 // a skip may have superseded this resolve
                 if (!this->owns || this->current().ratingKey != wantId) return;
                 if (src.url.empty()) {
                     brls::Application::notify("main/player/error"_i18n);
+                    return;
+                }
+                if (blocked) {
+                    brls::Logger::info("Audio playback refused on the metered address: {}", wantId);
+                    // Drop the whole queue rather than leave it loaded: it would
+                    // auto-advance into the next track at the end of this one and
+                    // be refused again, track by track, with nothing playing in
+                    // between. Releasing hides the mini-bar, so the dialog is the
+                    // only thing left to explain why. stop() so a track playing
+                    // from the queue this one replaced does not outlive it.
+                    this->release();
+                    MPVCore::instance().stop();
+                    Dialog::show("main/player/wan_block"_i18n);
                     return;
                 }
                 MPVCore::instance().setUrl(src.url, src.mpvExtra);

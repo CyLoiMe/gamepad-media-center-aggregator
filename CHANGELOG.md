@@ -23,6 +23,12 @@
   rather than the few minutes a playback costs, so it asks the player's rule
   (`utils/wan_guard.hpp`), not a second one of its own: a library allowed on WAN
   downloads as before, and a season refused episode by episode says so once.
+- **Music obeys the allow-list too.** The audio player had no guard at all: it
+  handed mpv a resolved track URL whatever the address was, so an album from a
+  hidden library streamed on the metered one. It now asks the same rule before
+  `setUrl`, and a refusal drops the queue instead of leaving it loaded — that queue
+  would advance at the end of the track and be refused again, one track at a time,
+  with silence in between.
 - **Favorites and playlists obey the allow-list.** Neither endpoint takes a library
   scope, so their pages are filtered as they arrive: a movie or a show names its
   library in `ParentId`, an episode is resolved through its show once per page, and

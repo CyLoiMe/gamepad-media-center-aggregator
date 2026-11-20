@@ -104,9 +104,9 @@ see `NOTICE` for the attribution that must stay).
 ## Current state
 
 Version 0.1.0 plus an unreleased batch: dual-address connections with the
-`wan_policy` probe, the per-profile WAN library allow-list with its playback **and
-download** guard, in-place connection editing, and the NetworkBadge. `CHANGELOG.md`
-keeps the list.
+`wan_policy` probe, the per-profile WAN library allow-list enforced on playback,
+downloads and audio, in-place connection editing, and the NetworkBadge.
+`CHANGELOG.md` keeps the list.
 CI (`switch.yaml`) builds `main` only; the artifact is the `.nro`. Two symptoms
 reported on hardware are recorded, with their first checks, in `docs/backlog.md`
 §Reported on hardware — start there before touching the address allow-list code.
