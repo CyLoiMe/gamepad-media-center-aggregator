@@ -8,7 +8,6 @@
 #include "activity/loading_activity.hpp"
 #include "tab/server_type_choose.hpp"
 #include "tab/jellyfin_add.hpp"
-#include "tab/media_collection.hpp"
 #include "view/auto_tab_frame.hpp"
 #include "utils/config.hpp"
 #include "utils/download.hpp"
@@ -153,7 +152,6 @@ static void connectWithUser(const AppUser& u) {
                 // queue stalled while another one was active
                 // (DownloadManager::processQueue).
                 DownloadManager::instance().resumeQueue();
-                MediaCollection::clearPref();
             });
         } catch (const std::exception& ex) {
             std::string msg = ex.what();

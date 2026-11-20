@@ -140,6 +140,16 @@ SECOND account in on a server whose entry already exists is the other way that f
 gets filled, so `AppConfig::addServer()` adopts a non-empty `local_url` from the form
 and never clears one with a blank.
 
+**Anything keyed by a provider id is keyed per CONNECTION.** Section ids (Plex
+numbers them 1, 2, 3…), metadata ids and part keys only mean something inside the
+server that issued them. `AppConfig::activeServerId()` is the discriminator, and
+three caches use it: `MediaCollection::customPrefs` (sort/filter per section, so two
+servers no longer share one), the artwork cache (a relative path names a different
+picture on another server) and `DownloadItem` (a queued transfer belongs to the
+connection that created it). The exception is the artwork cache when offline: nothing
+can be re-fetched there, so it accepts a copy cached under another connection rather
+than showing a blank poster.
+
 `AppUser::wan_visible_libraries` is the per-profile WAN allow-list this mode exists
 to enforce. `AppConfig::allowedLibraries()` snapshots it on the UI thread (nullopt =
 not configured = nothing hidden) and the Jellyfin/Emby backend then queries per

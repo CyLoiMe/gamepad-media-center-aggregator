@@ -25,8 +25,6 @@ public:
     /// only called in sidebar tab mode (createAttachedView)
     void onCreate() override;
 
-    static void clearPref() { customPrefs.clear(); }
-
 private:
     BRLS_BIND(RecyclingGrid, recycler, "media/series");
     BRLS_BIND(AutoTabFrame, tabFrame, "media/tabFrame");
@@ -46,6 +44,11 @@ private:
 
     void loadFilter();
     void saveFilter();
+
+    /// Key of this section's entry in `customPrefs`: the connection is part of it,
+    /// because a section id is only unique inside its server (Plex numbers them
+    /// 1, 2, 3…), so a bare id made two servers share one sort and filter.
+    static std::string prefKey(const std::string& sectionId);
 
     std::string itemId;
     std::string genresId;

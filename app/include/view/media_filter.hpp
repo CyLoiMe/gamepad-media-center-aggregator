@@ -15,9 +15,21 @@ public:
 
     brls::VoidEvent* getEvent() { return &this->event; }
 
-    inline static int selectedSort = 1;
-    inline static int selectedOrder = 1;
+    /// Process-wide selection, not per library: whoever reads it next decides
+    /// what the grid is sorted by. A section with no stored preference must put it
+    /// back to the defaults instead of inheriting the last library's choice —
+    /// `resetDefaults()` is that.
+    static constexpr int kDefaultSort = 1;
+    static constexpr int kDefaultOrder = 1;
+    inline static int selectedSort = kDefaultSort;
+    inline static int selectedOrder = kDefaultOrder;
     inline static bool selectedUnplayed = false;
+
+    static void resetDefaults() {
+        selectedSort = kDefaultSort;
+        selectedOrder = kDefaultOrder;
+        selectedUnplayed = false;
+    }
 
     /// Plex sort fields, aligned with the selector labels;
     /// descending order = ":desc" suffix

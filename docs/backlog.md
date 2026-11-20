@@ -45,12 +45,21 @@ Known work, roughly in the order it should be picked up. Nothing here is a promi
 State that outlives a connection switch. There is no "connection changed" event: the
 switch rebuilds `MainActivity` and everything inside it, but nothing outside.
 
-- [ ] `MediaCollection::customPrefs` (`LIBRARY_SORT`) is keyed by the section
-      `itemId` alone, not by server — two servers emitting the same section key share
-      the stored sort/filter. `MediaCollection::clearPref()` runs only in the
-      switcher's own switch path, not in the Plex/Jellyfin/Stremio add flows.
-- [ ] `ImageCache` keys on the raw artwork path with no server id
-      (`utils/image_cache.hpp`), so a cached poster can answer for another server.
+- [x] `MediaCollection::customPrefs` (`LIBRARY_SORT`) was keyed by the section
+      `itemId` alone, and Plex numbers sections 1, 2, 3…, so two servers shared one
+      sort and filter. The key is now `prefKey()` = `activeServerId() + "/" + id`,
+      entries written before that are adopted once for the connection that is
+      active (and rewritten), and `clearPref()` is gone: it wiped every
+      connection's preferences on each switch, which the scoped key makes
+      unnecessary.
+- [x] `ImageCache` keys on the raw artwork path with no server id
+      (`utils/image_cache.hpp`), so a cached poster could answer for another server
+      — a relative path is that server's own id, and Plex numbers metadata per
+      server. The key now carries `activeServerId()` (absolute URLs already carry
+      their host). Online a miss simply re-fetches; offline, where nothing can be
+      re-fetched, a copy cached under another connection (or under the old
+      unscoped key) is accepted, because a downloaded item must keep its artwork.
+      `remove()` clears every connection's copy.
 - [x] `DownloadManager` resolved the URL and auth headers from the *live* backend at
       transfer time (`utils/download.cpp`), so a queued item resumed against
       whichever connection was active — at best a 404, and with colliding part ids

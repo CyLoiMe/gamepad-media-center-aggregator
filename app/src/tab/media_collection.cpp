@@ -228,11 +228,23 @@ MediaCollection::MediaCollection(const std::string& itemId, const std::string& i
         // /DisplayPreferences does not exist in Plex (PLEX_MIGRATION.md §2.5)
         if (MediaCollection::customPrefs.empty()) {
             auto saved = AppConfig::instance().getItem(AppConfig::LIBRARY_SORT, nlohmann::json::object());
+            bool adopted = false;
             for (auto& el : saved.items()) {
-                if (el.value().is_string()) {
-                    MediaCollection::customPrefs[el.key()] = el.value().get<std::string>();
-                }
+                if (!el.value().is_string()) continue;
+                // A key written before it carried a connection: adopt it for the
+                // one that is active now. Its real owner is unknowable, and being
+                // wrong costs one library its sort once.
+                const bool legacy = el.key().find('/') == std::string::npos;
+                adopted = adopted || legacy;
+                MediaCollection::customPrefs[legacy ? MediaCollection::prefKey(el.key()) : el.key()] =
+                    el.value().get<std::string>();
             }
+            // Persist the adoption so the next launch (and the other connections)
+            // see scoped keys only; without it the bare keys would be re-adopted
+            // by whichever connection happens to come first.
+            if (adopted)
+                AppConfig::instance().setItem(
+                    AppConfig::LIBRARY_SORT, nlohmann::json(MediaCollection::customPrefs));
         }
         this->loadFilter();
         this->doRequest();
@@ -317,8 +329,14 @@ void MediaCollection::loadFilter() {
         return true;
     });
 
-    auto it = MediaCollection::customPrefs.find(this->itemId);
-    if (it == MediaCollection::customPrefs.end()) return;
+    auto it = MediaCollection::customPrefs.find(prefKey(this->itemId));
+    if (it == MediaCollection::customPrefs.end()) {
+        // Nothing stored for THIS section: the selection above is process-wide, so
+        // leaving it alone would sort a library the user never touched by the last
+        // one's field, and open its dialog on that choice too.
+        MediaFilter::resetDefaults();
+        return;
+    }
 
     // format "sortBy,sortOrder,filter" (e.g. "addedAt,1,0")
     std::stringstream ss(it->second);
@@ -336,8 +354,13 @@ void MediaCollection::loadFilter() {
     MediaFilter::selectedUnplayed = unwatched == "1";
 }
 
+std::string MediaCollection::prefKey(const std::string& sectionId) {
+    const std::string server = AppConfig::instance().activeServerId();
+    return server.empty() ? sectionId : server + "/" + sectionId;
+}
+
 void MediaCollection::saveFilter() {
-    MediaCollection::customPrefs[this->itemId] =
+    MediaCollection::customPrefs[prefKey(this->itemId)] =
         fmt::format("{},{},{}", MediaFilter::sortList[MediaFilter::selectedSort], MediaFilter::selectedOrder,
             MediaFilter::selectedUnplayed ? 1 : 0);
 

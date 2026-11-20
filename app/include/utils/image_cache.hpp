@@ -6,6 +6,15 @@
     Plex path such as item.thumb/art/clearLogo, or an absolute http URL such as
     a tmdb cast face). Files live under {config}/downloads/art/{key}.
 
+    A relative path is the SERVER's own id (/library/metadata/123/thumb/…,
+    /Items/{guid}/Images/Primary), and Plex numbers libraries and metadata per
+    server: the same path names a different picture on another one. The key is
+    therefore scoped by the connection that fetched it (AppConfig::activeServerId);
+    absolute URLs already carry their host and are left alone. Offline there is
+    nothing to re-fetch, so a copy cached under any configured server is accepted —
+    a downloaded item must keep its artwork when another connection is the active
+    one, which is exactly the state the offline shell starts in.
+
     A locally cached asset is preferred by Image::load even online, giving
     downloaded content instant local artwork (SPEC AC6/AC17).
 */

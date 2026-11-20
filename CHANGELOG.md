@@ -40,6 +40,16 @@
 
 ### Fixed
 
+- A library's sort and filter no longer leak between servers, or into the next
+  library. The stored preference was keyed by the section id alone and Plex numbers
+  sections 1, 2, 3…, so two servers shared one entry; the key now carries the
+  connection, existing entries are adopted once, switching no longer wipes
+  everyone's preferences, and a library with no stored preference starts from the
+  defaults instead of the selection the last library left behind.
+- A cached poster can no longer answer for another server. Artwork is keyed by the
+  connection that fetched it, since a relative path is that server's own id; offline
+  the cache still accepts a copy from another connection rather than showing a blank
+  poster, because nothing can be re-fetched there.
 - A queued download no longer resumes against whichever connection is active. Each
   item is stamped with the server and profile that queued it, and a transfer only
   starts under that connection: asking another server for a part key it does not
