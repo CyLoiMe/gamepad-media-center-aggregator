@@ -166,6 +166,15 @@ host. `utils/wan_guard.hpp` holds that rule, and it is the only place that decid
 it. Items that came through a filtered page already carry their library, so the
 guard costs no request there.
 
+A download is the same decision with the whole file at stake instead of a few
+minutes of it, so `DownloadManager` asks the same rule twice (`utils/download.cpp`):
+in `queueGuarded()`, before the item enters the queue, and again in `doDownload()` on
+the worker that is about to open the file. The second one is the one that holds — a
+queued item waits out an address change, a connection switch and even a restart — so
+removing it because "it was already checked when queued" would reopen the hole. Both
+sites reach `reportWanBlock()`, which shows the refusal once per batch instead of
+once per episode of a season.
+
 ## Where things live
 
 | Area | Entry point |

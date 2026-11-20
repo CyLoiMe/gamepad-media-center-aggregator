@@ -94,12 +94,19 @@ see `NOTICE` for the attribution that must stay).
     a build to one of them leaves the other entry point on the old binary — the
     "my new features are gone" report. Verify with the sha the settings screen
     prints (`docs/build.md` §Installing).
+11. **B dismisses a borealis `Dialog` without running the button callback.**
+    `cancelable` defaults to `true` and the B action calls `dismiss()` with an empty
+    callback, so `Dialog::show(msg, cb)` runs `cb` only on OK. Anything a caller
+    depends on having run — closing a view, clearing a one-shot flag — needs
+    `Dialog::show(msg, cb, false)` (`utils/dialog.hpp`), or the state stays wrong
+    until the app restarts.
 
 ## Current state
 
 Version 0.1.0 plus an unreleased batch: dual-address connections with the
-`wan_policy` probe, the per-profile WAN library allow-list with its playback guard,
-in-place connection editing, and the NetworkBadge. `CHANGELOG.md` keeps the list.
+`wan_policy` probe, the per-profile WAN library allow-list with its playback **and
+download** guard, in-place connection editing, and the NetworkBadge. `CHANGELOG.md`
+keeps the list.
 CI (`switch.yaml`) builds `main` only; the artifact is the `.nro`. Two symptoms
 reported on hardware are recorded, with their first checks, in `docs/backlog.md`
 §Reported on hardware — start there before touching the address allow-list code.

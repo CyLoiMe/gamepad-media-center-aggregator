@@ -102,14 +102,21 @@ is the part that actually protects the quota.
       other account still points at it, and the shell is rebuilt when the edited
       connection was the one being browsed. Rule: `utils/connection_edit.hpp`,
       covered by `tests/test_connection_edit.cpp`.
-- [ ] **Downloads are not guarded.** `DownloadManager` streams through whatever
-      address is active (`utils/download.cpp`), so queueing an item from a hidden
-      library while on the metered address spends exactly what the playback guard
-      refuses to spend — and worse, because the whole file crosses the tunnel, not
-      a few minutes of it. The rule is the same (`wanguard` + the resolved
-      library), but it has to be checked twice: when the item is queued, and again
-      when a transfer starts, since the address and the allow-list can change in
-      between.
+- [x] **Downloads are guarded.** `DownloadManager::queueGuarded()` asks the same
+      rule as the player (`wanguard` + the item's resolved library, from
+      `librarySectionID` else `sectionOfSync`) before an item enters the queue, and
+      `doDownload()` asks it again on the worker, at the moment bytes would start
+      crossing — an item can wait in the queue while the address or the allow-list
+      changes, and the queue survives a restart, so the second check is the one that
+      holds. A refusal at queue time is a `main/download/wan_block` dialog;
+      `reportWanBlock()` is the one shot behind it, so "Download season" does not
+      stack one modal per episode.
+- [ ] **The audio player is not guarded.** `view/audio_player.cpp` hands mpv a
+      track's part key, and the `resolvePlayback` result, with no `wanguard` check,
+      so an album from a hidden library plays on the metered address exactly what
+      the video path refuses. Same rule, different shape: a music queue is built
+      ahead of time, so the decision belongs where the queue is built rather than
+      per track, or the refusal arrives as a mid-album interruption.
 - [ ] `librarySectionID` is still not populated by the Jellyfin/Emby mapper, so an
       item listed by a per-library query cannot say which library it belongs to —
       those surfaces are exact by construction, so nothing needs it there. Filtered

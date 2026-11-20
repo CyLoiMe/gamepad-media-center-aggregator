@@ -16,6 +16,13 @@
   decides, per library, whether it exists on the metered address; the Jellyfin/Emby
   backend then queries only the visible libraries. Playback is guarded too: an item
   from a hidden library is refused before it reaches mpv.
+- **Downloads obey the allow-list.** Queueing an item whose library is hidden on the
+  metered address is refused before anything is written, and the check runs again
+  when a transfer starts — the address and the allow-list can change while an item
+  waits, and the queue even outlives a restart. A download spends the whole file
+  rather than the few minutes a playback costs, so it asks the player's rule
+  (`utils/wan_guard.hpp`), not a second one of its own: a library allowed on WAN
+  downloads as before, and a season refused episode by episode says so once.
 - **Favorites and playlists obey the allow-list.** Neither endpoint takes a library
   scope, so their pages are filtered as they arrive: a movie or a show names its
   library in `ParentId`, an episode is resolved through its show once per page, and
