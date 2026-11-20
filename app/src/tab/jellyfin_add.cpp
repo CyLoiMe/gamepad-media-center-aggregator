@@ -27,6 +27,7 @@
 #include "utils/config.hpp"
 #include "utils/net_error.hpp"
 #include "view/auto_tab_frame.hpp"
+#include "view/audio_player.hpp"
 
 using namespace brls::literals;
 
@@ -233,6 +234,8 @@ void JellyfinAdd::finish(const std::string& remote, const std::string& local,
     u.thumb = jellyfin::userImageUrl(active, r.userId, r.userImageTag, this->type == "emby");
     AppConfig::instance().addUser(u, active, lan);
 
+    // The queue that was playing belongs to the connection being left.
+    AudioPlayer::releaseForSwitch();
     brls::Application::clear();
     brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
 }
@@ -264,7 +267,9 @@ void JellyfinAdd::finishEdit(const std::string& remote, const std::string& local
 
     if (wasActive) {
         // Same connection, possibly new ids: rebuild the shell so every cached id
-        // (sidebar tabs, artwork, the backend's userId()) follows the edit.
+        // (sidebar tabs, artwork, the backend's userId()) follows the edit. The
+        // music queue holds those same ids, so it goes with them.
+        AudioPlayer::releaseForSwitch();
         brls::Application::clear();
         brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
         return;

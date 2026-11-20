@@ -30,10 +30,23 @@ Known work, roughly in the order it should be picked up. Nothing here is a promi
 
 ## Playback
 
-- [ ] The transcode/HLS branch and `downloadUrl()` still hand out the assembled
-      `/Videos/{id}/stream` URL. Remote sources on a 302 front-end will fail there
-      the same way direct play used to — apply the PlaybackInfo treatment
-      (`docs/playback.md`) if it shows up.
+- [x] A remote source (`.strm` behind a 302 front-end) was routed into the transcode
+      branch by the Switch's default 1080p resolution limit, for every 4K cloud item:
+      `limitedBitrate()` derived an 8 Mbps cap, and `resolvePlayback()` then asked the
+      server for `/Videos/{id}/master.m3u8` — the server pulling the whole cloud file
+      and re-encoding it. That setup has no encoder on the CDN side and the server
+      re-encode is at best unusably slow, so direct play is the only path that can
+      work. `player_view` now zeroes the cap and skips the resolution derivation for
+      `media::remote` (only `tryTranscodeFallback()`, i.e. after a direct play already
+      failed, may still ask for one), and the quality menu is hidden — every tier of
+      it is a transcode. `main/player/quality_remote` explains if the bound key is
+      pressed anyway.
+- [ ] **`downloadUrl()` still assembles `/Videos/{id}/stream`** for a remote item,
+      which those front-ends refuse (403, missing user context) — the same failure
+      direct play had before it moved to PlaybackInfo. Downloads need the item's
+      `remote` + `sourceId` carried on the `DownloadItem` (like `serverId` now is) so
+      the transfer can ask PlaybackInfo for `DirectStreamUrl` first, and fall back to
+      the assembled URL only for non-remote items.
 - [ ] A server that does not report `IsRemote` keeps the old path. Widening the
       trigger to "always ask PlaybackInfo on direct play" is a one-line change, at
       the cost of one extra request per playback.
@@ -70,8 +83,20 @@ switch rebuilds `MainActivity` and everything inside it, but nothing outside.
       to be queued, and a switch back to that connection calls `resumeQueue()`.
       Items queued before the stamp existed keep the old behaviour (empty ids = no
       opinion).
-- [ ] `AudioPlayer`'s queue is not cleared on a switch — only `player_view` and
-      `remote_view` call `release()`.
+- [x] `AudioPlayer`'s queue was not cleared on a switch — only `player_view` and
+      `remote_view` called `release()`. `AudioPlayer::releaseForSwitch()` is now
+      called wherever the active connection changes (switcher, the three sign-in
+      forms, the in-place edit when it was the active one, deleting the active
+      connection, the offline reconnect): it drops the queue and stops mpv, because
+      the rating keys, the progress reports and the resolved stream URL are all the
+      old server's. A Files queue (`playFiles`, local paths) is left alone, and so
+      is a playing video, which owns mpv and is torn down with the activity stack.
+
+All four are handled, each the same two ways: key the state by
+`AppConfig::activeServerId()` (prefs, artwork, download stamps) or release it at the
+switch points (the music queue, the download queue). There is still no "connection
+changed" event, so anything new that a switch should reset has to do one of those
+by hand — the call list is `grep -rn releaseForSwitch`.
 
 ## WAN bandwidth protection
 

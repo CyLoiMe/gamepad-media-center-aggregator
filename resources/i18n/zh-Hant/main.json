@@ -32,6 +32,7 @@
     "common": "通用",
     "speed": "播放速度",
     "quality": "畫質",
+    "quality_remote": "雲端檔案按原樣播放：伺服器端沒有編碼器，沒有畫質可選。",
     "chapter": "章節",
     "auto": "自動",
     "toggle": "播放/暫停",

@@ -50,6 +50,21 @@ The reasoning, the logs from both sides and the limits are written up in
 `emby-remote-playback.md` (and its Chinese version), with the issue/PR drafts in
 `upstream/`.
 
+**A remote source is never transcoded.** The URL the client ends up with is the
+CDN's copy of the original file: there is no encoder on that side, and asking the
+server to transcode means pulling the whole file through the server — which is what
+these setups exist to avoid, and usually cannot do at all. A cap is what routes
+`resolvePlayback()` into the transcode branch, so `player_view.cpp` zeroes it and
+skips the resolution-limit derivation (the Switch defaults to `RESOLUTION_LIMIT` at
+1080p, which would otherwise push every 4K cloud item into a transcode) for
+`media::remote`. The OSD quality menu is hidden for the same reason — every tier of
+it is a transcode — and `toggleQuality()` answers with `main/player/quality_remote`
+if the bound key is pressed anyway.
+
+The one exception is `tryTranscodeFallback()`: it only runs after a direct play has
+already failed, and a transcode that might be slow is still better than a guaranteed
+error.
+
 ## User-Agent: one value, for the whole app
 
 Cloud-drive front-ends **sign the CDN link against the User-Agent of the request

@@ -36,6 +36,7 @@
     "common": "Général",
     "speed": "Vitesse de lecture",
     "quality": "Qualité",
+    "quality_remote": "Fichier cloud : lu tel quel. Il n'y a pas d'encodeur de l'autre côté, donc aucune qualité à choisir.",
     "chapter": "Chapitres",
     "auto": "Automatique",
     "toggle": "Lecture/Pause",

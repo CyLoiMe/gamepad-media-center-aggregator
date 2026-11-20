@@ -32,6 +32,7 @@
     "common": "Genel",
     "speed": "Oynatma Hızı",
     "quality": "Video Kalitesi",
+    "quality_remote": "Bulut dosyası olduğu gibi oynatılır. Karşı tarafta kodlayıcı yok, seçilecek bir kalite de yok.",
     "chapter": "Kısımlar",
     "auto": "Otomatik",
     "toggle": "Oynat/Durdur",

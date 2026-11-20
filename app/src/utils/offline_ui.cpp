@@ -4,6 +4,7 @@
 #include "utils/download.hpp"
 #include "utils/network_state.hpp"
 #include "activity/main_activity.hpp"
+#include "view/audio_player.hpp"
 
 using namespace brls::literals;
 
@@ -15,6 +16,10 @@ void offline_ui::tryReconnect() {
         brls::sync([ok]() {
             if (ok) {
                 NetworkState::setOffline(false);
+                // A queue left over from before the drop would come back with a
+                // dead track: its URL was resolved against the address that was
+                // active then, and checkLogin has just re-probed for a new one.
+                AudioPlayer::releaseForSwitch();
                 brls::Application::clear();
                 brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
                 DownloadManager::instance().resumeQueue();

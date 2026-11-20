@@ -191,6 +191,14 @@ before `setUrl`. Music is minutes of streamed audio, not a rounding error. A ref
 releases the queue rather than leaving it loaded, because a loaded queue would
 advance at the end of the track and be refused again, track by track.
 
+Its queue is also dropped whenever the ACTIVE CONNECTION changes
+(`AudioPlayer::releaseForSwitch()`, called from the switcher, the three sign-in
+forms, the in-place edit, deleting the active connection and the offline reconnect).
+There is still no "connection changed" event — every one of those paths rebuilds the
+shell and has to remember this call — but a queue carried across is worse than a
+stale view: it offers "next" for a library the user left, and resolves the track's
+key against the wrong server.
+
 **A download belongs to a CONNECTION**, which is a different question from the WAN
 guard above. `DownloadItem` records `serverId` + `userId` — the connection that
 queued it — because the URL, the part key and the token are all that server's and

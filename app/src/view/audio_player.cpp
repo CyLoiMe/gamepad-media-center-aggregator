@@ -365,6 +365,19 @@ void AudioPlayer::unsubscribe() {
     this->subscribed = false;
 }
 
+void AudioPlayer::releaseForSwitch() {
+    auto& audio = AudioPlayer::instance();
+    // Nothing to do when a video owns mpv: its PlayerView is destroyed by the
+    // activity stack being cleared, and stopping mpv here would just fight it.
+    if (!audio.active()) return;
+    // A Files queue is local paths — no connection, nothing to invalidate.
+    if (audio.fromFiles) return;
+    audio.release();
+    // release() hands the controller back but does not stop the decoder: the
+    // track it started would keep playing under the next connection's badge.
+    MPVCore::instance().stop();
+}
+
 void AudioPlayer::release() {
     if (!this->owns) return;
     this->owns = false;

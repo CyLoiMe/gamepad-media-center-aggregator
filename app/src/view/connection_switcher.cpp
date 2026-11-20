@@ -9,6 +9,7 @@
 #include "tab/server_type_choose.hpp"
 #include "tab/jellyfin_add.hpp"
 #include "view/auto_tab_frame.hpp"
+#include "view/audio_player.hpp"
 #include "utils/config.hpp"
 #include "utils/download.hpp"
 #include "utils/network_state.hpp"
@@ -145,6 +146,9 @@ static void connectWithUser(const AppUser& u) {
                 // showing the previous catalog.
                 NetworkState::setOffline(false);
                 brls::Application::unblockInputs();
+                // The music queue is the previous connection's: its ids and its
+                // stream URL mean nothing on the server we just connected to.
+                AudioPlayer::releaseForSwitch();
                 brls::Application::clear();
                 brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
                 // Downloads queued by this connection were waiting for it: an item
@@ -243,6 +247,9 @@ public:
                     // the click handler and the closing dialog have unwound.
                     brls::sync([]() {
                         NetworkState::setOffline(false);
+                        // Deleting the connection being browsed: its music queue
+                        // must not outlive it into the cold server list.
+                        AudioPlayer::releaseForSwitch();
                         brls::Application::clear();
                         brls::Application::pushActivity(new ServerList(), brls::TransitionAnimation::NONE);
                     });

@@ -307,11 +307,25 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
 
     media::PlaybackOptions opts;
     opts.seekMs = seekMs;
+    // A remote source (.strm on a cloud drive) IS the original file: the CDN that
+    // serves it has no encoder, and asking the server to transcode means pulling
+    // the whole file through the server. So neither the stored cap nor the
+    // resolution limit may route it into a transcode — `forceBitrate` is the one
+    // exception, because it only comes from tryTranscodeFallback(), i.e. from a
+    // direct play that already failed (a rescue, not a preference).
+    const bool remote = this->stream.remote;
+    if (remote) {
+        // The OSD button too: every tier of that menu is a transcode, and there is
+        // nothing here to transcode from. The key binding still lands in
+        // toggleQuality(), which explains instead of opening a dead menu.
+        this->view->hideVideoQuality();
+    }
     // a cap is what routes resolvePlayback through the transcoder, so the
     // fallback needs one even when the user setting is 0 (auto)
     opts.bitrateCap = forceBitrate > 0 ? forceBitrate
                       : MPVCore::VIDEO_QUALITY > 0 ? MPVCore::VIDEO_QUALITY
                                                    : this->fallbackBitrate;
+    if (remote && forceBitrate <= 0) opts.bitrateCap = 0;
     // forceDirect: the transcode->direct-play fallback re-resolves with direct
     // play forced (resolvePlayback returns the direct source when set).
     opts.forceDirectPlay = MPVCore::FORCE_DIRECTPLAY || forceDirect;
@@ -320,8 +334,10 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
     // the Vita hardware H.264 decoder tops out at 1080p (scripts/vita/ffmpeg patch)
     if (opts.maxHeight <= 0 || opts.maxHeight > 1080) opts.maxHeight = 1080;
 #endif
-    opts.bitrateCap = media::limitedBitrate(opts.bitrateCap, MPVCore::RESOLUTION_LIMIT,
-        AppConfig::instance().backend().caps().transcode, this->stream.width, this->stream.height, opts.maxHeight);
+    if (!remote)
+        opts.bitrateCap = media::limitedBitrate(opts.bitrateCap, MPVCore::RESOLUTION_LIMIT,
+            AppConfig::instance().backend().caps().transcode, this->stream.width, this->stream.height,
+            opts.maxHeight);
     opts.plainPartUrl = this->plainPartUrl;
     opts.audioStreamId = PlayerSetting::selectedAudio;
     opts.subtitleStreamId = PlayerSetting::selectedSubtitle;
@@ -559,6 +575,13 @@ void PlayerView::maybeScrobble(int64_t timeMs) {
 }
 
 bool PlayerView::toggleQuality() {
+    // A cloud file plays as-is: every tier of that menu means "ask the server to
+    // re-encode", and the file it would have to pull is the one already playing.
+    // startPlayback() hides the OSD button, but the bound key still lands here.
+    if (this->stream.remote) {
+        brls::Application::notify("main/player/quality_remote"_i18n);
+        return true;
+    }
     std::vector<std::string> options = {"main/player/auto"_i18n};
     std::vector<int64_t> values = {0};
     int64_t videoBitRate = this->stream.bitrate * 1000;  // Plex: kbps -> bps

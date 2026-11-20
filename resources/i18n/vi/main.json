@@ -32,6 +32,7 @@
     "common": "Chung",
     "speed": "Tốc độ phát",
     "quality": "Chất lượng video",
+    "quality_remote": "Tệp trên đám mây phát nguyên bản. Bên kia không có bộ mã hoá nên không có chất lượng để chọn.",
     "chapter": "Chương",
     "auto": "Tự động",
     "toggle": "Phát/Tạm dừng",

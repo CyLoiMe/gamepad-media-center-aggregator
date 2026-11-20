@@ -67,6 +67,15 @@ public:
     /// stop owning, unsubscribe, keep no queue. Called before video playback.
     void release();
 
+    /// Drop the music queue and silence mpv because the ACTIVE CONNECTION is
+    /// going away (switch, sign-in, edit, delete). Its rating keys, its progress
+    /// reports and its stream URL are all that server's, so carrying the queue
+    /// into the next connection offers "next" for a library the user just left —
+    /// and resolves it against the wrong server. A Files queue (`playFiles`) is
+    /// local paths and is left alone; a playing video owns mpv and is left alone
+    /// too (the switch tears the activity stack down around it).
+    static void releaseForSwitch();
+
     /// Fires on queue load and on every track change (UI re-reads current()).
     brls::VoidEvent* trackEvent() { return &this->trackChanged; }
 

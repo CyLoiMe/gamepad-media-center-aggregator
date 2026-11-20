@@ -32,6 +32,7 @@
     "common": "General",
     "speed": "Velocidad de reproducción",
     "quality": "Calidad de vídeo",
+    "quality_remote": "Archivo en la nube: se reproduce el original. No hay codificador al otro lado, así que no hay calidad que elegir.",
     "chapter": "Capítulos",
     "auto": "Automático",
     "toggle": "Reproducir/Pausa",

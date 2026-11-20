@@ -40,6 +40,19 @@
 
 ### Fixed
 
+- A cloud source playing behind a 302 front-end is now always played as-is. On the
+  Switch the 1080p resolution limit derived a bitrate cap for any 4K item, which
+  routed it into a server-side transcode — the server pulling the whole cloud file
+  and re-encoding it, i.e. exactly what that setup cannot do, and by default. A
+  remote source now ignores the stored cap and the resolution limit (only the
+  failed-direct-play rescue may still ask for one), and its quality menu is gone:
+  every tier of it means "transcode", and there is no encoder on the other side.
+- Music no longer outlives the connection it came from. The queue held the old
+  server's rating keys and a stream URL resolved against its address, and switching
+  offered "next" for a library the user had just left; it is now dropped wherever
+  the active connection changes — switching, signing in, editing the connection in
+  use, deleting it, reconnecting from the offline shell. A queue of local files is
+  left alone.
 - A library's sort and filter no longer leak between servers, or into the next
   library. The stored preference was keyed by the section id alone and Plex numbers
   sections 1, 2, 3…, so two servers shared one entry; the key now carries the

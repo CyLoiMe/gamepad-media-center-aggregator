@@ -32,6 +32,7 @@
     "common": "Allgemein",
     "speed": "Abspielgeschwindigkeit",
     "quality": "Videoqualität",
+    "quality_remote": "Cloud-Datei: läuft im Original. Dort gibt es keinen Encoder, also keine Qualitätsauswahl.",
     "chapter": "Kapitel",
     "auto": "Auto",
     "toggle": "Wiedergabe/Pause",

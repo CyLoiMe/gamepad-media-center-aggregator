@@ -9,6 +9,7 @@
 
 #include "tab/plex_add.hpp"
 #include "activity/main_activity.hpp"
+#include "view/audio_player.hpp"
 #include "activity/loading_overlay.hpp"
 #include "api/plex.hpp"
 #include "api/plex/auth.hpp"
@@ -301,6 +302,8 @@ void PlexAdd::finishAll(const std::string& uuid, const std::string& name, const 
                 }
                 persist(servers.at(primaryIdx), base, true);
 
+                // The queue that was playing belongs to the connection being left.
+                AudioPlayer::releaseForSwitch();
                 brls::Application::clear();
                 brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
             });

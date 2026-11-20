@@ -36,6 +36,7 @@
     "common": "Common",
     "speed": "Playback Speed",
     "quality": "Video Quality",
+    "quality_remote": "Cloud file: it plays as the original. There is no encoder on that side, so there is no quality to pick.",
     "chapter": "Chapter",
     "auto": "Auto",
     "toggle": "Play/Pause",

@@ -17,6 +17,7 @@
 #include "activity/main_activity.hpp"
 #include "api/stremio/auth.hpp"
 #include "utils/config.hpp"
+#include "view/audio_player.hpp"
 
 using namespace brls::literals;
 
@@ -107,6 +108,8 @@ void StremioAdd::finish(const stremio::Account& a) {
     u.thumb = "";
     AppConfig::instance().addUser(u, s.urls.front());
 
+    // The queue that was playing belongs to the connection being left.
+    AudioPlayer::releaseForSwitch();
     brls::Application::clear();
     brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
 }
