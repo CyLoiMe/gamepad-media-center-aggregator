@@ -188,6 +188,7 @@
     "forbidden": "被伺服器拒絕 (403)",
     "wan_block": "已攔截：該媒體庫在外網位址上被隱藏，下載會讓整個檔案穿過流量隧道。",
     "queued": "已加入佇列",
+    "queued_other": "等待原伺服器連線",
     "no_downloads": "沒有下載項目",
     "confirm_remove": "是否移除此下載項目？",
     "play_offline": "離線播放",

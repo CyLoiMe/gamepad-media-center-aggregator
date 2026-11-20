@@ -188,6 +188,7 @@
     "forbidden": "Recusado pelo servidor (403)",
     "wan_block": "Bloqueado: esta biblioteca está oculta no endereço WAN com quota; a transferência passaria o ficheiro inteiro pelo túnel.",
     "queued": "Em fila",
+    "queued_other": "À espera do seu servidor",
     "no_downloads": "Sem transferências",
     "confirm_remove": "Remover esta transferência?",
     "play_offline": "Reproduzir offline",

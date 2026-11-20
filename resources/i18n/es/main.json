@@ -188,6 +188,7 @@
     "forbidden": "Rechazado por el servidor (403)",
     "wan_block": "Bloqueado: esta biblioteca está oculta en la dirección WAN con cuota; la descarga enviaría el archivo entero por el túnel.",
     "queued": "En cola",
+    "queued_other": "Esperando a su servidor",
     "no_downloads": "No hay descargas",
     "confirm_remove": "¿Eliminar esta descarga?",
     "play_offline": "Reproducir sin conexión",

@@ -581,6 +581,15 @@ std::string AppConfig::activeServerType() const {
     return "plex";
 }
 
+std::string AppConfig::activeServerId() const {
+    // Same resolution as activeServerType(), deliberately: the profile names its
+    // server, and `user_id` survives where the `user` iterator does not (an
+    // insert into `users` invalidates it).
+    auto profile = std::find_if(this->users.begin(), this->users.end(),
+        [this](const AppUser& u) { return u.id == this->user_id; });
+    return profile != this->users.end() ? profile->server_id : std::string{};
+}
+
 std::string AppConfig::getToken() const {
     // Jellyfin/Emby issue one AccessToken per account, and two accounts on one
     // server share an AppServer entry — so that entry's token only ever holds the

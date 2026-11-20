@@ -188,6 +188,7 @@
     "forbidden": "Odmítnuto serverem (403)",
     "wan_block": "Zablokováno: tato knihovna je na zpoplatněné WAN adrese skrytá – stažení by protlačilo celý soubor tunelem.",
     "queued": "Ve frontě",
+    "queued_other": "Čeká na svůj server",
     "no_downloads": "Žádná stahování",
     "confirm_remove": "Odstranit toto stažení?",
     "play_offline": "Přehrát offline",

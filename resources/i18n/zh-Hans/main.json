@@ -188,6 +188,7 @@
     "forbidden": "被服务器拒绝 (403)",
     "wan_block": "已拦截：该媒体库在外网地址上被隐藏，下载会让整个文件穿过流量隧道。",
     "queued": "下载任务提交成功",
+    "queued_other": "等待原服务器连接",
     "no_downloads": "下载记录为空",
     "confirm_remove": "是否移除下载文件?",
     "play_offline": "离线播放",

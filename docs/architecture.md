@@ -181,6 +181,17 @@ before `setUrl`. Music is minutes of streamed audio, not a rounding error. A ref
 releases the queue rather than leaving it loaded, because a loaded queue would
 advance at the end of the track and be refused again, track by track.
 
+**A download belongs to a CONNECTION**, which is a different question from the WAN
+guard above. `DownloadItem` records `serverId` + `userId` — the connection that
+queued it — because the URL, the part key and the token are all that server's and
+they are resolved from the LIVE backend when the transfer starts. `processQueue()`
+therefore skips an item whose connection is not active instead of asking the wrong
+server for a part key it does not have (with colliding part ids, `partKey` names a
+different file, not a 404). The row reads "Waiting for its server"
+(`main/download/queued_other`), and switching back to that connection calls
+`resumeQueue()`. Items queued before the stamp existed carry empty ids and stay
+transferable — there is nothing better to compare them with.
+
 ## Where things live
 
 | Area | Entry point |

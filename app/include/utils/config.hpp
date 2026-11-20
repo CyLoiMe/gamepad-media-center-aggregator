@@ -312,6 +312,12 @@ public:
     bool removeUser(const std::string& id);
     const std::string& getDeviceId() { return this->device; }
     const std::string& getUserId() const { return this->user_id; }
+    /// `AppServer::id` of the active connection, "" when nothing is connected.
+    /// Resolved through the active profile like activeServerType(), because the
+    /// URL does not identify a connection: one server has two addresses and two
+    /// servers can share one. `userId` + this id is what "same connection" means
+    /// (a download stamps both, see utils/download.hpp).
+    std::string activeServerId() const;
     const std::string& getUserName() const { return this->user->name; }
     /// Active profile (name, avatar...) — valid after init()/checkLogin().
     const AppUser& getUser() const { return *this->user; }

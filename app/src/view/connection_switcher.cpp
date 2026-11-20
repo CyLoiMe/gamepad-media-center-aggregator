@@ -11,6 +11,7 @@
 #include "tab/media_collection.hpp"
 #include "view/auto_tab_frame.hpp"
 #include "utils/config.hpp"
+#include "utils/download.hpp"
 #include "utils/network_state.hpp"
 #include "utils/image.hpp"
 #include "utils/dialog.hpp"
@@ -147,6 +148,11 @@ static void connectWithUser(const AppUser& u) {
                 brls::Application::unblockInputs();
                 brls::Application::clear();
                 brls::Application::pushActivity(new MainActivity(), brls::TransitionAnimation::NONE);
+                // Downloads queued by this connection were waiting for it: an item
+                // is only transferable by the connection that queued it, so the
+                // queue stalled while another one was active
+                // (DownloadManager::processQueue).
+                DownloadManager::instance().resumeQueue();
                 MediaCollection::clearPref();
             });
         } catch (const std::exception& ex) {

@@ -284,7 +284,12 @@ public:
 
         switch (item.status) {
         case DownloadStatus::Queued:
-            this->status->setText("main/download/queued"_i18n);
+            // A queued item is only transferable by the connection that queued
+            // it (DownloadManager::processQueue). Showing a plain "Queued" for one
+            // waiting on another connection reads as a stuck queue.
+            this->status->setText(DownloadManager::instance().onActiveConnection(item)
+                                      ? "main/download/queued"_i18n
+                                      : "main/download/queued_other"_i18n);
             break;
         case DownloadStatus::Downloading:
             this->badge->setVisibility(brls::Visibility::GONE);

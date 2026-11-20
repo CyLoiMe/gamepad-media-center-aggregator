@@ -40,6 +40,12 @@
 
 ### Fixed
 
+- A queued download no longer resumes against whichever connection is active. Each
+  item is stamped with the server and profile that queued it, and a transfer only
+  starts under that connection: asking another server for a part key it does not
+  have is a 404 at best and, where part ids collide, a different file. The row reads
+  "Waiting for its server" until the connection comes back, and switching to it
+  resumes the queue.
 - Adding a second account on a server that already exists no longer drops the home
   address typed on that form: the address lives on the server entry, so it is
   adopted there. The sign-in form now says the addresses belong to the server, which

@@ -168,6 +168,11 @@ void DownloadManager::enqueue(const media::Item& item, const std::string& partKe
                    ? (!item.parentThumb.empty() ? item.parentThumb : item.grandparentThumb)
                    : item.thumb;
     dl.partKey = partKey;
+    // The connection that asked for this file. Everything needed to fetch it —
+    // URL, token, part id, library — is that server's, and it is resolved live
+    // at transfer time.
+    dl.serverId = AppConfig::instance().activeServerId();
+    dl.userId = AppConfig::instance().getUserId();
     dl.status = DownloadStatus::Queued;
     this->items.push_back(dl);
     this->saveIndex();
@@ -310,6 +315,14 @@ std::vector<DownloadItem> DownloadManager::getItems() const {
     return this->items;
 }
 
+bool DownloadManager::onActiveConnection(const DownloadItem& item) const {
+    // No stamp at all: queued before the field existed. Keep the old behaviour
+    // rather than strand every pending download on upgrade.
+    if (item.serverId.empty() && item.userId.empty()) return true;
+    return item.serverId == AppConfig::instance().activeServerId() &&
+           item.userId == AppConfig::instance().getUserId();
+}
+
 std::string DownloadManager::buildDownloadUrl(const DownloadItem& item) const {
     // original-quality file (PLEX_MIGRATION.md D2 — no transcoded download in v1)
     return AppConfig::instance().backend().downloadUrl(item.partKey);
@@ -351,11 +364,17 @@ void DownloadManager::processQueue() {
     if (this->downloading) return;
 
     for (auto& item : this->items) {
-        if (item.status == DownloadStatus::Queued) {
-            this->downloading = true;
-            this->doDownload(item);
-            return;
-        }
+        if (item.status != DownloadStatus::Queued) continue;
+        // An item is only transferable by the connection that queued it. The
+        // part key, the token and the library are all that server's, and they are
+        // resolved from the LIVE backend — under another connection the same key
+        // either 404s or, where ids collide, names a different file. Wait for the
+        // right connection to come back rather than fetch the wrong bytes; the
+        // row says so (download_tab) and a switch resumes the queue.
+        if (!this->onActiveConnection(item)) continue;
+        this->downloading = true;
+        this->doDownload(item);
+        return;
     }
 }
 

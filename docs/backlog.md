@@ -51,9 +51,16 @@ switch rebuilds `MainActivity` and everything inside it, but nothing outside.
       switcher's own switch path, not in the Plex/Jellyfin/Stremio add flows.
 - [ ] `ImageCache` keys on the raw artwork path with no server id
       (`utils/image_cache.hpp`), so a cached poster can answer for another server.
-- [ ] `DownloadManager` resolves the URL and auth headers from the *live* backend at
-      transfer time (`utils/download.cpp`), so a queued item resumes against
-      whichever connection is active.
+- [x] `DownloadManager` resolved the URL and auth headers from the *live* backend at
+      transfer time (`utils/download.cpp`), so a queued item resumed against
+      whichever connection was active — at best a 404, and with colliding part ids
+      (Plex `/library/parts/{id}/…`) a different file than the one asked for. A
+      `DownloadItem` now records `serverId` + `userId` (`AppConfig::activeServerId()`
+      + `getUserId()`), and `processQueue()` skips an item whose connection is not
+      the active one. The row says `main/download/queued_other` instead of pretending
+      to be queued, and a switch back to that connection calls `resumeQueue()`.
+      Items queued before the stamp existed keep the old behaviour (empty ids = no
+      opinion).
 - [ ] `AudioPlayer`'s queue is not cleared on a switch — only `player_view` and
       `remote_view` call `release()`.
 

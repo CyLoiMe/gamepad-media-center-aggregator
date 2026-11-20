@@ -34,6 +34,15 @@ struct DownloadItem {
     std::string partKey;      // Part.key (original file)
     std::string sectionKey;   // owning library, when the backend metadata lacks it
     std::string sectionTitle;
+    /// Connection that queued the item (AppConfig::activeServerId() + the active
+    /// profile id). Its part key, its token and its library only mean something
+    /// there: the URL and the auth headers are resolved from the ACTIVE backend
+    /// at transfer time, so starting the item under another connection asks that
+    /// server for a file it does not have — and with colliding part ids, may hand
+    /// back a different one. Empty on items queued before this was recorded;
+    /// those stay transferable, there is nothing better to compare them with.
+    std::string serverId;
+    std::string userId;
     DownloadStatus status = DownloadStatus::Queued;
     std::string filePath;
     int64_t totalBytes = 0;
@@ -41,8 +50,8 @@ struct DownloadItem {
     std::string errorMessage;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(DownloadItem, itemId, name, type, seriesName,
-    seasonIndex, episodeIndex, productionYear, durationMs, thumb, partKey, sectionKey, sectionTitle, status,
-    filePath, totalBytes, downloadedBytes, errorMessage);
+    seasonIndex, episodeIndex, productionYear, durationMs, thumb, partKey, sectionKey, sectionTitle, serverId,
+    userId, status, filePath, totalBytes, downloadedBytes, errorMessage);
 
 class DownloadManager : public brls::Singleton<DownloadManager> {
 public:
@@ -71,6 +80,11 @@ public:
     std::string getDownloadDir() const { return this->downloadDir(); }
 
     std::vector<DownloadItem> getItems() const;
+    /// Was this item queued by the connection that is active right now? Only that
+    /// connection can transfer it: the URL and the auth headers come from the
+    /// live backend (processQueue() skips the others instead of asking the wrong
+    /// server). Always true for items queued before the stamp existed.
+    bool onActiveConnection(const DownloadItem& item) const;
 
     ProgressEvent* getProgressEvent() { return &progressEvent; }
     StatusEvent* getStatusEvent() { return &statusEvent; }
