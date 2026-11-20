@@ -186,6 +186,7 @@
     "completed": "Heruntergeladen",
     "failed": "Download fehlgeschlagen",
     "forbidden": "Vom Server abgelehnt (403)",
+    "wan_block": "Blockiert: Diese Bibliothek ist auf der getakteten WAN-Adresse ausgeblendet – ein Download würde die ganze Datei durch den Tunnel schicken.",
     "queued": "In Warteschlange",
     "no_downloads": "Keine Downloads",
     "confirm_remove": "Diesen Download entfernen?",

@@ -78,6 +78,13 @@ public:
 private:
     void saveIndex();
     void loadIndex();
+    /// Refuses a download that would cross the metered address, then hands the
+    /// item to enqueue(). The library resolution can cost a request, so it runs
+    /// off the UI thread when an allow-list is configured.
+    void queueGuarded(const media::Item& item, const std::string& partKey);
+    void enqueue(const media::Item& item, const std::string& partKey);
+    /// Says "refused on the metered address" — once. UI thread only.
+    void reportWanBlock();
     void processQueue();
     void doDownload(DownloadItem& item);
     /// Captures the full fiche + ancestors (season/show) + the season's full
@@ -95,6 +102,10 @@ private:
     std::vector<DownloadItem> items;
     std::shared_ptr<std::atomic_bool> currentCancel;
     bool downloading = false;
+    /// One WAN-block dialog at a time: a season queues one download per episode,
+    /// and a queue refused item by item at transfer time would say the same thing
+    /// twenty times over. Written and read on the UI thread only.
+    bool wanBlockShown = false;
 
     ProgressEvent progressEvent;
     StatusEvent statusEvent;

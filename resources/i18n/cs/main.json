@@ -186,6 +186,7 @@
     "completed": "Staženo",
     "failed": "Stahování selhalo",
     "forbidden": "Odmítnuto serverem (403)",
+    "wan_block": "Zablokováno: tato knihovna je na zpoplatněné WAN adrese skrytá – stažení by protlačilo celý soubor tunelem.",
     "queued": "Ve frontě",
     "no_downloads": "Žádná stahování",
     "confirm_remove": "Odstranit toto stažení?",

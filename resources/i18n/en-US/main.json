@@ -199,6 +199,7 @@
     "completed": "Downloaded",
     "failed": "Download Failed",
     "forbidden": "Refused by the server (403)",
+    "wan_block": "Blocked: this library is hidden on the metered (WAN) address, and a download would send the whole file through the tunnel.",
     "queued": "Queued",
     "no_downloads": "No Downloads",
     "confirm_remove": "Remove this download?",

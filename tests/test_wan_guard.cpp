@@ -1,7 +1,8 @@
-// Standalone logic test — the playback guard that protects the tunnel quota.
+// Standalone logic test — the guard that protects the tunnel quota.
 //
 // Filtering the UI is not enough: an item can reach the player from a
-// cross-library surface (favorites, playlist, deep link). See utils/wan_guard.hpp.
+// cross-library surface (favorites, playlist, deep link), and a download pulls
+// the whole file through whatever address is active. See utils/wan_guard.hpp.
 
 #include <cstdio>
 #include <string>
@@ -19,21 +20,21 @@ static int failures = 0;
 
 int main() {
     // Not filtering (home network, or no allow-list): never block.
-    CHECK(!wanguard::blocksPlayback(false, false, false, true));
-    CHECK(!wanguard::blocksPlayback(false, true, false, true));
+    CHECK(!wanguard::blocksTransfer(false, false, false, true));
+    CHECK(!wanguard::blocksTransfer(false, true, false, true));
 
     // Library known and allowed: play, even when the bytes come from the server
     // itself (the user explicitly allowed this library on WAN).
-    CHECK(!wanguard::blocksPlayback(true, true, true, true));
-    CHECK(!wanguard::blocksPlayback(true, true, true, false));
+    CHECK(!wanguard::blocksTransfer(true, true, true, true));
+    CHECK(!wanguard::blocksTransfer(true, true, true, false));
 
     // Library known and hidden: refuse, whatever the URL is.
-    CHECK(wanguard::blocksPlayback(true, true, false, false));
-    CHECK(wanguard::blocksPlayback(true, true, false, true));
+    CHECK(wanguard::blocksTransfer(true, true, false, false));
+    CHECK(wanguard::blocksTransfer(true, true, false, true));
 
     // Library unknown: only an EXTERNAL link (a CDN direct link) gets through.
-    CHECK(wanguard::blocksPlayback(true, false, false, true));
-    CHECK(!wanguard::blocksPlayback(true, false, false, false));
+    CHECK(wanguard::blocksTransfer(true, false, false, true));
+    CHECK(!wanguard::blocksTransfer(true, false, false, false));
 
     // Tunnel detection is host-only: scheme, port and path are irrelevant.
     CHECK(wanguard::isTunnelUrl("http://emby.example.com:8091", "http://emby.example.com:8091/Videos/1/stream"));

@@ -6,6 +6,9 @@
 #include "utils/offline_catalog.hpp"
 #include "utils/image_cache.hpp"
 #include "utils/thread.hpp"
+#include "utils/dialog.hpp"
+#include "utils/wan_filter.hpp"
+#include "utils/wan_guard.hpp"
 #include "api/plex.hpp"
 #include "api/backend.hpp"
 #include <algorithm>
@@ -71,42 +74,22 @@ void DownloadManager::addDownload(const std::string& itemId) {
     AppConfig::instance().backend().getItemDetail(
         itemId, false,
         [this](const media::Item& item) {
-
-            std::lock_guard<std::mutex> lock(this->mutex);
-
-            DownloadItem dl;
-            dl.itemId = item.ratingKey;
-            dl.name = item.title;
-            dl.type = item.type;
-            dl.seriesName = item.grandparentTitle;
-            dl.seasonIndex = (int)item.parentIndex;
-            dl.episodeIndex = (int)item.index;
-            dl.productionYear = (long)item.year;
-            dl.durationMs = item.duration;
-            // poster: for an episode, the season's/show's
-            dl.thumb = item.type == plex::mediaTypeEpisode
-                           ? (!item.parentThumb.empty() ? item.parentThumb : item.grandparentThumb)
-                           : item.thumb;
             // first accessible Part: original quality (PLEX_MIGRATION.md D2)
+            std::string partKey;
             for (auto& media : item.media) {
                 for (auto& part : media.parts) {
                     if (!part.key.empty()) {
-                        dl.partKey = part.key;
+                        partKey = part.key;
                         break;
                     }
                 }
-                if (!dl.partKey.empty()) break;
+                if (!partKey.empty()) break;
             }
-            if (dl.partKey.empty()) {
+            if (partKey.empty()) {
                 brls::Application::notify("main/download/failed"_i18n);
                 return;
             }
-            dl.status = DownloadStatus::Queued;
-
-            this->items.push_back(dl);
-            this->saveIndex();
-            brls::Logger::info("Download queued: {}", item.title);
-            this->processQueue();
+            this->queueGuarded(item, partKey);
         },
         [](const std::string& ex) { brls::Application::notify(ex); });
 }
@@ -120,6 +103,51 @@ void DownloadManager::addDownload(const media::Item& item, const std::string& pa
         brls::Application::notify("main/download/failed"_i18n);
         return;
     }
+    this->queueGuarded(item, partKey);
+}
+
+void DownloadManager::queueGuarded(const media::Item& item, const std::string& partKey) {
+    auto allow = AppConfig::instance().allowedLibraries();
+    if (!allow) {
+        this->enqueue(item, partKey);
+        return;
+    }
+
+    // A download pulls the WHOLE file through whatever address is active, so the
+    // playback rule applies here with more at stake (utils/wan_guard.hpp).
+    // Resolving the item's library can cost one Ancestors request — off the UI
+    // thread, like the guard in player_view.
+    brls::async([this, item, partKey, allow]() {
+        const std::string url = AppConfig::instance().backend().downloadUrl(partKey);
+        std::string library = item.librarySectionID;
+        if (library.empty() && !item.ratingKey.empty())
+            library = AppConfig::instance().backend().sectionOfSync(item.ratingKey).key;
+        const bool blocked = wanguard::blocksTransfer(true, !library.empty(),
+            wanfilter::allows(&*allow, library), wanguard::isTunnelUrl(AppConfig::instance().getUrl(), url));
+        brls::sync([this, item, partKey, blocked]() {
+            if (!blocked) {
+                this->enqueue(item, partKey);
+                return;
+            }
+            this->reportWanBlock();
+        });
+    });
+}
+
+void DownloadManager::reportWanBlock() {
+    // UI thread only (both call sites reach it through brls::sync). "Download
+    // season" queues one item per episode, and a queue that is refused one item
+    // at a time at transfer time fails the same way: the first dialog is the
+    // message, the rest would just stack up in front of an annoyed user.
+    if (this->wanBlockShown) return;
+    this->wanBlockShown = true;
+    // Not cancelable on purpose: borealis lets B dismiss a dialog WITHOUT running
+    // its callback, which would leave the flag set and silence every later
+    // refusal for the rest of the session. OK is the only way out.
+    Dialog::show("main/download/wan_block"_i18n, [this]() { this->wanBlockShown = false; }, false);
+}
+
+void DownloadManager::enqueue(const media::Item& item, const std::string& partKey) {
     std::lock_guard<std::mutex> lock(this->mutex);
     for (auto& existing : this->items) {
         if (existing.itemId == item.ratingKey) {
@@ -143,7 +171,7 @@ void DownloadManager::addDownload(const media::Item& item, const std::string& pa
     dl.status = DownloadStatus::Queued;
     this->items.push_back(dl);
     this->saveIndex();
-    brls::Logger::info("Download queued (explicit source): {}", item.title);
+    brls::Logger::info("Download queued: {}", item.title);
     this->processQueue();
 }
 
@@ -347,13 +375,18 @@ void DownloadManager::doDownload(DownloadItem& item) {
     auto cancel = std::make_shared<std::atomic_bool>(false);
     this->currentCancel = cancel;
 
+    // Allow-list snapshot for the transfer-time check below, taken here on the
+    // UI thread like every other policy input.
+    auto allow = AppConfig::instance().allowedLibraries();
+    const std::string blockedMsg = "main/download/wan_block"_i18n;
+
     brls::sync([this, itemId]() { this->statusEvent.fire(itemId, DownloadStatus::Downloading); });
 
     // Runs on a ThreadPool worker. We deliberately ignore the pool's shared
     // per-worker HTTP session and open a fresh one below: this transfer installs
     // a progress callback + cancel token that would otherwise linger on the
     // shared session and leak into the next image/version task on that worker.
-    ThreadPool::instance().submit([this, itemId, thumb, partKey, url, itemDir, cancel](HTTP&) {
+    ThreadPool::instance().submit([this, itemId, thumb, partKey, url, itemDir, cancel, allow, blockedMsg](HTTP&) {
         auto resetQueue = [this, itemId](const std::string& error) {
             brls::sync([this, itemId, error]() {
                 {
@@ -376,6 +409,20 @@ void DownloadManager::doDownload(DownloadItem& item) {
                 }
             });
         };
+
+        // Checked again here, not only when it was queued: an item can wait in
+        // the queue while the address or the allow-list changes, and this is the
+        // moment bytes would start crossing the tunnel.
+        if (allow) {
+            std::string library = AppConfig::instance().backend().sectionOfSync(itemId).key;
+            if (wanguard::blocksTransfer(true, !library.empty(), wanfilter::allows(&*allow, library),
+                    wanguard::isTunnelUrl(AppConfig::instance().getUrl(), url))) {
+                brls::Logger::info("Download refused on the metered address: {}", itemId);
+                brls::sync([this]() { this->reportWanBlock(); });
+                resetQueue(blockedMsg);
+                return;
+            }
+        }
 
         try {
             if (!fs::exists(itemDir)) fs::create_directories(itemDir);

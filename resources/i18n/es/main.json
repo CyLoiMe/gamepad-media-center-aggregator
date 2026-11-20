@@ -186,6 +186,7 @@
     "completed": "Descargado",
     "failed": "Descarga fallida",
     "forbidden": "Rechazado por el servidor (403)",
+    "wan_block": "Bloqueado: esta biblioteca está oculta en la dirección WAN con cuota; la descarga enviaría el archivo entero por el túnel.",
     "queued": "En cola",
     "no_downloads": "No hay descargas",
     "confirm_remove": "¿Eliminar esta descarga?",

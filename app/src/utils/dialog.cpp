@@ -8,9 +8,10 @@
 
 using namespace brls::literals;
 
-void Dialog::show(const std::string& msg, Callback cb) {
+void Dialog::show(const std::string& msg, Callback cb, bool cancelable) {
     auto dialog = new brls::Dialog(msg);
     dialog->addButton("hints/ok"_i18n, cb);
+    dialog->setCancelable(cancelable);
     dialog->open();
 }
 

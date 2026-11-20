@@ -186,6 +186,7 @@
     "completed": "Đã tải xuống",
     "failed": "Tải xuống thất bại",
     "forbidden": "Bị máy chủ từ chối (403)",
+    "wan_block": "Đã chặn: thư viện này bị ẩn trên địa chỉ WAN tính lưu lượng — tải xuống sẽ đẩy toàn bộ tệp qua đường hầm.",
     "queued": "Trong hàng đợi",
     "no_downloads": "Không có bản tải",
     "confirm_remove": "Xóa bản tải này?",

@@ -1,5 +1,6 @@
 /*
-    Last line of defence before mpv is handed a URL.
+    Last line of defence before bytes are pulled from the server: mpv, and a
+    download.
 
     Filtering the library lists keeps hidden content out of the UI, but an item
     can still reach the player from a cross-library surface (favorites, a
@@ -7,9 +8,13 @@
     through the tunnel within seconds, so playback refuses it unless the item's
     library is explicitly allowed.
 
+    A download is the same decision with more at stake: the whole file crosses,
+    not a few minutes of it. Both call sites therefore ask this one rule
+    (`blocksTransfer`), and both resolve the item's library the same way.
+
     The rule:
-      - not filtering (LAN, or no allow-list configured) -> play;
-      - library known and allowed -> play, even when the URL is the server's own
+      - not filtering (LAN, or no allow-list configured) -> allow;
+      - library known and allowed -> allow, even when the URL is the server's own
         (the user asked for that library on WAN; its bytes are their call);
       - library known and hidden -> refuse;
       - library unknown -> refuse unless the resolved URL is external (a cloud
@@ -51,8 +56,8 @@ inline bool isTunnelUrl(const std::string& serverUrl, const std::string& url) {
     return !server.empty() && !host.empty() && server == host;
 }
 
-/// Must playback be refused? See the rule in the header comment.
-inline bool blocksPlayback(bool filtering, bool libraryKnown, bool libraryAllowed, bool tunnelUrl) {
+/// Must these bytes be refused? See the rule in the header comment.
+inline bool blocksTransfer(bool filtering, bool libraryKnown, bool libraryAllowed, bool tunnelUrl) {
     if (!filtering) return false;
     if (libraryKnown) return !libraryAllowed;
     return tunnelUrl;

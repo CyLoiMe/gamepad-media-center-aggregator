@@ -359,7 +359,7 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
                 std::string libraryId = item.librarySectionID;
                 if (libraryId.empty() && !item.ratingKey.empty())
                     libraryId = AppConfig::instance().backend().sectionOfSync(item.ratingKey).key;
-                blocked = wanguard::blocksPlayback(true, !libraryId.empty(),
+                blocked = wanguard::blocksTransfer(true, !libraryId.empty(),
                     wanfilter::allows(&*allow, libraryId),
                     wanguard::isTunnelUrl(AppConfig::instance().getUrl(), src.url));
             }

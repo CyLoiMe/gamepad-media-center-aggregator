@@ -186,6 +186,7 @@
     "completed": "İndirildi",
     "failed": "İndirme Başarısız",
     "forbidden": "Sunucu tarafından reddedildi (403)",
+    "wan_block": "Engellendi: bu kitaplık ücretli WAN adresinde gizli; indirme tüm dosyayı tünelden geçirir.",
     "queued": "Kuyruğa Eklendi",
     "no_downloads": "İndirme Yok",
     "confirm_remove": "İndirilen dosya kaldırılsın mı?",

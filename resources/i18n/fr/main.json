@@ -199,6 +199,7 @@
     "completed": "Téléchargé",
     "failed": "Échec du téléchargement",
     "forbidden": "Refusé par le serveur (403)",
+    "wan_block": "Bloqué : cette bibliothèque est masquée sur l'adresse WAN facturée — le téléchargement ferait passer tout le fichier par le tunnel.",
     "queued": "En attente",
     "no_downloads": "Aucun téléchargement",
     "confirm_remove": "Supprimer ce téléchargement ?",
