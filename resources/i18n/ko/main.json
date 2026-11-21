@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "기타",
-      "fullscreen": "전체 화면",
-      "always_on_top": "항상 맨 위에 표시",
-      "single": "단일 인스턴스",
       "overclock": "CPU 오버클럭",
       "debug": "디버그 창",
       "sync": "정렬 설정 저장",

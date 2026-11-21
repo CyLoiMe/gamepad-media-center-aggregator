@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Miscelánea",
-      "fullscreen": "Pantalla completa",
-      "always_on_top": "Siempre visible",
-      "single": "Modo de una instancia",
       "overclock": "Overclock de CPU",
       "debug": "Vista de depuración",
       "sync": "Conservar configuración de ordenación",

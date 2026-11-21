@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Diverses",
-      "fullscreen": "Vollbild",
-      "always_on_top": "Immer im Vordergrund",
-      "single": "Einzelinstanz",
       "overclock": "CPU-Übertaktung",
       "debug": "Debug-Ansicht",
       "sync": "Reihenfolge der Einstellungen beibehalten",

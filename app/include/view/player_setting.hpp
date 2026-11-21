@@ -43,8 +43,6 @@ private:
     BRLS_BIND(brls::Box, cancel, "player/cancel");
 
     BRLS_BIND(brls::BooleanCell, btnOSDOnToggle, "setting/player/osd_on_toggle");
-    BRLS_BIND(brls::BooleanCell, btnFullscreen, "setting/fullscreen");
-    BRLS_BIND(brls::BooleanCell, btnAlwaysOnTop, "setting/always_on_top");
     BRLS_BIND(brls::SelectorCell, btnSpeed, "setting/video/speed");
     BRLS_BIND(brls::SelectorCell, btnRepeat, "setting/video/repeat");
     BRLS_BIND(brls::SelectorCell, btnVideoMirror, "setting/video/mirror");

@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Outros",
-      "fullscreen": "Ecrã inteiro",
-      "always_on_top": "Sempre visível",
-      "single": "Instância única",
       "overclock": "Overclock do CPU",
       "debug": "Vista de depuração",
       "sync": "Preservar ordem das definições",

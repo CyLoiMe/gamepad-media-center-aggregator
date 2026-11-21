@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Khác",
-      "fullscreen": "Toàn màn hình",
-      "always_on_top": "Luôn nằm ở trên",
-      "single": "Phiên bản duy nhất",
       "overclock": "Ép xung CPU",
       "debug": "Màn hình gỡ lỗi",
       "sync": "Cài đặt bảo lưu thứ tự",

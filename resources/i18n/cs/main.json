@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Ostatní",
-      "fullscreen": "Celá obrazovka",
-      "always_on_top": "Vždy navrchu",
-      "single": "Jediná instance",
       "overclock": "Přetaktování CPU",
       "debug": "Zobrazení ladění",
       "sync": "Zachovat pořadí nastavení",

@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "その他",
-      "fullscreen": "フルスクリーン",
-      "always_on_top": "常に最前面",
-      "single": "シングルインスタンス",
       "overclock": "CPU オーバークロック",
       "debug": "デバッグ表示",
       "sync": "並び順設定を保持",

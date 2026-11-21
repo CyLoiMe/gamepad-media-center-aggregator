@@ -149,7 +149,6 @@ class AppConfig : public brls::Singleton<AppConfig> {
 
 public:
     enum Item {
-        FULLSCREEN,
         OVERCLOCK,
         APP_THEME,
         APP_LANG,
@@ -183,8 +182,6 @@ public:
         /// which reject anything but a browser UA — see mpv_core.cpp init().
         PLAYER_USER_AGENT,
         PLAYER_TV_MODE,
-        ALWAYS_ON_TOP,
-        SINGLE,
         SHOW_FPS,
         SWAP_INTERVAL,
         APP_SWAP_ABXY,  // A-B 交换 和 X-Y 交换
@@ -253,7 +250,6 @@ public:
     bool checkLogin();
 
     std::string configDir();
-    std::string ipcSocket();
     void checkRestart(char* argv[]);
 
     template <typename T>

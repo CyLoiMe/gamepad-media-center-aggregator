@@ -49,7 +49,6 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
             {0, 2160, 1440, 1080, 720, 480},
         }},
     {PLAYER_RESOLUTION_LIMIT, {"player_resolution_limit"}},
-    {FULLSCREEN, {"fullscreen"}},
     {OSD_ON_TOGGLE, {"osd_on_toggle"}},
     {TOUCH_GESTURE, {"touch_gesture"}},
     {CLIP_POINT, {"clip_point"}},
@@ -79,8 +78,6 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
     {PLAYER_HWDEC_CUSTOM, {"player_hwdec_custom"}},
     {PLAYER_ASPECT, {"player_aspect", {"auto", "stretch", "crop", "4:3", "16:9"}}},
     {PLAYER_TV_MODE, {"player_tv_mode"}},
-    {ALWAYS_ON_TOP, {"always_on_top"}},
-    {SINGLE, {"single"}},
     {SHOW_FPS, {"show_fps"}},
     {SWAP_INTERVAL, {"swap_interval"}},
     {APP_SWAP_ABXY, {"app_swap_abxy"}},
@@ -189,9 +186,6 @@ bool AppConfig::init() {
     // here costs tunnel quota (see reachableUrl).
     AppConfig::wan_probe_ms = this->getItem(WAN_PROBE_MS, 2000L);
 
-    // 初始化是否全屏，必须在创建窗口前设置此值
-    VideoContext::FULLSCREEN = this->getItem(FULLSCREEN, false);
-
     MPVCore::OSD_ON_TOGGLE = this->getItem(OSD_ON_TOGGLE, true);
     MPVCore::TOUCH_GESTURE = this->getItem(TOUCH_GESTURE, true);
     MPVCore::CLIP_POINT = this->getItem(CLIP_POINT, true);
@@ -281,20 +275,6 @@ bool AppConfig::init() {
 
         // 初始化纹理缓存数量
         brls::TextureCache::instance().cache.setCapacity(getItem(TEXTURE_CACHE_NUM, 200));
-
-        // Init keyboard shortcut (F11 toggles fullscreen)
-        brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe(
-            [this](brls::KeyState state) {
-                if (!state.pressed) return;
-                switch (state.key) {
-                case brls::BRLS_KBD_KEY_F11:
-                    VideoContext::FULLSCREEN = !this->getItem(AppConfig::FULLSCREEN, VideoContext::FULLSCREEN);
-                    this->setItem(AppConfig::FULLSCREEN, VideoContext::FULLSCREEN);
-                    brls::Application::getPlatform()->getVideoContext()->fullScreen(VideoContext::FULLSCREEN);
-                    break;
-                default:;
-                }
-            });
     });
 
 #ifdef __SWITCH__
@@ -548,10 +528,6 @@ bool AppConfig::checkLogin() {
 }
 
 std::string AppConfig::configDir() { return dataDir(AppVersion::getPackageName()); }
-
-std::string AppConfig::ipcSocket() {
-    return fmt::format("{}/{}.sock", configDir(), AppVersion::getPackageName());
-}
 
 void AppConfig::checkRestart(char* argv[]) {
     // No restart path on Switch: the forwarder relaunches the NRO.

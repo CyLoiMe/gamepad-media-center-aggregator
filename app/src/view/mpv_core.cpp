@@ -3,14 +3,10 @@
 //
 
 #include "view/mpv_core.hpp"
-#include "view/hdr_options.hpp"
 #include "utils/config.hpp"
 #include "utils/misc.hpp"
 #include "utils/log_redact.hpp"
 #include "api/http.hpp"
-#ifdef __PS4__
-#include "utils/default_font.hpp"
-#endif
 #include <cstring>
 #include <fmt/ranges.h>
 
@@ -21,26 +17,17 @@ static inline void check_error(int status) {
 bool MPVCore::instanceCreated = false;
 
 #ifndef MPV_SW_RENDER
-#ifdef BOREALIS_USE_D3D11
-#include <borealis/platforms/driver/d3d11.hpp>
-extern std::unique_ptr<brls::D3D11Context> D3D11_CONTEXT;
-#elif defined(BOREALIS_USE_DEKO3D)
+#ifdef BOREALIS_USE_DEKO3D
 #include <borealis/platforms/switch/switch_video.hpp>
-#elif defined(BOREALIS_USE_GXM)
-#include <borealis/platforms/psv/psv_video.hpp>
-#include <borealis/extern/nanovg/nanovg_gxm.h>
 #else
+// The OpenGL fallback (borealis driver BOREALIS_USE_OPENGL): the Switch has no
+// native GLFW, the borealis port supplies it (library/borealis, PLATFORM_SWITCH
+// without USE_DEKO3D). USE_SDL2 is the alternative window backend there.
 #ifdef __SDL2__
 #include <SDL2/SDL.h>
 #else
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#if defined(__PS4__) || defined(__PSV__) || defined(__SWITCH__) || defined(ANDROID)
-#elif defined(__linux__)
-#define GLFW_EXPOSE_NATIVE_X11
-#define GLFW_EXPOSE_NATIVE_WAYLAND
-#include <GLFW/glfw3native.h>
-#endif
 #endif
 static void *get_proc_address(void *unused, const char *name) {
 #ifdef __SDL2__
@@ -54,48 +41,12 @@ static void *get_proc_address(void *unused, const char *name) {
 #endif
 #endif
 
-#ifdef ANDROID
-#include <jni.h>
-extern "C" {
-#include <libavcodec/jni.h>
-}
-static JavaVM *g_vm;
-static jobject surface;
-
-static int64_t getNativeSurface() {
-    int64_t ptr = 0;
-    JNIEnv *env = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
-    jobject activity = static_cast<jobject>(SDL_AndroidGetActivity());
-    jclass cls = env->GetObjectClass(activity);
-    jmethodID jmethod = env->GetStaticMethodID(cls, "getMpvSurface", "()Landroid/view/Surface;");
-    jobject surface_ = env->CallStaticObjectMethod(cls, jmethod);
-    if (surface_ != nullptr) {
-        surface = env->NewGlobalRef(surface_);
-        ptr = (int64_t)(intptr_t)surface;
-        env->DeleteLocalRef(surface_);
-    }
-    env->DeleteLocalRef(cls);
-    env->DeleteLocalRef(activity);
-    return ptr;
-}
-
-static void deleteSurfaceObj() {
-    auto env = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
-    env->DeleteGlobalRef(surface);
-}
-#endif
-
 void MPVCore::on_update(void *self) {
     MPVCore *mpv = reinterpret_cast<MPVCore *>(self);
     brls::sync([mpv]() {
         uint64_t flags = mpv_render_context_update(mpv->mpv_context);
-#if defined(MPV_SW_RENDER) || defined(BOREALIS_USE_GXM)
+#ifdef MPV_SW_RENDER
         if (flags & MPV_RENDER_UPDATE_FRAME) {
-#ifdef BOREALIS_USE_GXM
-            // FBO alloc can fail under GPU-memory pressure (init() leaves
-            // render_target null): skip the render, mpv keeps decoding audio.
-            if (!mpv->mpv_fbo.render_target) return;
-#endif
             mpv_render_context_render(mpv->mpv_context, mpv->mpv_params);
             mpv_render_context_report_swap(mpv->mpv_context);
         }
@@ -128,10 +79,6 @@ MPVCore::MPVCore() {
 
 void MPVCore::init() {
     std::setlocale(LC_NUMERIC, "C");
-#ifdef ANDROID
-    auto env = static_cast<JNIEnv *>(SDL_AndroidGetJNIEnv());
-    if (!env->GetJavaVM(&g_vm) && g_vm) av_jni_set_java_vm(g_vm, NULL);
-#endif
     this->mpv = mpv_create();
     if (!mpv) {
         brls::fatal("Error Create mpv Handle");
@@ -144,23 +91,6 @@ void MPVCore::init() {
     mpv_set_option_string(mpv, "config", "yes");
     mpv_set_option_string(mpv, "config-dir", confDir.c_str());
     mpv_set_option_string(mpv, "sub-fonts-dir", confDir.c_str());
-#ifdef __PS4__
-    // the PS4 libass has no font provider: {config}/subfont.ttf is its only fallback
-    // font, so install the bundled one unless the user put their own there
-    {
-        const std::string subfont = confDir + "/subfont.ttf";
-        switch (DefaultFont::install(BRLS_ASSET("font/switch_font.ttf"), subfont)) {
-        case DefaultFont::Result::Installed:
-            brls::Logger::info("Subtitle font installed: {}", subfont);
-            break;
-        case DefaultFont::Result::Failed:
-            brls::Logger::error("Subtitle font install failed: {}", subfont);
-            break;
-        default:
-            break;
-        }
-    }
-#endif
     mpv_set_option_string(mpv, "watch-later-dir", fmt::format("{}/watch-later", confDir).c_str());
     mpv_set_option_string(mpv, "gpu-shader-cache-dir", fmt::format("{}/cache", confDir).c_str());
     mpv_set_option_string(mpv, "ytdl", "no");
@@ -177,11 +107,7 @@ void MPVCore::init() {
     mpv_set_option_string(mpv, "reset-on-next-file", "speed,pause");
     mpv_set_option_string(mpv, "subs-fallback", SUBS_FALLBACK ? "yes" : "no");
     mpv_set_option_string(mpv, "vo", MPVCore::VO.c_str());
-#if defined(__PS4__) || defined(__PSV__) || defined(TRIMUI)
-    mpv_set_option_string(mpv, "audio-channels", "stereo");
-#else
     mpv_set_option_string(mpv, "audio-channels", MPVCore::AUDIO_CHANNELS.c_str());
-#endif
 
     if (MPVCore::LOW_QUALITY) {
         // Less cpu cost
@@ -201,8 +127,9 @@ void MPVCore::init() {
     } else {
         mpv_set_option_string(mpv, "cache", "no");
     }
-    // Making the loading process faster
-#if defined(__SWITCH__)
+    // Making the loading process faster. Switch tunings: decode straight into the
+    // output surface, three decode threads (what the console can actually use for
+    // this), and the system's own subtitle fonts, which the locale picks.
     mpv_set_option_string(mpv, "vd-lavc-dr", "yes");
     mpv_set_option_string(mpv, "vd-lavc-threads", "3");
     // This should fix random crash, but I don't know why.
@@ -215,23 +142,6 @@ void MPVCore::init() {
         mpv_set_option_string(mpv, "sub-font", "nintendo_udjxh-db_zh-tw_003");
     else if (locale == brls::LOCALE_Ko)
         mpv_set_option_string(mpv, "sub-font", "nintendo_udsg-r_ko_003");
-#elif defined(__PS4__)
-    mpv_set_option_string(mpv, "vd-lavc-threads", "6");
-    // A larger audio buffer, so a short CPU burst of the software decoder does not starve the
-    // sound (choppy with SDL's default 2048 samples, 43 ms). `sdl-buflen` is ao_sdl.c's `buflen`
-    // with the options prefix "sdl" (seconds; mpv 0.36 has no --ao sub-options, so
-    // `--ao=sdl:buflen=` is rejected) and `audio-buffer` is mpv's own audio buffer (seconds).
-    check_error(mpv_set_option_string(mpv, "sdl-buflen", "0.2"));
-    check_error(mpv_set_option_string(mpv, "audio-buffer", "0.5"));
-#elif defined(__PSV__)
-    mpv_set_option_string(mpv, "vd-lavc-threads", "4");
-    mpv_set_option_string(mpv, "fbo-format", "rgba8");
-    // Fix vo_wait_frame() cannot be wakeup
-    mpv_set_option_string(mpv, "video-latency-hacks", "yes");
-#elif defined(ANDROID)
-    mpv_set_option_string(mpv, "gpu-context", "android");
-    mpv_set_option_string(mpv, "opengl-es", "yes");
-#endif
 
     // hardware decoding
     if (MPVCore::HARDWARE_DEC) {
@@ -252,18 +162,6 @@ void MPVCore::init() {
         mpv_request_log_messages(mpv, brls::Application::isDebuggingViewEnabled() ? "info" : "warn");
     }
 
-#ifdef __PS4__
-    // HDR video drawn through mpv's own HDR shader can't work on the PS4 (no shader compiler): the
-    // re-tag filter, in the chain before the first frame, keeps mpv on its precompiled SDR shader
-    mpv_set_option_string(mpv, "vf", hdr::retagFilter().c_str());
-#endif
-
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(ANDROID)
-    if (conf.getItem(AppConfig::SINGLE, false)) {
-        mpv_set_option_string(mpv, "input-ipc-server", conf.ipcSocket().c_str());
-    }
-#endif
-
     if (mpv_initialize(mpv) < 0) {
         mpv_terminate_destroy(mpv);
         brls::fatal("Could not initialize mpv context");
@@ -279,27 +177,11 @@ void MPVCore::init() {
     check_error(mpv_observe_property(mpv, 5, "cache-speed", MPV_FORMAT_INT64));
     check_error(mpv_observe_property(mpv, 9, "speed", MPV_FORMAT_DOUBLE));
     check_error(mpv_observe_property(mpv, 10, "volume", MPV_FORMAT_INT64));
-#ifdef __PS4__
-    // the video's transfer function: a PQ file gets its saturation and contrast boost then
-    hdr_active = false;
-    check_error(mpv_observe_property(mpv, 11, "video-params/gamma", MPV_FORMAT_STRING));
-#endif
 
 // init renderer params
-#ifdef ANDROID
-    int64_t wid = getNativeSurface();
-    mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, (void *)&wid);
-    mpv_set_option_string(mpv, "force-window", "yes");
-#elif defined(MPV_SW_RENDER)
+#ifdef MPV_SW_RENDER
     mpv_render_param params[] = {
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_SW)},
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
-#elif defined(BOREALIS_USE_D3D11)
-    mpv_dxgi_init_params init_params{D3D11_CONTEXT->getDevice(), D3D11_CONTEXT->getSwapChain()};
-    mpv_render_param params[] = {
-        {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_DXGI)},
-        {MPV_RENDER_PARAM_DXGI_INIT_PARAMS, &init_params},
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
 #elif defined(BOREALIS_USE_DEKO3D)
@@ -310,108 +192,27 @@ void MPVCore::init() {
         {MPV_RENDER_PARAM_DEKO3D_INIT_PARAMS, &deko_init_params},
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
-#elif defined(BOREALIS_USE_GXM)
-    auto videoContext = dynamic_cast<brls::PsvVideoContext *>(brls::Application::getPlatform()->getVideoContext());
-    NVGXMwindow *gxm = videoContext->getWindow();
-    NVGcontext *vg = brls::Application::getNVGContext();
-    mpv_gxm_init_params gxm_params = {
-        .context = gxm->context,
-        .shader_patcher = gxm->shader_patcher,
-        .buffer_index = 0,
-        // The video FBO is a fullscreen quad — MSAA antialiases geometry edges,
-        // of which it has none, so 4X only wastes CDRAM. NONE here must match
-        // the FBO's render target (framebufferOpts.msaa below): it drops the
-        // FBO depth/stencil surface from ~8 MB to ~2 MB (960x544), ~6 MB of
-        // CDRAM freed exactly during playback, where GPU memory is tightest and
-        // the FBO alloc already fails first under pressure. The window UI keeps
-        // its own MSAA (nanovg has edgeAntiAlias off, so that AA is load-bearing).
-        .msaa = SCE_GXM_MULTISAMPLE_NONE,
-    };
-    mpv_render_param params[] = {
-        {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_GXM)},
-        {MPV_RENDER_PARAM_GXM_INIT_PARAMS, &gxm_params},
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
-
-    if (!mpv_fbo.render_target) {
-        int texture_width = DISPLAY_WIDTH;
-        int texture_height = DISPLAY_HEIGHT;
-        int texture_stride = ALIGN(texture_width, 8);
-        // Every step of this chain allocates GPU memory and the player is
-        // created AFTER browsing already filled LPDDR/CDRAM with artwork, so
-        // each one can fail right here. On failure leave render_target null:
-        // on_update/setFrameSize skip the FBO render (audio keeps playing,
-        // video stays black) instead of handing gxmCreateFramebuffer a NULL
-        // texture and data-aborting.
-        nvg_image = nvgCreateImageRGBA(vg, texture_width, texture_height, 0, nullptr);
-        NVGXMtexture *texture = nvg_image > 0 ? nvgxmImageHandle(vg, nvg_image) : nullptr;
-        if (texture != nullptr && texture->data != nullptr) {
-            NVGXMframebufferInitOptions framebufferOpts = {
-                .display_buffer_count = 1,  // Must be 1 for custom FBOs
-                .scenesPerFrame = 1,
-                .render_target = texture,
-                .color_format = SCE_GXM_COLOR_FORMAT_U8U8U8U8_ABGR,
-                .color_surface_type = SCE_GXM_COLOR_SURFACE_LINEAR,
-                .display_width = texture_width,
-                .display_height = texture_height,
-                .display_stride = texture_stride,
-                // No MSAA for the video FBO (must match gxm_params.msaa above):
-                // saves ~6 MB CDRAM on its depth/stencil, no visual cost.
-                .msaa = SCE_GXM_MULTISAMPLE_NONE,
-            };
-            NVGXMframebuffer *fbo = gxmCreateFramebuffer(&framebufferOpts);
-            if (fbo != nullptr && fbo->gxm_render_target != nullptr) {
-                mpv_fbo.render_target = fbo->gxm_render_target;
-                mpv_fbo.color_surface = &fbo->gxm_color_surfaces[0].surface;
-                mpv_fbo.depth_stencil_surface = &fbo->gxm_depth_stencil_surface;
-                mpv_fbo.w = texture_width;
-                mpv_fbo.h = texture_height;
-            } else if (fbo != nullptr) {
-                gxmDeleteFramebuffer(fbo);
-            }
-        }
-        if (!mpv_fbo.render_target) {
-            if (nvg_image > 0) {
-                nvgDeleteImage(vg, nvg_image);
-                nvg_image = 0;
-            }
-            brls::Logger::error("mpv: GXM FBO allocation failed (GPU memory exhausted), video output disabled");
-        }
-    }
 #else
     mpv_opengl_init_params gl_init_params{get_proc_address, nullptr};
     mpv_render_param params[] = {
         {MPV_RENDER_PARAM_API_TYPE, const_cast<char *>(MPV_RENDER_API_TYPE_OPENGL)},
         {MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, &gl_init_params},
-#if defined(GLFW_EXPOSE_NATIVE_X11)
-        {MPV_RENDER_PARAM_X11_DISPLAY, glfwGetX11Display()},
-#endif
-#if defined(GLFW_EXPOSE_NATIVE_WAYLAND)
-        {MPV_RENDER_PARAM_WL_DISPLAY, glfwGetWaylandDisplay()},
-#endif
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
 #endif
 
-#ifndef ANDROID
     if (mpv_render_context_create(&mpv_context, mpv, params) < 0) {
         mpv_terminate_destroy(mpv);
         brls::fatal("failed to initialize mpv context");
     }
-#endif
-#ifdef BOREALIS_USE_D3D11
-    misc::initCrashDump();
-#endif
     brls::Logger::info("version: {} ffmpeg {}", mpv_get_property_string(mpv, "mpv-version"),
         mpv_get_property_string(mpv, "ffmpeg-version"));
 
     this->command("set", "audio-client-name", AppVersion::getPackageName().c_str());
     // set event callback
     mpv_set_wakeup_callback(mpv, on_wakeup, this);
-#ifndef ANDROID
     // set render callback
     mpv_render_context_set_update_callback(mpv_context, on_update, this);
-#endif
 
     focusSubscription = brls::Application::getWindowFocusChangedEvent()->subscribe([this](bool focus) {
         // Music (audio-only, VO disabled) keeps playing in the background: don't
@@ -426,9 +227,6 @@ void MPVCore::init() {
         } else if (playing) {  // application is on top
             command("set", "pause", "no");
         }
-#if defined(ANDROID)
-        this->enableVO(focus);
-#endif
     });
 
     sizeSubscription = brls::Application::getWindowSizeChangedEvent()->subscribe([this]() {
@@ -464,9 +262,6 @@ void MPVCore::clean() {
         // mpv_destroy(this->mpv);
         this->mpv = nullptr;
     }
-#ifdef ANDROID
-    deleteSurfaceObj();
-#endif
 }
 
 void MPVCore::restart() {
@@ -507,12 +302,7 @@ void MPVCore::setFrameSize(brls::Rect area) {
     if (std::isnan(rect.getWidth()) || std::isnan(rect.getHeight())) return;
 
 #ifdef MPV_SW_RENDER
-#ifdef BOREALIS_USE_D3D11
-    // 使用 dx11 的拷贝交换，否则视频渲染异常
-    const static int mpvImageFlags = NVG_IMAGE_STREAMING | NVG_IMAGE_COPY_SWAP;
-#else
     const static int mpvImageFlags = 0;
-#endif
     int drawWidth = rect.getWidth() * brls::Application::windowScale;
     int drawHeight = rect.getHeight() * brls::Application::windowScale;
     if (drawWidth == 0 || drawHeight == 0) return;
@@ -536,30 +326,14 @@ void MPVCore::setFrameSize(brls::Rect area) {
     sw_size[0] = drawWidth;
     sw_size[1] = drawHeight;
     pitch = PIXCEL_SIZE * drawWidth;
-#elif defined(BOREALIS_USE_GXM)
-    // This line will be called between beginFrame() and endFrame() in Application::frame(),
-    // but mpvRenderContextRender(...) will call functions similar to beginFrame() and endFrame() to draw content to FBO,
-    // and that will cause error in GXM, so call in brls::sync to make the mpv drawing calls outside the brls::Application::frame().
-    brls::sync([this]() {
-        // no FBO (GPU OOM at init): nothing to render into
-        if (!this->mpv_fbo.render_target) return;
-        mpv_render_context_render(this->mpv_context, mpv_params);
-        mpv_render_context_report_swap(this->mpv_context);
-    });
-#elif !defined(BOREALIS_USE_D3D11)
+#else
     // Using default framebuffer
     this->mpv_fbo.w = brls::Application::windowWidth;
     this->mpv_fbo.h = brls::Application::windowHeight;
 #endif
 }
 
-bool MPVCore::isValid() {
-#ifdef ANDROID
-    return true;
-#else
-    return mpv_context != nullptr;
-#endif
-}
+bool MPVCore::isValid() { return mpv_context != nullptr; }
 
 void MPVCore::draw(brls::Rect area, float alpha) {
     if (mpv_context == nullptr) return;
@@ -582,19 +356,6 @@ void MPVCore::draw(brls::Rect area, float alpha) {
     nvgRect(vg, rect.getMinX(), rect.getMinY(), rect.getWidth(), rect.getHeight());
     nvgFillPaint(vg, nvgImagePattern(vg, 0, 0, rect.getWidth(), rect.getHeight(), 0, nvg_image, alpha));
     nvgFill(vg);
-#elif defined(BOREALIS_USE_GXM)
-    // FBO init failed (GPU OOM): nothing to draw. Today nvg_image == 0 would
-    // fall back to the 1x1 dummy texture deep in nanovg_gxm, but don't rely
-    // on that implicit guarantee.
-    if (!mpv_fbo.render_target) return;
-    NVGcontext *vg = brls::Application::getNVGContext();
-    NVGpaint img =
-        nvgImagePattern(vg, area.getMinX(), area.getMinY(), area.getWidth(), area.getHeight(), 0, nvg_image, alpha);
-    nvgBeginPath(vg);
-    nvgRect(vg, area.getMinX(), area.getMinY(), area.getWidth(), area.getHeight());
-    nvgFillPaint(vg, img);
-    nvgFill(vg);
-#elif defined(ANDROID)
 #else
     // 只在非透明时绘制视频，可以避免退出页面时视频画面残留
     if (alpha >= 1 && !this->video_stopped) {
@@ -607,9 +368,7 @@ void MPVCore::draw(brls::Rect area, float alpha) {
 #endif
         // 绘制视频
         mpv_render_context_render(this->mpv_context, mpv_params);
-#ifdef BOREALIS_USE_D3D11
-        D3D11_CONTEXT->beginFrame();
-#elif defined(BOREALIS_USE_DEKO3D)
+#ifdef BOREALIS_USE_DEKO3D
         videoContext->queueWaitFence(&doneFence);
 #elif defined(BOREALIS_USE_OPENGL)
         glBindFramebuffer(GL_FRAMEBUFFER, default_framebuffer);
@@ -744,13 +503,6 @@ void MPVCore::eventMainLoop() {
         case MPV_EVENT_PROPERTY_CHANGE: {
             /// https://mpv.io/manual/stable/#property-list
             mpv_event_property *prop = (mpv_event_property *)event->data;
-#ifdef __PS4__
-            // also when the property goes away (the file ended): the boost is undone
-            if (event->reply_userdata == 11) {
-                this->applyHdrHandling();
-                break;
-            }
-#endif
             if (prop->format == MPV_FORMAT_NONE) break;
 
             switch (event->reply_userdata) {
@@ -812,38 +564,11 @@ void MPVCore::eventMainLoop() {
     }
 }
 
-#ifdef __PS4__
-// Called when the video's transfer function changes (a file loaded, or ended). What the previous
-// PQ file got is undone first (saturation and contrast back to the viewer's own), so the next
-// file, SDR or HDR, starts clean; then a PQ file gets its boost. The re-tag filter itself is in
-// the chain from the start (see hdr_options.hpp), so this only raises saturation and contrast.
-void MPVCore::applyHdrHandling() {
-    const std::string gamma = this->getString("video-params/gamma");
-    if (this->hdr_active) {
-        this->setInt("saturation", this->hdr_base_saturation);
-        this->setInt("contrast", this->hdr_base_contrast);
-        this->hdr_active = false;
-    }
-    const hdr::Plan plan = hdr::planFor(gamma);
-    if (!plan.boost) return;
-    this->hdr_base_saturation = int(this->getDouble("saturation"));
-    this->hdr_base_contrast = int(this->getDouble("contrast"));
-    this->setInt("saturation", hdr::clampEqualizer(this->hdr_base_saturation + plan.saturation));
-    this->setInt("contrast", hdr::clampEqualizer(this->hdr_base_contrast + plan.contrast));
-    this->hdr_active = true;
-    brls::Logger::info("MPV HDR video ({}): shown as SDR, {}", gamma, hdr::describe(plan));
-}
-#endif
-
-// The mirror setting (0 off, 1 horizontal, 2 vertical): `set vf` replaces the whole filter list,
-// so on the PS4 the HDR re-tag filter goes in the same list, in one step.
+/// The mirror setting (0 off, 1 horizontal, 2 vertical). `set vf` replaces the whole
+/// filter list, so the value is one string in one step; an empty one empties the list.
 void MPVCore::setMirror(int mirror) {
-#ifdef __PS4__
-    const bool retag = true;
-#else
-    const bool retag = false;
-#endif
-    this->command("set", "vf", hdr::filterChain(mirror, retag).c_str());
+    const char *filter = mirror == 1 ? "hflip" : (mirror == 2 ? "vflip" : "");
+    this->command("set", "vf", filter);
 }
 
 void MPVCore::reset() {

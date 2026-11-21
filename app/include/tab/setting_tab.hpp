@@ -51,9 +51,6 @@ private:
     BRLS_BIND(brls::BooleanCell, btnTouchGesture, "setting/player/touch_gesture");
     BRLS_BIND(brls::BooleanCell, btnTvOsdMode, "setting/player/tv_model");
     BRLS_BIND(brls::BooleanCell, btnClipPoint, "setting/player/clip_point");
-    BRLS_BIND(brls::BooleanCell, btnFullscreen, "setting/fullscreen");
-    BRLS_BIND(brls::BooleanCell, btnAlwaysOnTop, "setting/always_on_top");
-    BRLS_BIND(brls::BooleanCell, btnSingle, "setting/single");
     BRLS_BIND(brls::BooleanCell, btnOverClock, "setting/overclock");
     BRLS_BIND(brls::BooleanCell, btnDebug, "setting/debug");
     BRLS_BIND(brls::BooleanCell, btnSync, "setting/sync");

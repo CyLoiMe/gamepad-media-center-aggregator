@@ -10,21 +10,11 @@
 #include <utils/event.hpp>
 #ifdef MPV_SW_RENDER
 #include <mpv/render.h>
-#elif defined(BOREALIS_USE_D3D11)
-#include <mpv/render_dxgi.h>
 #elif defined(BOREALIS_USE_DEKO3D)
 #include <mpv/render_dk3d.h>
-#elif defined(BOREALIS_USE_GXM)
-#include <mpv/render.h>
-#include <mpv/render_gxm.h>
-#include <nanovg_gxm_utils.h>
 #else
 #include <mpv/render_gl.h>
-#if defined(__PSV__) || defined(__PS4__)
-#include <GLES2/gl2.h>
-#else
 #include <glad/glad.h>
-#endif
 #endif
 
 typedef std::unordered_map<std::string, std::string> MPVMap;
@@ -72,7 +62,7 @@ public:
 
     std::unordered_map<std::string, mpv_node> getNodeMap(const std::string &key);
 
-    /// The mirror setting (0 off, 1 horizontal, 2 vertical), keeping the HDR re-tag filter (PS4).
+    /// The mirror setting (0 off, 1 horizontal, 2 vertical).
     void setMirror(int mirror);
 
     void togglePlay();
@@ -147,20 +137,9 @@ public:
 
     // 硬件解码
     inline static bool HARDWARE_DEC = false;
-#if defined(__SWITCH__) || defined(BOREALIS_USE_GXM) || defined(ANDROID)
+    // "auto" resolves to the console's NVDEC; the settings screen can still pick another method.
     inline static std::string PLAYER_HWDEC_METHOD = "auto";
-#elif defined(__PSV__)
-    inline static std::string PLAYER_HWDEC_METHOD = "vita-copy";
-#elif defined(__PS4__)
-    inline static std::string PLAYER_HWDEC_METHOD = "no";
-#else
-    inline static std::string PLAYER_HWDEC_METHOD = "auto-safe";
-#endif
-#if defined(ANDROID)
-    inline static std::string VO = "gpu";
-#else
     inline static std::string VO = "libmpv";
-#endif
     inline static std::string VIDEO_CODEC = "h264";
     inline static int64_t VIDEO_QUALITY = 0;
     inline static int MAX_RESOLUTION = 0;  // transcode height limit; 0 = auto
@@ -197,16 +176,6 @@ private:
     bool voEnabled = true;  // false in audio-only mode (music): keep playing when backgrounded
     int64_t cache_speed = 0;  // Bps
 
-#ifdef __PS4__
-    // HDR video (view/hdr_options.hpp): every file goes through a filter that re-tags it as SDR,
-    // in the chain from the start. While a PQ file plays, saturation and contrast are raised; the
-    // viewer's own values are kept here to put back when the file ends.
-    void applyHdrHandling();
-    bool hdr_active = false;
-    int hdr_base_saturation = 0;
-    int hdr_base_contrast = 0;
-#endif
-
 #ifdef MPV_SW_RENDER
     const int PIXCEL_SIZE = 4;
     int nvg_image = 0;
@@ -224,10 +193,6 @@ private:
         {MPV_RENDER_PARAM_SW_POINTER, pixels},
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
-#elif defined(BOREALIS_USE_D3D11)
-    mpv_render_param mpv_params[1] = {
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
 #elif defined(BOREALIS_USE_DEKO3D)
     DkFence doneFence;
     DkFence readyFence;
@@ -241,22 +206,6 @@ private:
     };
     mpv_render_param mpv_params[3] = {
         {MPV_RENDER_PARAM_DEKO3D_FBO, &mpv_fbo},
-        {MPV_RENDER_PARAM_INVALID, nullptr},
-    };
-#elif defined(BOREALIS_USE_GXM)
-    int nvg_image = 0;
-    mpv_gxm_fbo mpv_fbo = {
-        .render_target = nullptr,
-        .color_surface = nullptr,
-        .depth_stencil_surface = nullptr,
-        .w = DISPLAY_WIDTH,
-        .h = DISPLAY_HEIGHT,
-        .format = SCE_GXM_TEXTURE_FORMAT_U8U8U8U8_RGBA,
-    };
-    int flip_y{1};
-    mpv_render_param mpv_params[3] = {
-        {MPV_RENDER_PARAM_FLIP_Y, &flip_y},
-        {MPV_RENDER_PARAM_GXM_FBO, &mpv_fbo},
         {MPV_RENDER_PARAM_INVALID, nullptr},
     };
 #else

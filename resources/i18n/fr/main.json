@@ -361,9 +361,6 @@
     },
     "others": {
       "header": "Autres",
-      "fullscreen": "Affichage en plein écran",
-      "always_on_top": "Mettre la fenêtre en avant",
-      "single": "Mode à instance unique",
       "overclock": "Overclocking du processeur",
       "debug": "Fenêtre de débogage",
       "sync": "Enregistrer les paramètres de tri",

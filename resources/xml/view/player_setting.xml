@@ -67,10 +67,6 @@
                     axis="column"
                     marginBottom="30px">
                     <brls:BooleanCell
-                        id="setting/fullscreen" />
-                    <brls:BooleanCell
-                        id="setting/always_on_top" />
-                    <brls:BooleanCell
                         id="setting/player/osd_on_toggle" />
                 </brls:Box>
 

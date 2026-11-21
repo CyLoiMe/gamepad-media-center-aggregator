@@ -34,10 +34,6 @@ std::string hexEncode(const unsigned char* data, size_t len);
 
 void split(const std::string& data, std::vector<std::string>& result, char seq);
 
-bool sendIPC(const std::string& sock, const std::string& payload);
-
-void initCrashDump();
-
 }  // namespace misc
 
 namespace base64 {

@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "Diğer",
-      "fullscreen": "Tam Ekran",
-      "always_on_top": "Her zaman üstte",
-      "single": "Birden fazla uygulama çalıştırmasını engelle",
       "overclock": "İşlemci Hız Aşırtma",
       "debug": "Hata Ayıklama Görünümü",
       "sync": "Sıralama ayarlarını koru",

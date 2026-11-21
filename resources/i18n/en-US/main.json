@@ -361,9 +361,6 @@
     },
     "others": {
       "header": "Others",
-      "fullscreen": "Fullscreen",
-      "always_on_top": "Always on top",
-      "single": "Single instance",
       "overclock": "CPU Overclock",
       "debug": "Debug View",
       "sync": "Preserve order setting",

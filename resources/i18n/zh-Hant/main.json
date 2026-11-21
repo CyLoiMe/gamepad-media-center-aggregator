@@ -349,9 +349,6 @@
     },
     "others": {
       "header": "其他",
-      "fullscreen": "全螢幕顯示",
-      "always_on_top": "總在最上層",
-      "single": "單例模式",
       "overclock": "CPU 超頻",
       "debug": "偵錯視窗",
       "sync": "保存排序設定",

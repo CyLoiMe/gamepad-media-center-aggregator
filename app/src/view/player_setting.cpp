@@ -137,10 +137,6 @@ PlayerSetting::PlayerSetting(VideoView* video) {
     auto& mpv = MPVCore::instance();
     auto& conf = AppConfig::instance();
 
-/// Fullscreen
-    btnFullscreen->setVisibility(brls::Visibility::GONE);
-    btnAlwaysOnTop->setVisibility(brls::Visibility::GONE);
-
     btnOSDOnToggle->init(
         "main/setting/playback/osd_on_toggle"_i18n, conf.getItem(AppConfig::OSD_ON_TOGGLE, true), [&conf](bool value) {
             MPVCore::OSD_ON_TOGGLE = value;

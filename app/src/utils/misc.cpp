@@ -9,11 +9,6 @@
 
 using namespace brls::literals;  // for _i18n
 
-
-
-void misc::initCrashDump() {}
-
-
 inline std::string pre0(size_t num, size_t length) {
     std::string str = std::to_string(num);
     if (length <= str.length()) {
@@ -93,12 +88,6 @@ void misc::split(const std::string& data, std::vector<std::string>& result, char
     std::string s;
     std::stringstream ss(data);
     while (std::getline(ss, s, seq)) result.push_back(s);
-}
-
-bool misc::sendIPC(const std::string& sock, const std::string& payload) {
-    (void)sock;
-    (void)payload;
-    return false;
 }
 
 namespace base64 {
