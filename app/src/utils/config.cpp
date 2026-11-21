@@ -217,26 +217,14 @@ bool AppConfig::init() {
     MPVCore::VO = this->getItem(MPV_VO, MPVCore::VO);
     MPVCore::HARDWARE_DEC = this->getItem(PLAYER_HWDEC, true);
     MPVCore::FORCE_DIRECTPLAY = this->getItem(FORCE_DIRECTPLAY, false);
-    // default transcode bitrate cap. The Vita decoder chokes on heavy direct
-    // play (high-bitrate / unsupported codecs -> slideshow), so default to a
-    // smooth 4 Mbps H.264 transcode; "Auto" (0 = direct play) stays selectable
-    // in the player quality menu. Other platforms default to direct play (the
-    // Switch still transcodes sources above its max resolution, below).
-    // Persisted now (it was reset every launch, so the user's lowered choice
-    // never survived a restart).
-#if defined(__PSV__)
-    MPVCore::VIDEO_QUALITY = this->getItem(PLAYER_VIDEO_QUALITY, (int64_t)4000000);
-#else
+    // default transcode bitrate cap. "Auto" (0 = direct play) stays selectable in
+    // the player quality menu; the Switch still transcodes sources above its max
+    // resolution, below. Persisted now (it was reset every launch, so the user's
+    // lowered choice never survived a restart).
     MPVCore::VIDEO_QUALITY = this->getItem(PLAYER_VIDEO_QUALITY, (int64_t)0);
-#endif
     // sources above 1080p overwhelm the Switch: transcode them down by default
-#if defined(__SWITCH__)
     MPVCore::MAX_RESOLUTION = this->getItem(PLAYER_MAX_RESOLUTION, 1080);
     MPVCore::RESOLUTION_LIMIT = this->getItem(PLAYER_RESOLUTION_LIMIT, true);
-#else
-    MPVCore::MAX_RESOLUTION = this->getItem(PLAYER_MAX_RESOLUTION, 0);
-    MPVCore::RESOLUTION_LIMIT = this->getItem(PLAYER_RESOLUTION_LIMIT, false);
-#endif
     MPVCore::VIDEO_CODEC = this->getItem(TRANSCODEC, MPVCore::VIDEO_CODEC);
     MPVCore::AUDIO_CHANNELS = this->getItem(AUDIO_CHANNELS, MPVCore::AUDIO_CHANNELS);
     // 初始化自定义的硬件加速方案
@@ -277,14 +265,9 @@ bool AppConfig::init() {
 
     // 初始化一些在创建窗口之后才能初始化的内容
     brls::Application::getWindowCreationDoneEvent()->subscribe([this]() {
-#if defined(TRIMUI)
-        if (this->getItem(APP_SWAP_ABXY, true))
-#else
         if (this->getItem(APP_SWAP_ABXY, false))
-#endif
         {
-            // 对于 PSV/PS4 来说，初始化时会加载系统设置，可能在那时已经交换过按键
-            // 所以这里需要读取 isSwapInputKeys 的值，而不是直接设置为 true
+            // 系统设置里可能已经交换过按键，所以读取现值再取反，而不是直接设成 true
             brls::Application::setSwapInputKeys(!brls::Application::isSwapInputKeys());
         }
 
@@ -297,32 +280,9 @@ bool AppConfig::init() {
         }
 
         // 初始化纹理缓存数量
-#if defined(__PSV__) || defined(__PS4__)
-        brls::TextureCache::instance().cache.setCapacity(1);
-#ifdef __PSV__
-        // The entry-count cap alone (401 effective: setCapacity ADDS
-        // DEFAULT_CAPACITY) lets artwork pin ~100+ MB and starve mpv of
-        // LPDDR/CDRAM. Cap the BYTES too: 48 MB of DXT posters is ~200-400
-        // covers, plenty for browsing, and leaves the video allocations room.
-        // (48, not 64: the music-view crash log peaked near ~54 MB of artwork
-        // before the blue light — the budget must sit safely below that.)
-        brls::TextureCache::instance().cache.setByteCapacity(48 * 1024 * 1024);
-#endif
-#else
         brls::TextureCache::instance().cache.setCapacity(getItem(TEXTURE_CACHE_NUM, 200));
-#endif
 
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(ANDROID)
-        // 设置窗口最小尺寸
-        brls::Application::getPlatform()->setWindowSizeLimits(MINIMUM_WINDOW_WIDTH, MINIMUM_WINDOW_HEIGHT, 0, 0);
-        if (this->getItem(ALWAYS_ON_TOP, false)) {
-            brls::Application::getPlatform()->setWindowAlwaysOnTop(true);
-        }
-#endif
-
-        // Init keyboard shortcut (F11 fullscreen toggle — non-Apple platforms only;
-        // on macOS the handler had no live case, so it's not registered there)
-#ifndef __APPLE__
+        // Init keyboard shortcut (F11 toggles fullscreen)
         brls::Application::getPlatform()->getInputManager()->getKeyboardKeyStateChanged()->subscribe(
             [this](brls::KeyState state) {
                 if (!state.pressed) return;
@@ -335,7 +295,6 @@ bool AppConfig::init() {
                 default:;
                 }
             });
-#endif
     });
 
 #ifdef __SWITCH__
@@ -351,9 +310,6 @@ bool AppConfig::init() {
     brls::FontLoader::USER_ICON_PATH = configDir() + "/icon.ttf";
     if (access(brls::FontLoader::USER_ICON_PATH.c_str(), F_OK) == -1) {
         // 自定义字体不存在，使用内置字体
-#if defined(__PSV__) || defined(__PS4__)
-        brls::FontLoader::USER_ICON_PATH = BRLS_ASSET("font/keymap_ps.ttf");
-#else
         std::string icon = getItem(KEYMAP, std::string("xbox"));
         if (icon == "xbox") {
             brls::FontLoader::USER_ICON_PATH = BRLS_ASSET("font/keymap_xbox.ttf");
@@ -364,7 +320,6 @@ bool AppConfig::init() {
         } else {
             brls::FontLoader::USER_ICON_PATH = BRLS_ASSET("font/keymap_keyboard.ttf");
         }
-#endif
     }
 
     brls::FontLoader::USER_EMOJI_PATH = configDir() + "/emoji.ttf";
@@ -595,25 +550,12 @@ bool AppConfig::checkLogin() {
 std::string AppConfig::configDir() { return dataDir(AppVersion::getPackageName()); }
 
 std::string AppConfig::ipcSocket() {
-#ifdef _WIN32
-    return "\\\\.\\pipe\\" + AppVersion::getPackageName();
-#else
     return fmt::format("{}/{}.sock", configDir(), AppVersion::getPackageName());
-#endif
 }
 
 void AppConfig::checkRestart(char* argv[]) {
-#if !defined(__PS4__) && !defined(__SWITCH__) && !defined(ANDROID)
-    if (brls::DesktopPlatform::RESTART_APP) {
-        brls::Logger::info("Restart app {}", argv[0]);
-
-#if defined(__PSV__)
-        sceAppMgrLoadExec(argv[0], argv, nullptr);
-#else
-        execv(argv[0], argv);
-#endif
-    }
-#endif
+    // No restart path on Switch: the forwarder relaunches the NRO.
+    (void)argv;
 }
 
 int AppConfig::getOptionIndex(const Item item, int default_index) const {
