@@ -31,10 +31,13 @@ std::string userId() { return AppConfig::instance().getUserId(); }
 std::string base() { return AppConfig::instance().getUrl(); }
 std::string token() { return AppConfig::instance().getToken(); }
 
-/// A library whose contents this app browses (movie/show/artist/mixed).
+/// A library whose contents this app browses (movie/show/artist/video/mixed).
+/// "video" is an Emby "Photos & videos" (homevideos) library: the home rows pick
+/// up its videos, the photos in it have no renderer and are not queried.
 bool browsableLibrary(const std::string& type) {
     return type == media::mediaTypeMovie || type == media::mediaTypeShow ||
-           type == media::mediaTypeArtist || type == media::mediaTypeMixed;
+           type == media::mediaTypeArtist || type == media::mediaTypeVideo ||
+           type == media::mediaTypeMixed;
 }
 
 /// Tri-state (nullopt = no filtering) -> the pure predicate's pointer form.
@@ -142,6 +145,8 @@ std::string kindTypes(media::MediaKind k) {
     if (k == media::MediaKind::Artist) return "MusicArtist";
     if (k == media::MediaKind::Album) return "MusicAlbum";
     if (k == media::MediaKind::Track) return "Audio";
+    // Emby/Jellyfin home videos: the item type is `Video`, not `Movie`.
+    if (k == media::MediaKind::Video) return "Video";
     return "Movie,Series";
 }
 

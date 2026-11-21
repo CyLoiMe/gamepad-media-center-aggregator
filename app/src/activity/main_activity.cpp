@@ -211,9 +211,10 @@ void MainTabFrame::addLibraryTabs(const std::vector<plex::Section>& sections) {
     // server order, right after the home tab
     size_t position = 1;
     for (auto& s : sections) {
-        // music (artist) is now supported (issue #11); other types stay out of scope
+        // music (artist) is supported (issue #11), and so are home videos (Emby's
+        // "Photos & videos" library); other types stay out of scope
         if (s.type != plex::mediaTypeMovie && s.type != plex::mediaTypeShow && s.type != plex::mediaTypePhoto &&
-            s.type != plex::mediaTypeArtist && s.type != media::mediaTypeMixed)
+            s.type != plex::mediaTypeArtist && s.type != media::mediaTypeVideo && s.type != media::mediaTypeMixed)
             continue;
 
         this->libs_.push_back(s);

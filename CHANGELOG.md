@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added
+
+- Home-video libraries. Emby's "Photos & videos" library (`CollectionType:
+  homevideos`) and Jellyfin's "Home videos" now get a sidebar tab, list their
+  videos and play one on **A** like a clip — no detail page, because a home video
+  has no overview and no seasons. Its videos also reach *Continue Watching* and the
+  per-library "Recently added" home row. The **photos** in such a library are not
+  shown: the grid asks the server for `IncludeItemTypes=Video` only, since there is
+  no photo viewer yet.
+
 ### Fixed
 
 - Settings → Others no longer carries three switches that do nothing. "Fullscreen",

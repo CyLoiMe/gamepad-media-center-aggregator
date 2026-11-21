@@ -35,7 +35,7 @@ enum class BackendType { Plex, Jellyfin, Emby, Stremio };
 
 /// Content kind requested by the UI (each backend maps onto its own encoding:
 /// Plex type=1|2, Jellyfin includeItemTypes=Movie|Series, Stremio movie|series).
-enum class MediaKind { Any, Movie, Show, Season, Episode, Collection, Playlist, Photo, Artist, Album, Track };
+enum class MediaKind { Any, Movie, Show, Season, Episode, Video, Collection, Playlist, Photo, Artist, Album, Track };
 
 /// Playback report state
 enum class PlayState { Playing, Paused, Stopped };

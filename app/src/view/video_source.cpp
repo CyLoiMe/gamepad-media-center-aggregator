@@ -114,7 +114,8 @@ RecyclingGridItem* VideoDataSource::cellForRow(RecyclingView* recycler, size_t i
         } else if (item.type == plex::mediaTypeCollection || item.type == plex::mediaTypePlaylist ||
                    item.type.empty()) {
             cell->labelExt->setVisibility(brls::Visibility::GONE);
-        } else if (item.type == plex::mediaTypeClip) {
+        } else if (item.type == plex::mediaTypeClip || item.type == plex::mediaTypeVideo) {
+            // clip / home video: no year to show, the running time identifies it
             cell->labelExt->setText(misc::sec2Time(item.duration / 1000));
         } else if (item.year > 0) {
             cell->labelExt->setText(std::to_string(item.year));
@@ -144,10 +145,10 @@ RecyclingGridItem* VideoDataSource::cellForRow(RecyclingView* recycler, size_t i
     }
 
     // A-button hint + focus overlay reflect what selecting the card DOES: it
-    // PLAYS for items that start playback on select (episode/clip — incl. the
-    // continue-watching row), and OPENS a detail page otherwise.
+    // PLAYS for items that start playback on select (episode/clip/home video —
+    // incl. the continue-watching row), and OPENS a detail page otherwise.
     bool plays = (item.type == plex::mediaTypeEpisode || item.type == plex::mediaTypeClip ||
-                  item.type == plex::mediaTypeTrack ||
+                  item.type == plex::mediaTypeVideo || item.type == plex::mediaTypeTrack ||
                   (item.type == plex::mediaTypePlaylist && item.playlistType == "audio"));
     cell->setPlayOverlay(plays);
     cell->updateActionHint(brls::BUTTON_A, plays ? "main/media/play"_i18n : "main/media/open"_i18n);
@@ -183,6 +184,10 @@ void VideoDataSource::onItemSelected(brls::Box* recycler, size_t index) {
     } else if (item.type == plex::mediaTypeClip) {
         PlayerView* view = new PlayerView(item);
         view->setTitie(item.year ? fmt::format("{} ({})", item.title, item.year) : item.title);
+    } else if (item.type == plex::mediaTypeVideo) {
+        // a home video has no detail page (no overview, no seasons): play it
+        PlayerView* view = new PlayerView(item);
+        view->setTitie(item.title);
     } else if (item.type == plex::mediaTypeEpisode) {
         // downloads area / offline: play the local file; ONLINE library keeps
         // streaming from the server (no online regression)

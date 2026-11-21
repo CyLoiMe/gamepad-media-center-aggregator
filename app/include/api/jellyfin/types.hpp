@@ -105,6 +105,9 @@ inline std::string mapType(const std::string& t) {
     if (t == "BoxSet") return media::mediaTypeCollection;
     if (t == "Playlist") return media::mediaTypePlaylist;
     if (t == "Photo") return media::mediaTypePhoto;
+    // Emby/Jellyfin home videos: a standalone file in a "Photos & videos" or
+    // "Home videos" library, not an Episode (no season/series of its own).
+    if (t == "Video") return media::mediaTypeVideo;
     if (t == "Trailer" || t == "Clip") return media::mediaTypeClip;
     if (t == "MusicArtist") return media::mediaTypeArtist;
     if (t == "MusicAlbum") return media::mediaTypeAlbum;
@@ -318,16 +321,20 @@ inline media::Section parseSection(const nlohmann::json& j) {
     media::Section s;
     s.key = jstr(j, "Id");
     s.title = jstr(j, "Name");
-    // CollectionType: movies | tvshows | music | ...; a mixed-content library is
-    // "mixed" on Emby and has no CollectionType on Jellyfin.
+    // CollectionType: movies | tvshows | music | homevideos | photos | ...; a
+    // mixed-content library is "mixed" on Emby and has no CollectionType on
+    // Jellyfin. "homevideos" is Emby's single "Photos & videos" library type —
+    // its videos are browsable here, its photos are not (see media::mediaTypeVideo).
     std::string ct = jstr(j, "CollectionType");
-    bool mixed = ct == "mixed" || (ct.empty() && jstr(j, "Type") == "CollectionFolder");
-    s.type = mixed             ? media::mediaTypeMixed
-             : ct == "movies"  ? "movie"
-             : ct == "tvshows" ? "show"
-             : ct == "photos"  ? "photo"
-             : ct == "music"   ? media::mediaTypeArtist
-                               : ct;
+    const bool mixed = ct == "mixed" || (ct.empty() && jstr(j, "Type") == "CollectionFolder");
+    // if/else rather than a nested ternary: six library types no longer line up
+    if (mixed) s.type = media::mediaTypeMixed;
+    else if (ct == "movies") s.type = media::mediaTypeMovie;
+    else if (ct == "tvshows") s.type = media::mediaTypeShow;
+    else if (ct == "homevideos") s.type = media::mediaTypeVideo;  // Emby "Photos & videos"
+    else if (ct == "photos") s.type = media::mediaTypePhoto;
+    else if (ct == "music") s.type = media::mediaTypeArtist;
+    else s.type = ct;
     auto tags = j.find("ImageTags");
     if (tags != j.end() && tags->is_object()) {
         std::string primary = jstr(*tags, "Primary");

@@ -50,6 +50,7 @@ using media::mediaTypePlaylist;
 using media::mediaTypeSeason;
 using media::mediaTypeShow;
 using media::mediaTypeTrack;
+using media::mediaTypeVideo;
 // normalized streamType values
 using media::streamTypeAudio;
 using media::streamTypeSubtitle;

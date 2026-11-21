@@ -380,6 +380,8 @@ void MediaCollection::doRequest() {
         q.kind = media::MediaKind::Show;
     else if (this->itemType == media::mediaTypeArtist)
         q.kind = media::MediaKind::Artist;
+    else if (this->itemType == media::mediaTypeVideo)
+        q.kind = media::MediaKind::Video;  // Emby home videos: IncludeItemTypes=Video
     // photo / collection: no type= filter
 
     ASYNC_RETAIN
