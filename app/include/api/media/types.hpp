@@ -211,6 +211,11 @@ struct Media {
     /// through the URL the server hands out in PlaybackInfo — see
     /// api/jellyfin/playback_info.hpp.
     bool remote = false;
+    /// The `.strm` target itself, when the server reported it as an absolute
+    /// http(s) MediaSource `Path` (Emby does not always set `IsRemote`). Played
+    /// directly when PlaybackInfo hands out no DirectStreamUrl: the alternative is
+    /// the server's own proxy, which fetches the cloud file through itself.
+    std::string remotePath;
     // ---- source presentation (Stremio picker; empty/default on Plex/Jellyfin) ----
     std::string label;   // primary line: source/addon name (+ release group); Jellyfin/Emby: version name
     std::string detail;  // secondary line: codec · size · seeders (our own re-render)

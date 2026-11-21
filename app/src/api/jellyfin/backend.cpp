@@ -763,13 +763,24 @@ media::PlaybackSource JellyfinBackend::resolvePlayback(
         // through the URL IT hands out in PlaybackInfo. Cloud-drive front-ends
         // (TgtoDrive and the like) rewrite DirectStreamUrl to the CDN's signed
         // link and reject the /Videos/{id}/stream URL built below with a 403.
-        if (version.remote && !version.sourceId.empty()) {
-            const std::string direct = playbackInfoUrl(item.ratingKey, version.sourceId, tok);
-            if (!direct.empty()) {
-                brls::Logger::info("jellyfin: remote source, playing the server's DirectStreamUrl");
-                return {direct, e.str(), false, "directplay"};
+        if (version.remote) {
+            if (!version.sourceId.empty()) {
+                const std::string direct = playbackInfoUrl(item.ratingKey, version.sourceId, tok);
+                if (!direct.empty()) {
+                    brls::Logger::info("jellyfin: remote source, playing the server's DirectStreamUrl");
+                    return {direct, e.str(), false, "directplay"};
+                }
             }
-            brls::Logger::info("jellyfin: no usable DirectStreamUrl, keeping the built stream URL");
+            // No DirectStreamUrl: the `.strm` target the server reported as the
+            // media source's Path is still better than the server's own proxy.
+            // /Videos/{id}/stream makes the SERVER fetch the cloud file through
+            // itself, and Emby answers HTTP 500 once its 20 s HttpClient timeout
+            // expires (seen with a local 115 gateway that needs longer).
+            if (!version.remotePath.empty()) {
+                brls::Logger::info("jellyfin: remote source, playing the media source's own URL");
+                return {version.remotePath, e.str(), false, "directplay"};
+            }
+            brls::Logger::info("jellyfin: no remote URL, keeping the built stream URL (the server will fetch it)");
         }
         std::string url = withToken(base() + version.parts.front().key, tok);
         return {url, e.str(), false, "directplay"};

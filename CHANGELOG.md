@@ -24,6 +24,16 @@
 
 ### Fixed
 
+- A cloud source whose gateway sits on the LAN now plays directly. The rule that
+  drops a private `DirectStreamUrl` ("unreachable from a console elsewhere") also
+  dropped it when the server itself was on that LAN — the normal setup for a 115/123
+  front-end — so playback fell back to `/Videos/{id}/stream`, i.e. the server
+  fetching the cloud file through itself. Emby gives up after its 20 s HttpClient
+  timeout and answers **HTTP 500**. A private URL is now accepted when the server is
+  private too, and still refused when the console is genuinely elsewhere.
+- A `.strm`-backed source that Emby does not flag `IsRemote` is now recognised by
+  its MediaSource `Path` (an absolute http(s) URL), and that URL is used directly
+  when PlaybackInfo hands out no `DirectStreamUrl` — instead of the server's proxy.
 - A cloud source (`.strm` behind a CDN) is no longer sent to the transcoder when its
   direct play fails. The recovery path retried every failed direct play at 8 Mbps
   regardless of the source, so a CDN-backed item — which has no encoder behind it —

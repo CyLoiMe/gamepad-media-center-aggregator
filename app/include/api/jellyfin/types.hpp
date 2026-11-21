@@ -156,7 +156,15 @@ inline media::Media parseMediaSource(const nlohmann::json& j, const std::string&
     std::string msId = jstr(j, "Id");
     if (msId.empty()) msId = itemId;
     m.sourceId = msId;
-    m.remote = jbool(j, "IsRemote");
+    // Emby does not reliably set IsRemote on a `.strm`-backed source, but its
+    // MediaSource.Path is then the URL inside the .strm. Treat that as remote too:
+    // without the flag the player never asks PlaybackInfo and plays the server's
+    // proxy URL (/Videos/{id}/stream), which makes the server fetch the cloud file
+    // itself and fail on its 20 s timeout.
+    const std::string path = jstr(j, "Path");
+    const bool pathIsUrl = path.rfind("http://", 0) == 0 || path.rfind("https://", 0) == 0;
+    m.remote = jbool(j, "IsRemote") || pathIsUrl;
+    if (pathIsUrl) m.remotePath = path;
     m.label = jstr(j, "Name");
     m.container = jstr(j, "Container");
     m.bitrate = jint(j, "Bitrate") / 1000;  // bps -> kbps (parity with Plex Media.bitrate)

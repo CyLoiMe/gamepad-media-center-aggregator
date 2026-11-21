@@ -84,7 +84,14 @@ inline std::string directStreamUrl(const nlohmann::json& resp, const std::string
     if (url.rfind("http://", 0) != 0 && url.rfind("https://", 0) != 0) return "";
 
     const bool ownHost = net::hostFromUrl(url) == net::hostFromUrl(serverUrl);
-    if (!ownHost && detail::isInternalHost(url)) return "";  // server-internal address
+    // A private address is unreachable only when the server is NOT on that network.
+    // Rejecting it unconditionally broke the ordinary home setup: the server sits at
+    // 192.168.x.y and the cloud gateway next to it (the 115/123 front-end that
+    // rewrites DirectStreamUrl) at another private address the console can reach
+    // perfectly well. Dropping that URL sent playback back to /Videos/{id}/stream,
+    // i.e. the server fetching the cloud file through itself — Emby gives up after
+    // its 20 s HttpClient timeout and answers HTTP 500.
+    if (!ownHost && detail::isInternalHost(url) && !detail::isInternalHost(serverUrl)) return "";
 
     if (ownHost && !token.empty() && url.find("api_key=") == std::string::npos)
         url += (url.find('?') == std::string::npos ? "?" : "&") + std::string("api_key=") + token;

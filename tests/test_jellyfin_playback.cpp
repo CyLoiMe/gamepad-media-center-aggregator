@@ -107,6 +107,20 @@ int main() {
                   token) == "http://192.168.1.10:8096/videos/1/stream?api_key=abc123");
     }
 
+    // --- both private: server and cloud gateway on the same LAN -------------
+    {
+        // The gateway that rewrites DirectStreamUrl sits at another private address,
+        // next to the server (115/123 front-ends do). The console can reach it, and
+        // rejecting it used to send playback to the server's proxy, which 500s after
+        // its own 20 s timeout — see docs/playback.md.
+        CHECK(directStreamUrl(response("http://192.168.3.244:12366/play115/a.mp4"), "x", "http://192.168.3.10:8096",
+                  token) == "http://192.168.3.244:12366/play115/a.mp4");
+        CHECK(directStreamUrl(response("http://10.0.0.7:12366/x.mp4"), "x", "http://10.0.0.5:8096", token) ==
+              "http://10.0.0.7:12366/x.mp4");
+        // a public server still refuses a private URL: the console is elsewhere
+        CHECK(directStreamUrl(response("http://192.168.3.244:12366/play115/a.mp4"), "x", server, token).empty());
+    }
+
     if (failures == 0)
         printf("test_jellyfin_playback: all checks passed\n");
     else
