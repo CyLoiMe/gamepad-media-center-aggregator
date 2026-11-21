@@ -1,40 +1,6 @@
 #ifdef __SWITCH__
 #include <switch.h>
 #include "utils/overclock.hpp"
-#elif defined(__PSV__)
-#include <psp2/kernel/cpu.h>
-#include <psp2/kernel/threadmgr/thread.h>
-#include <psp2/appmgr.h>
-#include <psp2/vshbridge.h>
-#include <borealis/platforms/desktop/desktop_platform.hpp>
-
-extern "C" {
-unsigned int _newlib_heap_size_user = 220 * 1024 * 1024;
-unsigned int _pthread_stack_default_user = 2 * 1024 * 1024;
-}
-#elif defined(__PS4__)
-#include <orbis/SystemService.h>
-#include <orbis/Sysmodule.h>
-#include <arpa/inet.h>
-
-extern "C" {
-extern int ps4_mpv_use_precompiled_shaders;
-extern int ps4_mpv_dump_shaders;
-extern in_addr_t primary_dns;
-extern in_addr_t secondary_dns;
-}
-#elif defined(ANDROID)
-#include <SDL2/SDL_system.h>
-#include <jni.h>
-#elif defined(__APPLE__) || defined(__linux__) || defined(_WIN32)
-#include <unistd.h>
-#include <borealis/platforms/desktop/desktop_platform.hpp>
-#if defined(_WIN32)
-#include <shlobj.h>
-#endif
-
-constexpr uint32_t MINIMUM_WINDOW_WIDTH = 640;
-constexpr uint32_t MINIMUM_WINDOW_HEIGHT = 360;
 #endif
 
 #include <borealis.hpp>
@@ -162,63 +128,6 @@ static std::string generateDeviceId() {
         sha256CalculateHash(digest, &uid, sizeof(uid));
         return misc::hexEncode(digest, sizeof(digest));
     }
-#elif defined(__PSV__)
-    char cid[0x20];
-    if (_vshSblAimgrGetConsoleId(cid) >= 0) {
-        char text[0x40];
-        sceClibSnprintf(text, sizeof(text) - 1, "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",
-            cid[0x0], cid[0x1], cid[0x2], cid[0x3], cid[0x4], cid[0x5], cid[0x6], cid[0x7], cid[0x8], cid[0x9],
-            cid[0xA], cid[0xB], cid[0xC], cid[0xD], cid[0xE], cid[0xF]);
-        return text;
-    }
-#elif defined(ANDROID)
-    JNIEnv* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
-    jclass utilsClass = env->FindClass("org/libsdl/app/PlatformUtils");
-    if (utilsClass) {
-        jmethodID jmethod = env->GetStaticMethodID(utilsClass, "getAndroidId", "()Ljava/lang/String;");
-        jstring jname = (jstring)env->CallStaticObjectMethod(utilsClass, jmethod);
-        const char* name = env->GetStringUTFChars(jname, nullptr);
-        std::string deviceId = name;
-        env->ReleaseStringUTFChars(jname, name);
-        env->DeleteLocalRef(jname);
-        env->DeleteLocalRef(utilsClass);
-        return deviceId;
-    }
-#elif defined(_WIN32)
-    HW_PROFILE_INFOW profile;
-    if (GetCurrentHwProfileW(&profile)) {
-        std::vector<char> deviceId(HW_PROFILE_GUIDLEN);
-        WideCharToMultiByte(CP_UTF8, 0, profile.szHwProfileGuid, std::wcslen(profile.szHwProfileGuid), deviceId.data(),
-            deviceId.size(), nullptr, nullptr);
-        return deviceId.data();
-    }
-#elif defined(__APPLE__)
-    io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-    if (ioRegistryRoot) {
-        CFStringRef uuidCf = (CFStringRef)IORegistryEntryCreateCFProperty(
-            ioRegistryRoot, CFSTR(kIOPlatformUUIDKey), kCFAllocatorDefault, 0);
-        std::vector<char> deviceId(CFStringGetLength(uuidCf) + 1);
-        CFStringGetCString(uuidCf, deviceId.data(), deviceId.size(), kCFStringEncodingMacRoman);
-        CFRelease(uuidCf);
-        IOObjectRelease(ioRegistryRoot);
-        return deviceId.data();
-    }
-#elif defined(__linux__)
-    static const std::vector<std::string> dev_names = {
-        "/sys/devices/virtual/dmi/id/board_serial",
-        "/proc/device-tree/serial-number",
-        "/etc/machine-id",
-    };
-    for (auto& path : dev_names) {
-        std::ifstream f(path.c_str());
-        if (f.is_open()) {
-            std::string name;
-            std::getline(f, name);
-            if (name.size() > 0) {
-                return misc::hexEncode((uint8_t*)name.data(), name.size());
-            }
-        }
-    }
 #endif
     return misc::randHex(16);
 }
@@ -226,27 +135,7 @@ static std::string generateDeviceId() {
 /// Per-platform data folder for a given application name.
 /// Factored out so the migration can compute the old name's path.
 static std::string dataDir(const std::string& name) {
-#if __SWITCH__
     return fmt::format("sdmc:/switch/{}", name);
-#elif defined(__PS4__)
-    return fmt::format("/data/{}", name);
-#elif defined(__PSV__)
-    return fmt::format("ux0:/data/{}", name);
-#elif _WIN32
-    WCHAR wpath[MAX_PATH];
-    std::vector<char> lpath(MAX_PATH);
-    SHGetSpecialFolderPathW(0, wpath, CSIDL_LOCAL_APPDATA, false);
-    WideCharToMultiByte(CP_UTF8, 0, wpath, std::wcslen(wpath), lpath.data(), lpath.size(), nullptr, nullptr);
-    return fmt::format("{}\\{}", lpath.data(), name);
-#elif defined(ANDROID)
-    return SDL_AndroidGetExternalStoragePath();
-#elif __linux__
-    char* config_home = getenv("XDG_CONFIG_HOME");
-    if (config_home) return fmt::format("{}/{}", config_home, name);
-    return fmt::format("{}/.config/{}", getenv("HOME"), name);
-#elif __APPLE__
-    return fmt::format("{}/Library/Application Support/{}", getenv("HOME"), name);
-#endif
 }
 
 bool AppConfig::init() {
@@ -269,60 +158,6 @@ bool AppConfig::init() {
         }
         brls::sync([]() { brls::Application::notify(brls::getStr("main/setting/others/config_reset")); });
     }
-
-#if defined(_WIN32) && !defined(_WINRT_)
-    misc::initCrashDump();
-#endif
-
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(ANDROID) && !defined(TRIMUI)
-    brls::DesktopPlatform::GAMEPAD_DB = configDir() + "/gamecontrollerdb.txt";
-    if (this->getItem(AppConfig::SINGLE, false) && misc::sendIPC(this->ipcSocket(), "{}")) {
-        brls::Logger::warning("AppConfig single instance");
-        return false;
-    }
-    // 加载窗口位置
-    auto wstate = this->getItem(AppConfig::WINDOW_STATE, std::string{""});
-    if (wstate.size() > 0) {
-        int hXPos, hYPos, monitor;
-        uint32_t hWidth, hHeight;
-        sscanf(wstate.c_str(), "%d,%ux%u,%dx%d", &monitor, &hWidth, &hHeight, &hXPos, &hYPos);
-        if (hWidth > 0 && hHeight > 0) {
-            VideoContext::sizeH = hHeight;
-            VideoContext::sizeW = hWidth;
-            VideoContext::posX = (float)hXPos;
-            VideoContext::posY = (float)hYPos;
-            VideoContext::monitorIndex = monitor;
-        }
-    }
-    // 窗口将要关闭时, 保存窗口状态配置
-    brls::Application::getExitEvent()->subscribe([this]() {
-        if (std::isnan(VideoContext::posX) || std::isnan(VideoContext::posY)) return;
-        if (VideoContext::FULLSCREEN) return;
-        auto videoContext = brls::Application::getPlatform()->getVideoContext();
-        uint32_t width = VideoContext::sizeW;
-        uint32_t height = VideoContext::sizeH;
-        if (width == 0) width = brls::Application::ORIGINAL_WINDOW_WIDTH;
-        if (height == 0) height = brls::Application::ORIGINAL_WINDOW_HEIGHT;
-        this->setItem(AppConfig::WINDOW_STATE, fmt::format("{},{}x{},{}x{}", videoContext->getCurrentMonitorIndex(),
-                                                   width, height, (int)VideoContext::posX, (int)VideoContext::posY));
-        this->save();
-    });
-#elif defined(__PSV__)
-    int search_unk[2];
-    if (_vshKernelSearchModuleByName("CapUnlocker", search_unk) >= 0) {
-        brls::sync([]() { brls::Application::notify("CapUnlocker found"); });
-        sceKernelChangeThreadPriority(SCE_KERNEL_THREAD_ID_SELF, 64);
-        sceKernelChangeThreadCpuAffinityMask(SCE_KERNEL_THREAD_ID_SELF, SCE_KERNEL_CPU_MASK_SYSTEM);
-    }
-#elif defined(__PS4__)
-    if (sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NET) < 0) brls::Logger::error("cannot load net module");
-    primary_dns = inet_addr("223.5.5.5");
-    secondary_dns = inet_addr("1.1.1.1");
-    ps4_mpv_use_precompiled_shaders = 1;
-    ps4_mpv_dump_shaders = 0;
-    // 在加载第一帧之后隐藏启动画面
-    brls::sync([]() { sceSystemServiceHideSplashScreen(); });
-#endif
 
     std::string uiScale = this->getItem(APP_UI_SCALE, std::string(""));
     if (uiScale == "544p") {
@@ -363,11 +198,7 @@ bool AppConfig::init() {
     // 初始化内存缓存大小
     MPVCore::INMEMORY_CACHE = this->getItem(PLAYER_INMEMORY_CACHE, 10);
     // 是否使用低质量解码
-#if defined(__PSV__) || defined(__PS4__) || defined(__SWITCH__)
     MPVCore::LOW_QUALITY = this->getItem(PLAYER_LOW_QUALITY, true);
-#else
-    MPVCore::LOW_QUALITY = this->getItem(PLAYER_LOW_QUALITY, false);
-#endif
     MPVCore::SUBS_FALLBACK = this->getItem(PLAYER_SUBS_FALLBACK, true);
     // ONE User-Agent for the whole app: the settings tab / config.json value,
     // else a `user-agent=` line in mpv.conf, else the built-in one. HTTP (API,
