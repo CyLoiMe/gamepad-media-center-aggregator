@@ -360,6 +360,11 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
             // universal-transcoder request (incl. the 1080p height cap) is
             // built here — see PlexBackend::resolvePlayback.
             media::PlaybackSource src = AppConfig::instance().backend().resolvePlayback(item, version, opts);
+            // One line per playback attempt, enough to tell the three paths apart in
+            // a user's log without touching the URL (which carries tokens):
+            // directplay with remote=true is the CDN case, "transcode" a server encode.
+            brls::Logger::info("playback {}: method={} remote={} cap={} maxHeight={}", item.ratingKey,
+                src.playMethod, version.remote, opts.bitrateCap, opts.maxHeight);
 
             // Traffic guard: on the metered address, an item whose library is not
             // allowed there — or that cannot prove it is — must never reach mpv.
@@ -524,6 +529,17 @@ bool PlayerView::tryTranscodeFallback() {
     if (MPVCore::FORCE_DIRECTPLAY) return false;
     if (!AppConfig::instance().backend().caps().transcode) return false;
     if (this->item.type == media::mediaTypeTrack) return false;
+    // A cloud source (.strm behind a CDN) has no encoder behind it: the server-side
+    // transcode would first have to pull the whole file through the server, and the
+    // front-ends serving these sources refuse or 500 it. Retrying there replaces the
+    // real direct-play error (403/404 against the CDN, the one worth reading) with a
+    // 500 from a URL that never had a chance, after spending the seconds of a
+    // re-resolve + reconnect. Direct play is the only path for these — the same rule
+    // startPlayback() applies by zeroing the bitrate cap (docs/playback.md).
+    if (this->stream.remote) {
+        brls::Logger::info("PlayerView: direct playback of a remote source failed — no transcode to fall back to");
+        return false;
+    }
     this->transcodeFallback = true;
     this->directPlayFallback = true;
 

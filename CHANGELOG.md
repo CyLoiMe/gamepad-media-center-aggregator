@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- A cloud source (`.strm` behind a CDN) is no longer sent to the transcoder when its
+  direct play fails. The recovery path retried every failed direct play at 8 Mbps
+  regardless of the source, so a CDN-backed item — which has no encoder behind it —
+  replaced its real error (a 403/404 from the CDN, the one worth reading) with a
+  server-side HTTP 500 from a URL that never had a chance, after the seconds the
+  re-resolve and reconnect cost. Direct play is now the only path for a remote
+  source, and the dialog shows the first error. A one-line log per attempt
+  (`playback <id>: method=… remote=… cap=… maxHeight=…`) makes the three paths
+  distinguishable in a user's log.
+
 ### Added
 
 - Home-video libraries. Emby's "Photos & videos" library (`CollectionType:
