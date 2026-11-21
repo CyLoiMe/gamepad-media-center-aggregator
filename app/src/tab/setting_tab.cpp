@@ -279,11 +279,6 @@ void SettingTab::onCreate() {
         return true;
     });
 
-/// Fullscreen
-    btnFullscreen->setVisibility(brls::Visibility::GONE);
-    btnAlwaysOnTop->setVisibility(brls::Visibility::GONE);
-    btnSingle->setVisibility(brls::Visibility::GONE);
-
     selectorKeymap->setVisibility(brls::Visibility::GONE);
 
     // App language
