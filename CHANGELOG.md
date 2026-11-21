@@ -33,7 +33,9 @@
   private too, and still refused when the console is genuinely elsewhere.
 - A `.strm`-backed source that Emby does not flag `IsRemote` is now recognised by
   its MediaSource `Path` (an absolute http(s) URL), and that URL is used directly
-  when PlaybackInfo hands out no `DirectStreamUrl` — instead of the server's proxy.
+  when PlaybackInfo hands out no `DirectStreamUrl` — or when the one it hands out
+  points back at the server, which is the same proxy under another name. Instead of
+  the server's proxy, in both cases.
 - A cloud source (`.strm` behind a CDN) is no longer sent to the transcoder when its
   direct play fails. The recovery path retried every failed direct play at 8 Mbps
   regardless of the source, so a CDN-backed item — which has no encoder behind it —

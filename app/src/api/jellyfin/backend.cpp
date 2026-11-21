@@ -766,10 +766,18 @@ media::PlaybackSource JellyfinBackend::resolvePlayback(
         if (version.remote) {
             if (!version.sourceId.empty()) {
                 const std::string direct = playbackInfoUrl(item.ratingKey, version.sourceId, tok);
-                if (!direct.empty()) {
+                // A DirectStreamUrl on the server's own host IS the proxy: the server
+                // pulling the cloud file, i.e. the 20 s HttpClient timeout that
+                // produced the HTTP 500. With the .strm target known, the gateway's
+                // own URL is the one that plays, so don't take the proxy URL.
+                const bool viaServer =
+                    !direct.empty() && net::hostFromUrl(direct) == net::hostFromUrl(base());
+                if (!direct.empty() && !(viaServer && !version.remotePath.empty())) {
                     brls::Logger::info("jellyfin: remote source, playing the server's DirectStreamUrl");
                     return {direct, e.str(), false, "directplay"};
                 }
+                if (viaServer)
+                    brls::Logger::info("jellyfin: DirectStreamUrl is the server's proxy, prefer the source's own URL");
             }
             // No DirectStreamUrl: the `.strm` target the server reported as the
             // media source's Path is still better than the server's own proxy.
