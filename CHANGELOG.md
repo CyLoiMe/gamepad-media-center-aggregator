@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-11-21
+
+First public release.
+
 ### Networking
 
 - **Two addresses per Jellyfin/Emby connection.** An optional home address

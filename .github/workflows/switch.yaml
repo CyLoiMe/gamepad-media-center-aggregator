@@ -5,6 +5,9 @@ name: switch
 on:
   push:
     branches: [ main ]
+    # a tag push builds once and then publishes that artifact as the release the
+    # in-app updater reads (it calls /releases/latest, which ignores prereleases)
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -92,3 +95,47 @@ jobs:
       with:
         name: SMCA-dev-elf-${{ env.DRIVER }}-${{ github.run_number }}
         path: build/SMCA.elf
+
+  release:
+    # Tags only. The updater asks GitHub for /releases/latest, which ignores
+    # prereleases and needs an asset ending in .nro; this job produces exactly
+    # that, with the matching CHANGELOG section as the release body (the app shows
+    # it in the update dialog).
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/download-artifact@v6
+      with:
+        pattern: SMCA-NintendoSwitch*
+        # without this the archive lands in dist/<artifact-name>/SMCA.nro and the
+        # files: glob below matches nothing
+        merge-multiple: true
+        path: dist
+
+    - name: Take the CHANGELOG section for this tag
+      run: |
+        version="${GITHUB_REF_NAME#v}"
+        awk -v v="$version" '
+          index($0, "## [" v "]") == 1 { found = 1; next }
+          found && index($0, "## [") == 1 { exit }
+          found { print }
+        ' CHANGELOG.md > notes.md
+        if [ ! -s notes.md ]; then
+          echo "SMCA ${version}." > notes.md
+          echo "::warning::no CHANGELOG section for ${version}"
+        fi
+        { echo "## What's in this build"; echo; cat notes.md; } > body.md
+
+    - name: Publish release
+      uses: softprops/action-gh-release@v3
+      with:
+        name: SMCA ${{ github.ref_name }}
+        body_path: body.md
+        files: dist/SMCA.nro
+        fail_on_unmatched_files: true
+        prerelease: false
