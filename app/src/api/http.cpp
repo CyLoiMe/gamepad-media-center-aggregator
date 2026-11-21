@@ -3,69 +3,6 @@
 #include <borealis/core/logger.hpp>
 #include <curl/curl.h>
 #include <mutex>
-#if defined(BOREALIS_USE_GXM)
-#include <mbedtls/platform.h>
-#include <psp2/gxm.h>
-#include <psp2/kernel/sysmem.h>
-static SceUID mempool_id = 0;
-static void* mempool_addr = nullptr;
-static size_t mempool_size = 20 * 1024 * 1024;
-static void* s_mspace = nullptr;
-int __attribute__((optimize("no-optimize-sibling-calls"))) malloc_finalize() {
-    if (s_mspace) sceClibMspaceDestroy(s_mspace);
-    if (mempool_addr) sceGxmUnmapMemory(mempool_addr);
-    if (mempool_id) sceKernelFreeMemBlock(mempool_id);
-    return 0;
-}
-
-int malloc_init() {
-    int res;
-    if (s_mspace) return 0;
-    mempool_id = sceKernelAllocMemBlock("curl", SCE_KERNEL_MEMBLOCK_TYPE_USER_MAIN_PHYCONT_RW, mempool_size, nullptr);
-    sceKernelGetMemBlockBase(mempool_id, &mempool_addr);
-    if (!mempool_addr) goto error;
-    res = sceGxmMapMemory(mempool_addr, mempool_size, SCE_GXM_MEMORY_ATTRIB_RW);
-    if (res != SCE_OK) goto error;
-    s_mspace = sceClibMspaceCreate(mempool_addr, mempool_size);
-    if (!s_mspace) goto error;
-
-    return 0;
-error:
-    malloc_finalize();
-    return 1;
-}
-
-void __attribute__((optimize("no-optimize-sibling-calls"))) * sce_malloc(size_t size) {
-    if (!s_mspace) malloc_init();
-    return sceClibMspaceMalloc(s_mspace, size);
-}
-
-void __attribute__((optimize("no-optimize-sibling-calls"))) sce_free(void* ptr) {
-    if (!ptr || !s_mspace) return;
-    sceClibMspaceFree(s_mspace, ptr);
-}
-
-void __attribute__((optimize("no-optimize-sibling-calls"))) * sce_calloc(size_t nelem, size_t size) {
-    if (!s_mspace) malloc_init();
-    return sceClibMspaceCalloc(s_mspace, nelem, size);
-}
-
-void __attribute__((optimize("no-optimize-sibling-calls"))) * sce_realloc(void* ptr, size_t size) {
-    if (!s_mspace) malloc_init();
-    return sceClibMspaceRealloc(s_mspace, ptr, size);
-}
-
-char __attribute__((optimize("no-optimize-sibling-calls"))) * sce_strdup(const char* str) {
-    size_t len;
-    char* newstr;
-    if (!str) return (char*)nullptr;
-    len = strlen(str) + 1;
-    newstr = (char*)sce_malloc(len);
-    if (!newstr) return (char*)nullptr;
-    sceClibMemcpy(newstr, str, len);
-    return newstr;
-}
-#endif
 
 #ifndef CURL_PROGRESSFUNC_CONTINUE
 #define CURL_PROGRESSFUNC_CONTINUE 0x10000001
@@ -108,13 +45,8 @@ static void curl_share_unlock_cb(CURL* /*handle*/, curl_lock_data data, void* /*
 HTTP::HTTP() : chunk(nullptr) {
     static struct Global {
         Global() {
-#ifdef BOREALIS_USE_GXM
-            mbedtls_platform_set_calloc_free(sce_calloc, sce_free);
-            curl_global_init_mem(CURL_GLOBAL_DEFAULT, sce_malloc, sce_free, sce_realloc, sce_strdup, sce_calloc);
-#else
             CURLcode rc = curl_global_init(CURL_GLOBAL_ALL);
             brls::Logger::debug("curl global init {}", std::to_string(rc));
-#endif
             this->share = curl_share_init();
             // Callbacks de verrouillage obligatoires pour un partage inter-threads sûr
             curl_share_setopt(share, CURLSHOPT_LOCKFUNC, curl_share_lock_cb);

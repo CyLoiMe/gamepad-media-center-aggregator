@@ -98,8 +98,8 @@ void PlexAdd::pollOnce() {
                 ASYNC_RELEASE
                 // 404/410: the PIN was consumed or expired server-side — that
                 // is terminal, stop and let the user request a fresh code.
-                // Anything else (timeout, 5xx, a TLS/network hiccup — frequent
-                // on Vita) is transient: keep polling. The 2-minute deadline
+                // Anything else (timeout, 5xx, a TLS/network hiccup) is
+                // transient: keep polling. The 2-minute deadline
                 // above stays the real give-up, so a single blip no longer
                 // aborts the whole account link ("took a couple tries ...
                 // error'd out").
@@ -241,7 +241,7 @@ void PlexAdd::finishAll(const std::string& uuid, const std::string& name, const 
         }
     }
     // Keep the loading screen up during the (possibly multi-second) probe —
-    // without it the app looks frozen (thcolin/pleNx#1 on Vita).
+    // without it the app looks frozen (thcolin/pleNx#1).
     brls::Application::blockInputs();
     brls::Application::pushActivity(new LoadingOverlay(), brls::TransitionAnimation::NONE);
     ASYNC_RETAIN

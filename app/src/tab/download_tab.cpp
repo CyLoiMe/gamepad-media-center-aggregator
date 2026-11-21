@@ -231,7 +231,7 @@ public:
         this->progressTrack->addView(this->progressBar);
     }
 
-    // The thumb load can be async (remote poster, withLocal on GXM): drop any
+    // The thumb load can be async (remote poster): drop any
     // in-flight request and reset to the placeholder before this cell is reused
     // for another row, else a late completion would paint the previous item's
     // poster. Matches the media grid cells (media_series/media_movie).
@@ -244,17 +244,7 @@ public:
         this->thumb->setImageFromRes("img/video-card-bg.png");
         std::string thumbPath = downloadDir + "/" + item.itemId + "/thumb.png";
         if (fs::exists(thumbPath)) {
-#ifdef BOREALIS_USE_GXM
-            // GXM: decode+downscale+DXT to the 76x114 card size instead of
-            // uploading thumb.png at its native resolution, uncompressed:
-            // thumb.png can be a full-size poster (absolute Stremio URLs are
-            // not resized server-side, older downloads), the same GPU-memory
-            // concern as Image::load. withLocal is async, so cancel on reuse
-            // (cacheForReuse below).
-            Image::withLocal(this->thumb, thumbPath, 76, 114);
-#else
             this->thumb->setImageFromFile(thumbPath);
-#endif
         } else if (!NetworkState::isOffline() || ImageCache::has(item.thumb)) {
             // queued, or started before its thumb.png landed: the server's (or cached) poster
             Image::load(this->thumb, item.thumb, 225);

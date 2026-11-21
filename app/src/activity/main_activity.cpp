@@ -148,8 +148,8 @@ void MainActivity::addSidebarStatus() {
     // bottom of the pinned footer (appended after the gear). Each widget is added
     // only when the platform can actually report that info: otherwise its ctor
     // early-returns and leaves its members null, but draw() dereferences them
-    // anyway (null-deref crash — battery on a PC with no battery, see #37; wifi on
-    // desktop Linux where canShowWirelessLevel() is false).
+    // anyway (null-deref crash — battery on a device that has none, see #37; wifi
+    // where canShowWirelessLevel() is false).
     auto* status = new brls::Box();
     status->setAxis(brls::Axis::ROW);
     status->setJustifyContent(brls::JustifyContent::CENTER);

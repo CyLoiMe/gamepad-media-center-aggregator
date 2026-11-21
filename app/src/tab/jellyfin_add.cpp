@@ -2,8 +2,8 @@
     SMCA — sign-in form for a Jellyfin or Emby server.
 
     A clickable cell per field opens the IME for THAT field only (no chained
-    IME prompts — the chaining used to flicker open then close at once on
-    desktop GLFW). "Connect" validates the URL, then runs jellyfin::getServerName
+    IME prompts — the chaining used to flicker open then close at once). "Connect"
+    validates the URL, then runs jellyfin::getServerName
     + jellyfin::login off the UI thread; on success the server/user are stored
     and MainActivity is entered, on failure the message is shown in the status
     label.

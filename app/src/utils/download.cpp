@@ -498,7 +498,7 @@ void DownloadManager::doDownload(DownloadItem& item) {
         // Extension of the original file, read from Part.key (Plex:
         // /library/parts/{id}/{ts}/file.mkv). For Stremio the partKey is a full
         // stream URL, so strip any query/fragment first — otherwise ext becomes
-        // "mkv?token=…" and the filename is rejected by FAT/exFAT (Switch/Vita).
+        // "mkv?token=…" and the filename is rejected by FAT/exFAT.
         // Keep only a sane short alphanumeric extension, else fall back to mp4.
         std::string ext = "mp4";
         std::string keyPath = partKey;

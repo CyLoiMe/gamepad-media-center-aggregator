@@ -15,7 +15,7 @@ using namespace brls::literals;  // for _i18n
 
 void Changelog::onContentAvailable() {
     // CHANGELOG.md is embedded under resources at configure time (CMakeLists):
-    // read it via romfs when bundled, else from the resources dir on desktop.
+    // read it via romfs when bundled, else from the resources directory.
     std::string md;
 #ifdef USE_LIBROMFS
     auto& res = romfs::get("CHANGELOG.md");

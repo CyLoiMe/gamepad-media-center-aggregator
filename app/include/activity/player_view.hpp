@@ -31,7 +31,7 @@ private:
     /// Resolves the playback URL through the active backend (resolvePlayback,
     /// which decides direct vs transcode internally). forceDirect bypasses
     /// transcoding for the direct-play fallback after a transcode playback error
-    /// (helps the Vita hardware decoder, which can choke on the transcoded stream).
+    /// (a hardware decoder can reject the transcoded stream).
     /// forceBitrate (bps, 0 = user setting) caps the stream for the
     /// transcode fallback after a direct-play error.
     void startPlayback(const int64_t seekMs, bool forceDirect = false, int64_t forceBitrate = 0);
@@ -39,9 +39,9 @@ private:
     /// direct play or non-Plex backends). Fire-and-forget; safe to call after
     /// `this` is gone.
     void stopTranscode();
-    /// On a transcode playback error, retry once in direct play (helps Vita,
-    /// where the hardware decoder can choke on the transcoded stream). Returns
-    /// true when a fallback was started (so the error dialog is suppressed).
+    /// On a transcode playback error, retry once in direct play (the hardware
+    /// decoder can reject the transcoded stream). Returns true when a fallback was
+    /// started (so the error dialog is suppressed).
     bool tryDirectPlayFallback();
     /// On a direct-play error, retry once through the server transcoder: a
     /// server may refuse the raw part while a transcode session opens fine.

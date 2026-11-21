@@ -21,6 +21,14 @@
   stub the D3D11 arm called. What remains is what this tree actually builds:
   deko3d, the OpenGL fallback (GLFW or SDL2) and the `MPV_SW_RENDER` CPU path. No
   behaviour change on the console.
+- The dead platform code left outside the player core: the PS Vita texture path in
+  the artwork loader (its power-of-two downscale, DXT compression and the offline
+  `withLocal` entry point), the Vita curl/mbedtls memory pool in the HTTP client,
+  and the "D3D11"/"GXM" driver names in About. Artwork is uploaded at the size the
+  server returned — which is what the console already did, since that cap existed
+  for the Vita's GPU memory.
+- The bundled PS4 subtitle font (718 KB), unreferenced since that installer was
+  removed.
 
 ## [0.1.0] — 2026-11-21
 

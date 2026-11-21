@@ -1030,7 +1030,7 @@ void AppConfig::initThemes() {
             brls::getStyle().addMetric("app/album/height", 225);
             brls::getStyle().addMetric("app/books/height", 280);
             brls::getStyle().addMetric("app/video/height", 300);
-            // row = width x image ratio + 55 of labels (cf. PSV block)
+            // row = width x image ratio + 55 of labels
             brls::getStyle().addMetric("app/card/poster/width", 185);
             brls::getStyle().addMetric("app/card/poster/row", 333);
             brls::getStyle().addMetric("app/card/wide/width", 340);

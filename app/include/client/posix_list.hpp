@@ -1,10 +1,9 @@
-// Listing a folder with only the calls that work on the PS4. OpenOrbis musl's fstatat is a stub
-// that fails with ENOSYS (and its lstat goes through it), so std::filesystem's
-// directory_iterator, is_directory, file_size and last_write_time fail there. Names come from
-// opendir/readdir; a name is a folder if it opens as one and reads without error, else a file
-// whose size is lseek(SEEK_END) on an open fd. No modification time: no stat call that works
-// there fills one in a known layout (0 keeps the "Date" sort stable). Builds and behaves the same
-// on Linux, which is how it is tested.
+// Listing a folder without stat: names come from opendir/readdir, a name is a folder if it opens
+// as one and reads without error, else a file whose size is lseek(SEEK_END) on an open fd.
+// std::filesystem is not an option — directory_iterator, is_directory, file_size and
+// last_write_time all go through stat/fstatat, which a minimal libc may stub out (ENOSYS), lstat
+// with them. No modification time is reported (0 keeps the "Date" sort stable). Builds and
+// behaves the same on the host, which is how it is tested.
 #pragma once
 
 #include <dirent.h>
@@ -27,8 +26,7 @@ struct Entry {
 };
 
 /// True for an entry the file system kept after a delete: FreeBSD's UFS hands them out with inode
-/// 0, and musl's readdir doesn't skip them like FreeBSD's libc does. (The OpenOrbis header names
-/// the field d_fileno, then #defines d_fileno to d_ino, a field it doesn't have.)
+/// 0, and a libc's readdir does not necessarily skip them.
 inline bool isDeletedEntry(const struct dirent* entry) {
     return entry->d_ino == 0;
 }
@@ -47,8 +45,7 @@ inline bool listNames(const std::string& dir, std::vector<std::string>& names, s
         errno = 0;
         const struct dirent* e = readdir(d);
         if (!e) {
-            // NULL with errno unchanged is the end. On the PS4, musl's readdir reports any
-            // getdents failure as EPERM.
+            // NULL with errno unchanged is the end; some libcs report any getdents failure as EPERM.
             const int err = errno;
             if (err != 0) {
                 error = "readdir " + dir + ": " + std::strerror(err);
@@ -65,7 +62,7 @@ inline bool listNames(const std::string& dir, std::vector<std::string>& names, s
 }
 
 /// True when `path` opens as a folder and reads to its first entry (or its end) without an error:
-/// on the PS4 a file can pass opendir, and then its first readdir fails.
+/// a plain file can pass opendir, and then its first readdir fails.
 inline bool isFolder(const std::string& path) {
     DIR* d = opendir(path.c_str());
     if (!d) return false;

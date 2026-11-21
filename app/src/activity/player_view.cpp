@@ -44,7 +44,7 @@ PlayerView::PlayerView(const plex::Item& item, const int64_t seekMs, int version
     this->addView(view);
     view->registerVideoQuality([this](...) { return this->toggleQuality(); });
     // direct-access OSD pickers; &stream lets them switch transcode-side
-    // tracks (the Vita default) as well as embedded ones
+    // tracks as well as embedded ones
     view->registerVideoSubtitle([this](...) {
         PlayerSetting::showSubtitleMenu(&this->stream);
         return true;
@@ -54,7 +54,7 @@ PlayerView::PlayerView(const plex::Item& item, const int64_t seekMs, int version
         return true;
     });
     // playback failed -> try the other delivery path once before the error
-    // dialog (Vita hardware decode can reject a transcoded stream, a server
+    // dialog (a hardware decoder can reject a transcoded stream, a server
     // can refuse the raw part)
     view->registerError([this](...) {
         return this->tryDirectPlayFallback() || this->tryPlainUrlFallback() || this->explainRefusal() ||
@@ -135,7 +135,7 @@ PlayerView::PlayerView(const plex::Item& item, const int64_t seekMs, int version
             // audio track and no selectable subtitle, so switching means asking
             // the server for a fresh transcode and reloading it. Mirror
             // playIndex and reset() mpv first: reloading in place kept the old
-            // (Vita hardware) decoder pinned, so the switch stalled and then
+            // (hardware) decoder pinned, so the switch stalled and then
             // failed with a playback error. Read the position before reset()
             // zeroes it so the new transcode resumes where we were.
             int64_t pos = int64_t(MPVCore::instance().playback_time) * 1000;
@@ -357,7 +357,7 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
         try {
             // resolvePlayback runs the transcode decision synchronously and
             // throws on failure; the direct-play fallback is internal. The Plex
-            // universal-transcoder request (incl. the Vita 1080p height cap) is
+            // universal-transcoder request (incl. the 1080p height cap) is
             // built here — see PlexBackend::resolvePlayback.
             media::PlaybackSource src = AppConfig::instance().backend().resolvePlayback(item, version, opts);
 
@@ -391,7 +391,8 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
                 }
                 this->playMethod = src.playMethod;
                 // Remember the backend transcode session so we can tear it down
-                // server-side on reload/exit — the dev Vita fix. Set by the backend
+                // server-side on reload/exit; left running, the server keeps
+                // encoding a stream nobody is watching. Set by the backend
                 // (Plex); empty for direct play or backends without a server
                 // transcode session, leaving stopTranscode a safe no-op.
                 this->transcodeSession = src.transcodeSession;
@@ -480,7 +481,7 @@ bool PlayerView::tryDirectPlayFallback() {
     int64_t pos = mpv.playback_time > 0 ? int64_t(mpv.playback_time) * 1000 : this->lastSeekMs;
     brls::Logger::error("PlayerView: transcode playback failed ({}) — falling back to direct play at {} ms",
         mpv.getError(), pos);
-    mpv.reset();            // release the (Vita hardware) decoder held by the failed stream
+    mpv.reset();            // release the (hardware) decoder held by the failed stream
     this->stopTranscode();  // drop the dead transcode session server-side
     this->startPlayback(pos, /*forceDirect=*/true);  // re-resolve, forcing direct play
     brls::Application::notify(fmt::format("{} ({})", "main/player/direct_fallback"_i18n, mpv.getError()));
@@ -600,8 +601,8 @@ bool PlayerView::toggleQuality() {
         "main/player/quality"_i18n, options,
         [this, values](int selected) {
             MPVCore::VIDEO_QUALITY = values[selected];
-            // remember the choice across launches (Vita users had to re-lower
-            // it every session otherwise — see config.cpp default)
+            // remember the choice across launches (it would otherwise reset to
+            // the default every session — see config.cpp)
             AppConfig::instance().setItem(AppConfig::PLAYER_VIDEO_QUALITY, MPVCore::VIDEO_QUALITY);
             this->fallbackBitrate = 0;
             MPVCore::instance().getCustomEvent()->fire(QUALITY_CHANGE, nullptr);

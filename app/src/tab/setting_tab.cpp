@@ -40,13 +40,10 @@ public:
         this->inflateFromXMLRes("xml/view/setting_about.xml");
 
         this->labelTitle->setText(AppVersion::getPackageName());
+        // The graphics driver borealis was built with (the two this tree supports).
         this->labelVersion->setText(fmt::format("v{}-{} ({})", AppVersion::getVersion(), AppVersion::getCommit(),
-#if defined(BOREALIS_USE_D3D11)
-            "D3D11"
-#elif defined(BOREALIS_USE_DEKO3D)
+#ifdef BOREALIS_USE_DEKO3D
             "Deko3D"
-#elif defined(BOREALIS_USE_GXM)
-            "GXM"
 #else
             "OpenGL"
 #endif

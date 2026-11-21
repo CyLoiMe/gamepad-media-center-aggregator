@@ -515,8 +515,8 @@ inline std::vector<StreamOption> parseStreams(const nlohmann::json& j) {
 
 /// Resolution label from a stream's name+title ("4K"/"1440p"/"1080p"/"720p"/
 /// "480p"/"CAM"/"SD"). CAM-class (cam/ts/telesync/screener) ranks below any
-/// resolution. 1440p gets its own label so the PSV filter can drop it: an
-/// unlabelled 1440p used to fall through to "SD" and rank ABOVE 1080p on Vita.
+/// resolution. 1440p gets its own label so it can be dropped by name: unlabelled
+/// it used to fall through to "SD" and rank ABOVE 1080p.
 inline std::string qualityLabel(const std::string& text) {
     std::string t = text;
     for (auto& c : t) c = (char)std::tolower((unsigned char)c);
