@@ -31,9 +31,6 @@
 #ifdef __SWITCH__
 #include "utils/overclock.hpp"
 #endif
-#ifdef __linux__
-#include <borealis/platforms/desktop/steam_deck.hpp>
-#endif
 
 using namespace brls::literals;  // for _i18n
 
@@ -109,34 +106,17 @@ void SettingTab::onCreate() {
             SwitchSys::setClock(value);
             conf.setItem(AppConfig::OVERCLOCK, value);
         });
-#else
-    btnOverClock->setVisibility(brls::Visibility::GONE);
 #endif
 
 /// Hardware decode
-#ifdef PS4
-    btnHWDEC->setVisibility(brls::Visibility::GONE);
-#else
     btnHWDEC->init("main/setting/playback/hwdec"_i18n, MPVCore::HARDWARE_DEC, [&conf](bool value) {
         if (MPVCore::HARDWARE_DEC == value) return;
         MPVCore::HARDWARE_DEC = value;
         MPVCore::instance().restart();
         conf.setItem(AppConfig::PLAYER_HWDEC, value);
     });
-#endif
 
-#if defined(ANDROID)
-    auto& voOption = conf.getOptions(AppConfig::MPV_VO);
-    selectorVO->init("main/setting/playback/vo"_i18n, voOption.options, conf.getOptionIndex(AppConfig::MPV_VO),
-        [&voOption](int selected) {
-            if (MPVCore::VO == voOption.options[selected]) return;
-            MPVCore::VO = voOption.options[selected];
-            AppConfig::instance().setItem(AppConfig::MPV_VO, MPVCore::VO);
-            MPVCore::instance().restart();
-        });
-#else
     selectorVO->setVisibility(brls::Visibility::GONE);
-#endif
 
     /// Decode quality
     btnQuality->init("main/setting/playback/low_quality"_i18n, MPVCore::LOW_QUALITY, [&conf](bool value) {
@@ -180,25 +160,17 @@ void SettingTab::onCreate() {
         conf.setItem(AppConfig::FORCE_DIRECTPLAY, value);
     });
 
-#if defined(__PSV__)
-    selectorCodec->setVisibility(brls::Visibility::GONE);
-#else
     auto& codecOption = conf.getOptions(AppConfig::TRANSCODEC);
     selectorCodec->init("main/setting/playback/transcodec"_i18n, {"AVC/H264", "HEVC/H265", "AV1"},
         conf.getOptionIndex(AppConfig::TRANSCODEC), [&codecOption](int selected) {
             MPVCore::VIDEO_CODEC = codecOption.options[selected];
             AppConfig::instance().setItem(AppConfig::TRANSCODEC, MPVCore::VIDEO_CODEC);
         });
-#endif
 
     auto& resolutionOption = conf.getOptions(AppConfig::PLAYER_MAX_RESOLUTION);
     std::vector<std::string> resolutionLabels;
     std::vector<int> resolutionValues;
     for (size_t i = 0; i < resolutionOption.values.size(); ++i) {
-#if defined(__PSV__)
-        // nothing above the Vita decoder ceiling (player_view.cpp)
-        if (resolutionOption.values[i] > 1080) continue;
-#endif
         resolutionLabels.push_back(i == 0 ? "main/player/auto"_i18n : resolutionOption.options[i]);
         resolutionValues.push_back((int)resolutionOption.values[i]);
     }
@@ -217,9 +189,6 @@ void SettingTab::onCreate() {
             conf.setItem(AppConfig::PLAYER_RESOLUTION_LIMIT, value);
         });
 
-#if defined(__PS4__) || defined(__PSV__) || defined(TRIMUI)
-    selectorAudioChannels->setVisibility(brls::Visibility::GONE);
-#else
     auto& audioChannelsOption = conf.getOptions(AppConfig::AUDIO_CHANNELS);
     selectorAudioChannels->init("main/setting/playback/audio_channels"_i18n, {"Auto", "Stereo", "Mono"},
         conf.getOptionIndex(AppConfig::AUDIO_CHANNELS), [&audioChannelsOption](int selected) {
@@ -227,7 +196,6 @@ void SettingTab::onCreate() {
             AppConfig::instance().setItem(AppConfig::AUDIO_CHANNELS, MPVCore::AUDIO_CHANNELS);
             MPVCore::instance().restart();
         });
-#endif
 
     auto& inmemoryOption = conf.getOptions(AppConfig::PLAYER_INMEMORY_CACHE);
     selectorInmemory->init("main/setting/playback/in_memory_cache"_i18n, inmemoryOption.options,
@@ -297,9 +265,6 @@ void SettingTab::onCreate() {
         dialog->open();
         return true;
     });
-#else
-    btnTutorialOpenApp->setVisibility(brls::Visibility::GONE);
-    btnTutorialError->setVisibility(brls::Visibility::GONE);
 #endif
     btnTutorialFont->registerClickAction([](...) -> bool {
         auto dialog = new brls::Dialog(new TutorialFont());
@@ -310,61 +275,16 @@ void SettingTab::onCreate() {
 
     btnOpenConfig->registerClickAction([](...) -> bool {
         const std::string confDir = AppConfig::instance().configDir();
-#if defined(__SWITCH__) || defined(__PSV__) || defined(__PS4__) || defined(ANDROID)
         Dialog::show("main/setting/others/config_dir"_i18n + ":\n" + confDir);
-#else
-#ifdef __linux__
-        if (!brls::isSteamDeck())
-#endif
-        {
-            brls::Application::getPlatform()->openBrowser(confDir);
-        }
-#endif
         return true;
     });
 
 /// Fullscreen
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(ANDROID) && !defined(TRIMUI)
-    btnFullscreen->init(
-        "main/setting/others/fullscreen"_i18n, conf.getItem(AppConfig::FULLSCREEN, false), [](bool value) {
-            VideoContext::FULLSCREEN = value;
-            AppConfig::instance().setItem(AppConfig::FULLSCREEN, value);
-            brls::Application::getPlatform()->getVideoContext()->fullScreen(value);
-        });
-
-    btnAlwaysOnTop->init(
-        "main/setting/others/always_on_top"_i18n, conf.getItem(AppConfig::ALWAYS_ON_TOP, false), [](bool value) {
-            AppConfig::instance().setItem(AppConfig::ALWAYS_ON_TOP, value);
-            brls::Application::getPlatform()->setWindowAlwaysOnTop(value);
-        });
-
-    btnSingle->init("main/setting/others/single"_i18n, conf.getItem(AppConfig::SINGLE, false), [](bool value) {
-        AppConfig::instance().setItem(AppConfig::SINGLE, value);
-        MPVCore::instance().restart();
-    });
-#else
     btnFullscreen->setVisibility(brls::Visibility::GONE);
     btnAlwaysOnTop->setVisibility(brls::Visibility::GONE);
     btnSingle->setVisibility(brls::Visibility::GONE);
-#endif
 
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(TRIMUI)
-    int keyIndex = conf.getOptionIndex(AppConfig::KEYMAP);
-    selectorKeymap->init("main/setting/others/keymap/header"_i18n,
-        {
-            "main/setting/others/keymap/xbox"_i18n,
-            "main/setting/others/keymap/ps"_i18n,
-            "main/setting/others/keymap/keyboard"_i18n,
-        },
-        keyIndex, [keyIndex](int selected) {
-            if (keyIndex == selected) return;
-            auto& conf = AppConfig::instance();
-            auto& keyOptions = conf.getOptions(AppConfig::KEYMAP);
-            conf.setItem(AppConfig::KEYMAP, keyOptions.options[selected]);
-        });
-#else
     selectorKeymap->setVisibility(brls::Visibility::GONE);
-#endif
 
     // App language
     int langIndex = conf.getOptionIndex(AppConfig::APP_LANG);
