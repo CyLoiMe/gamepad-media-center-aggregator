@@ -2,20 +2,6 @@
 #ifdef __SWITCH__
 #include <switch.h>
 #include <filesystem>
-#elif defined(__PSV__)
-#include <psp2/vshbridge.h>
-#include <psp2/io/fcntl.h>
-#include <psp2/io/stat.h>
-#elif defined(ANDROID)
-#include <SDL2/SDL.h>
-#include <jni.h>
-#elif defined(__APPLE__)
-#include <SystemConfiguration/SystemConfiguration.h>
-#elif defined(__linux__)
-#include <borealis/platforms/desktop/steam_deck.hpp>
-#elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #endif
 #include <algorithm>
 #include <cstdio>
@@ -24,7 +10,6 @@
 #include "utils/dialog.hpp"
 #include "utils/thread.hpp"
 #include "utils/misc.hpp"
-#include "utils/vita_install.hpp"
 #include "api/http.hpp"
 
 using namespace brls::literals;
@@ -39,28 +24,7 @@ std::string AppVersion::getPackageName() { return STR(BUILD_PACKAGE_NAME); }
 std::string AppVersion::getCommit() { return STR(BUILD_TAG_SHORT); }
 
 std::string AppVersion::getPlatform() {
-#ifdef __SWITCH__
     return "NX";
-#elif defined(__PSV__)
-    return "PSVita";
-#elif defined(__PS4__)
-    return "PS4";
-#elif defined(ANDROID)
-    return "Android";
-#elif defined(__APPLE__)
-    return "macOS";
-#elif defined(__linux__)
-    if (getenv("SteamDeck")) return "SteamDeck";
-    return "Linux";
-#elif defined(_WIN32)
-#if defined(_M_ARM64)
-    return "Windows-arm64";
-#else
-    return "Windows";
-#endif
-#else
-#error "Unsupport platform"
-#endif
 }
 
 std::string AppVersion::getDeviceName() {
@@ -68,52 +32,6 @@ std::string AppVersion::getDeviceName() {
     SetSysDeviceNickName nick;
     if (R_SUCCEEDED(setsysGetDeviceNickname(&nick))) {
         return nick.nickname;
-    }
-#elif defined(__PSV__)
-    if (vshSblAimgrIsGenuineDolce()) {
-        return "PSTV";
-    } else if (vshSblAimgrIsGenuineVITA()) {
-        char cid[0x20];
-        if (_vshSblAimgrGetConsoleId(cid) >= 0) {
-            if (cid[7] == 0x14 || cid[7] == 0x18) {
-                return "PSVita Slim";
-            }
-        }
-        return "PSVita";
-    }
-#elif defined(ANDROID)
-    JNIEnv* env = static_cast<JNIEnv*>(SDL_AndroidGetJNIEnv());
-    jclass clazz = env->FindClass("android/os/Build");
-    if (clazz) {
-        jfieldID fid = env->GetStaticFieldID(clazz, "MODEL", "Ljava/lang/String;");
-        jstring jname = (jstring)env->GetStaticObjectField(clazz, fid);
-        const char* name = env->GetStringUTFChars(jname, nullptr);
-        std::string device_name = name;
-        env->ReleaseStringUTFChars(jname, name);
-        env->DeleteLocalRef(jname);
-        env->DeleteLocalRef(clazz);
-        return device_name;
-    }
-#elif defined(_WIN32)
-    DWORD bufsize = MAX_PATH;
-    std::wstring buf(bufsize, '\0');
-    if (GetComputerNameW(buf.data(), &bufsize)) {
-        std::string name(bufsize * 3, '\0');
-        WideCharToMultiByte(CP_UTF8, 0, buf.data(), bufsize, name.data(), name.size(), nullptr, nullptr);
-        return name.data();
-    }
-#elif defined(__APPLE__)
-    CFStringRef nameRef = SCDynamicStoreCopyComputerName(nullptr, nullptr);
-    if (nameRef) {
-        std::vector<char> name(CFStringGetLength(nameRef) * 3);
-        CFStringGetCString(nameRef, name.data(), name.size(), kCFStringEncodingUTF8);
-        CFRelease(nameRef);
-        return name.data();
-    }
-#elif defined(__linux__)
-    char name[256];
-    if (!gethostname(name, sizeof(name))) {
-        return name;
     }
 #endif
     return fmt::format("{} for {}", getPackageName(), getPlatform());
@@ -217,101 +135,6 @@ static void startUpdate(const std::string& latest_ver, const std::string& url, i
         }
     });
 }
-#elif defined(__PSV__)
-static int64_t vitaFileSize(const std::string& path) {
-    SceIoStat st;
-    if (sceIoGetstat(path.c_str(), &st) < 0) return -1;
-    return static_cast<int64_t>(st.st_size);
-}
-
-/// Downloads the release VPK into configDir, verifies its size, then installs
-/// it in place via ScePromoterUtility (cf. vita::installVpk). Unlike the Switch
-/// path there is no in-process restart: the bubble is replaced under
-/// `ux0:app`, so the app quits to the LiveArea and the user relaunches the new
-/// version. Progress is shown in a dialog with a cancel button.
-static void startUpdate(const std::string& latest_ver, const std::string& url, int64_t size) {
-    AppVersion::updating->store(false);
-
-    brls::Style style = brls::Application::getStyle();
-    auto* label = new brls::Label();
-    label->setFontSize(style["brls/dialog/fontSize"]);
-    label->setHorizontalAlign(brls::HorizontalAlign::CENTER);
-    label->setSingleLine(false);
-    label->setText(brls::getStr("main/setting/others/downloading", latest_ver, 0));
-
-    auto* box = new brls::Box();
-    box->addView(label);
-    box->setAlignItems(brls::AlignItems::CENTER);
-    box->setJustifyContent(brls::JustifyContent::CENTER);
-    box->setPadding(style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"],
-        style["brls/dialog/paddingTopBottom"], style["brls/dialog/paddingLeftRight"]);
-
-    auto* dialog = new brls::Dialog(box);
-    dialog->setCancelable(false);
-    auto dismissed = std::make_shared<std::atomic_bool>(false);
-    dialog->addButton("hints/cancel"_i18n, [dismissed]() {
-        dismissed->store(true);
-        AppVersion::updating->store(true);  // true = cancel the transfer, cf. HTTP::easy_progress_cb
-    });
-    dialog->open();
-
-    ThreadPool::instance().submit([latest_ver, url, size, label, dialog, dismissed](HTTP& s) {
-        std::string conf_dir = AppConfig::instance().configDir();
-        std::string pkg_name = AppVersion::getPackageName();
-        std::string path = fmt::format("{}/{}_{}.vpk", conf_dir, pkg_name, latest_ver);
-        std::string work = fmt::format("{}/update", conf_dir);
-
-        auto finish = [dialog, dismissed](std::function<void()> then) {
-            brls::sync([dialog, dismissed, then]() {
-                if (dismissed->exchange(true))
-                    then();
-                else
-                    dialog->close(then);
-            });
-        };
-
-        auto last = std::make_shared<std::chrono::steady_clock::time_point>();
-        HTTP::Progress::Callback progress = [latest_ver, label, dismissed, last](curl_off_t total, curl_off_t now) {
-            auto tp = std::chrono::steady_clock::now();
-            if (total <= 0 || tp - *last < std::chrono::milliseconds(500)) return;
-            *last = tp;
-            int percent = static_cast<int>(now * 100 / total);
-            brls::sync([label, dismissed, latest_ver, percent]() {
-                if (!dismissed->load())
-                    label->setText(brls::getStr("main/setting/others/downloading", latest_ver, percent));
-            });
-        };
-
-        try {
-            HTTP::download(url, path, HTTP::Timeout{-1}, AppVersion::updating, progress);
-
-            // size verified BEFORE unpacking/promoting the package
-            int64_t actual = vitaFileSize(path);
-            if (size > 0 && actual != size)
-                throw std::runtime_error(fmt::format("incomplete download ({}/{} bytes)", actual, size));
-
-            // extraction + head.bin + promotion is blocking and cannot report a
-            // percentage: swap the label so the app doesn't look frozen
-            brls::sync([label, dismissed]() {
-                if (!dismissed->load()) label->setText("main/setting/others/installing"_i18n);
-            });
-
-            std::string err;
-            int rc = vita::installVpk(path, work, err);
-            sceIoRemove(path.c_str());
-            if (rc != 0) throw std::runtime_error(err);
-
-            finish([]() { Dialog::quitApp(false, "main/setting/others/updated"_i18n); });
-        } catch (const std::exception& ex) {
-            sceIoRemove(path.c_str());
-            bool canceled = AppVersion::updating->load();
-            AppVersion::updating->store(true);
-            if (canceled) return;  // user cancellation, not a failure
-            std::string msg = ex.what();
-            finish([msg]() { Dialog::show(msg); });
-        }
-    });
-}
 #endif
 
 // Update popup content: the version prompt + the new release's notes (GitHub
@@ -356,16 +179,10 @@ void AppVersion::checkUpdate(int delay, bool showUpToDateDialog) {
             // release notes shown in the popup (only this version's changelog)
             std::string release_body = j.value("body", std::string());
 
-#if defined(__SWITCH__) || defined(__PSV__)
             // Installable asset URL and size from the API response rather than a
             // hardcoded URL: robust to an asset rename, and the size lets us
-            // validate the download before installing. Switch ships an .nro,
-            // Vita a .vpk.
-#ifdef __SWITCH__
+            // validate the download before installing.
             const std::string asset_ext = ".nro";
-#else
-            const std::string asset_ext = ".vpk";
-#endif
             std::string asset_url;
             int64_t asset_size = 0;
             for (auto& asset : j.at("assets")) {
@@ -393,19 +210,6 @@ void AppVersion::checkUpdate(int delay, bool showUpToDateDialog) {
                     [latest_ver, asset_url, asset_size]() { startUpdate(latest_ver, asset_url, asset_size); });
                 dialog->open();
             });
-#else
-            brls::sync([latest_ver, release_body]() {
-                std::string title = brls::getStr("main/setting/others/upgrade", latest_ver);
-                auto dialog = makeUpdateDialog(title, release_body);
-                dialog->addButton("hints/cancel"_i18n, []() {
-                    auto& conf = AppConfig::instance();
-                    conf.setItem(AppConfig::APP_UPDATE, getVersion());
-                });
-                std::string url = fmt::format("https://github.com/{}/releases/tag/{}", git_repo, latest_ver);
-                dialog->addButton("hints/ok"_i18n, [url] { brls::Application::getPlatform()->openBrowser(url); });
-                dialog->open();
-            });
-#endif
         } catch (const std::exception& ex) {
             brls::Logger::error("checkUpdate failed: {}", ex.what());
         }

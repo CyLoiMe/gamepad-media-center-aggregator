@@ -30,14 +30,7 @@ struct Entry {
 /// 0, and musl's readdir doesn't skip them like FreeBSD's libc does. (The OpenOrbis header names
 /// the field d_fileno, then #defines d_fileno to d_ino, a field it doesn't have.)
 inline bool isDeletedEntry(const struct dirent* entry) {
-#ifdef __PS4__
-#pragma push_macro("d_fileno")
-#undef d_fileno
-    return entry->d_fileno == 0;
-#pragma pop_macro("d_fileno")
-#else
     return entry->d_ino == 0;
-#endif
 }
 
 /// The names in `dir` ("." and ".." left out). False, with `error` set to "<call> <dir>: <reason>",

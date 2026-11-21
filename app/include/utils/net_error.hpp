@@ -17,7 +17,7 @@ inline std::string dnsHelp(const std::string& url) {
 
 /// libnx and SceNet have no mDNS resolver: a `.local` server can never be reached.
 inline bool unresolvableHost(const std::string& url) {
-#if defined(__SWITCH__) || defined(__PSV__)
+#ifdef __SWITCH__
     return isMdnsHost(url);
 #else
     (void)url;
