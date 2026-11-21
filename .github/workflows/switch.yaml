@@ -20,13 +20,16 @@ on:
         default: false
 
 env:
-  # TODO: mirror these packages in THIS repository's own release before
-  # publishing releases — they currently point at the GMCA project's ci-deps
-  # prerelease. If that release changes or disappears, this build stops working.
-  # scripts/switch/* holds the PKGBUILDs, and .github/workflows/switch-portlibs.yaml
-  # rebuilds them; upload the resulting `switch-*.pkg.tar.zst` under a
-  # `ci-deps` prerelease here and point DEPS_URL at it.
-  DEPS_URL: https://github.com/thcolin/gamepad-media-center-aggregator/releases/download/ci-deps
+  # The Switch portlibs this build installs. They are mirrored, byte for byte,
+  # from GMCA's ci-deps into this repository's own `switch-portlibs` prerelease
+  # (sha256 checked), so the build no longer depends on another project's release.
+  #
+  # The mirror is a snapshot, not a rebuild: scripts/switch/* still pins
+  # ffmpeg 7.1.4 / mbedtls 3.6.5 / dav1d 1.5.3, and the devkitPro port patches are
+  # version-locked, so the workflow cannot yet reproduce the names below. Bumping
+  # them is its own task — see docs/backlog.md, "Make the mirrored portlibs
+  # rebuildable".
+  DEPS_URL: https://github.com/CyLoiMe/switch-media-center-aggregator/releases/download/switch-portlibs
 
 jobs:
   build:

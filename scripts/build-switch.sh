@@ -15,10 +15,10 @@ cd "$(dirname "$0")/.."
 
 DRIVER="${DRIVER:-deko3d}"
 IMAGE="devkitpro/devkita64:20260219"
-# Portlibs release. TODO: mirror these in THIS project's own `ci-deps` release
-# (scripts/switch/* + .github/workflows/switch-portlibs.yaml rebuild them) —
-# until then the build borrows GMCA's pinned set.
-BASE_URL="https://github.com/thcolin/gamepad-media-center-aggregator/releases/download/ci-deps"
+# Portlibs release: this project's own `switch-portlibs` prerelease, a byte-for-byte
+# mirror of GMCA's ci-deps. Rebuilding them here is not possible yet — the PKGBUILDs
+# pin older versions and the port patches are version-locked (docs/backlog.md).
+BASE_URL="https://github.com/CyLoiMe/switch-media-center-aggregator/releases/download/switch-portlibs"
 BUILD_DIR="build_switch_${DRIVER}"
 
 CMAKE_EXTRA=""
