@@ -224,38 +224,8 @@ std::vector<media::Media> resolveAllStreams(
         }
         for (auto& s : streams) all.push_back(streamToMedia(s, a.manifest.name));
     }
-#if defined(__PSV__)
-    // PS Vita: >1080p exceeds the hardware H.264 decoder (level 4.x) and
-    // hard-crashes the GPU on play (the "blue light of death" users report),
-    // and the Vita ffmpeg build has NO decoder at all for HEVC/AV1/XviD
-    // (scripts/vita/ffmpeg/VITABUILD) — those streams fail 100% of the time.
-    // Drop them outright — better an "unsupported" message than a device
-    // freeze or a guaranteed playback error. 1080p H.264 is kept but demoted
-    // below every <=720p option by qualityRankVita, so the default pick
-    // (index 0) stays smooth while the heavier source remains a manual
-    // fallback. See bug #216 (crash on Vita playback).
-    all.erase(std::remove_if(all.begin(), all.end(),
-                  [](const media::Media& m) {
-                      return m.videoResolution == "4K" || m.videoResolution == "1440p" ||
-                             (m.playable() && codecRankVita(m.videoCodec) == 0);
-                  }),
-        all.end());
-#endif
     std::stable_sort(all.begin(), all.end(), [](const media::Media& x, const media::Media& y) {
         if (x.playable() != y.playable()) return x.playable();  // playable first
-#if defined(__PSV__)
-        // decodable video codec first (H.264 explicit > unknown; the
-        // no-decoder codecs were erased above, this is a safety net), then
-        // decodable audio (an eac3/dts/truehd/opus track plays SILENT on the
-        // Vita ffmpeg build), then quality
-        int cx = codecRankVita(x.videoCodec), cy = codecRankVita(y.videoCodec);
-        if (cx != cy) return cx > cy;
-        int ax = audioRankVita(x.audioCodec), ay = audioRankVita(y.audioCodec);
-        if (ax != ay) return ax > ay;
-        int qx = qualityRankVita(x.videoResolution), qy = qualityRankVita(y.videoResolution);
-#else
-        int qx = qualityRank(x.videoResolution), qy = qualityRank(y.videoResolution);
-#endif
         if (qx != qy) return qx > qy;                           // then best quality
         if (x.playable() && x.cached != y.cached) return x.cached;  // then cached debrid first
         return false;

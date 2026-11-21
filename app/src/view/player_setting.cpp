@@ -138,23 +138,8 @@ PlayerSetting::PlayerSetting(VideoView* video) {
     auto& conf = AppConfig::instance();
 
 /// Fullscreen
-#if (defined(__APPLE__) || defined(__linux__) || defined(_WIN32)) && !defined(ANDROID)
-    btnFullscreen->init(
-        "main/setting/others/fullscreen"_i18n, conf.getItem(AppConfig::FULLSCREEN, false), [](bool value) {
-            VideoContext::FULLSCREEN = value;
-            AppConfig::instance().setItem(AppConfig::FULLSCREEN, value);
-            brls::Application::getPlatform()->getVideoContext()->fullScreen(value);
-        });
-
-    btnAlwaysOnTop->init(
-        "main/setting/others/always_on_top"_i18n, conf.getItem(AppConfig::ALWAYS_ON_TOP, false), [](bool value) {
-            AppConfig::instance().setItem(AppConfig::ALWAYS_ON_TOP, value);
-            brls::Application::getPlatform()->setWindowAlwaysOnTop(value);
-        });
-#else
     btnFullscreen->setVisibility(brls::Visibility::GONE);
     btnAlwaysOnTop->setVisibility(brls::Visibility::GONE);
-#endif
 
     btnOSDOnToggle->init(
         "main/setting/playback/osd_on_toggle"_i18n, conf.getItem(AppConfig::OSD_ON_TOGGLE, true), [&conf](bool value) {

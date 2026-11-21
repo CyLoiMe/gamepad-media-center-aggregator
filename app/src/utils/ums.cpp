@@ -53,45 +53,6 @@ bool Ums::unmount(const Device &dev) {
 
 #else
 
-#if defined(__PSV__)
-
-int Ums::init() {
-    this->devices.push_back(Device{.id = -1, .name = "Memory Stock", .mount = "ux0:"});
-    return 0;
-}
-
-#elif defined(__PS4__)
-#include <dirent.h>
-#include <string>
-
-int Ums::init() {
-    this->devices.push_back(Device{.id = -1, .name = "HardDisk", .mount = "/data"});
-    // USB drives the console mounted: /mnt/usb0 .. /mnt/usb7, those that open as folders
-    for (int i = 0; i < 8; i++) {
-        std::string mount = "/mnt/usb" + std::to_string(i);
-        if (DIR* d = opendir(mount.c_str())) {
-            closedir(d);
-            this->devices.push_back(Device{.id = -1, .name = "USB " + std::to_string(i + 1), .mount = mount});
-        }
-    }
-    return 0;
-}
-
-#elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <shlobj.h>
-
-int Ums::init() {
-    WCHAR wpath[MAX_PATH];
-    std::vector<char> lpath(MAX_PATH);
-    SHGetSpecialFolderPathW(0, wpath, CSIDL_MYVIDEO, false);
-    WideCharToMultiByte(CP_UTF8, 0, wpath, std::wcslen(wpath), lpath.data(), lpath.size(), nullptr, nullptr);
-    this->devices.push_back({.id = -1, .name = lpath.data(), .mount = lpath.data()});
-    return 0;
-}
-
-#else
 #include <cstdlib>
 
 // generic desktop (macOS/Linux): expose the user's home directory as a
@@ -102,7 +63,6 @@ int Ums::init() {
     if (home && *home) this->devices.push_back({.id = -1, .name = "Home", .mount = home});
     return 0;
 }
-#endif
 
 bool Ums::unmount(const Device& dev) { return false; }
 

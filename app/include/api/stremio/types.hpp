@@ -542,41 +542,6 @@ inline int qualityRank(const std::string& label) {
     return 1;  // CAM
 }
 
-/// PS Vita sort rank. The hardware H.264 decoder tops out at 1080p and 4K
-/// hard-crashes the GPU (blue light), while 1080p remux bitrates stutter on the
-/// Vita's limited CPU/IO. So every <=720p source outranks 1080p, which stays
-/// only as a last-resort fallback (4K is filtered out before the sort, but is
-/// ranked lowest here as a safety net). Field-tested guidance from Vita users:
-/// keep Stremio playback at <=720p. (default pick = highest-ranked = index 0.)
-inline int qualityRankVita(const std::string& label) {
-    if (label == "720p") return 5;
-    if (label == "480p" || label == "SD") return 4;
-    if (label == "1080p") return 3;  // decodable but heavy -> fallback only
-    if (label == "4K" || label == "1440p") return 1;  // exceed the decoder; excluded upstream
-    return 2;                        // CAM
-}
-
-/// PS Vita video-codec rank. The Vita ffmpeg build ships NO hevc/av1/vp9/xvid
-/// decoder at all (scripts/vita/ffmpeg/VITABUILD compiles --disable-decoders
-/// plus an H.264-centric allowlist) — such streams cannot play, ever, not even
-/// slowly. An empty label (no codec token in the addon text) is most often
-/// H.264 in the wild, so it stays playable-by-default, below explicit H.264.
-inline int codecRankVita(const std::string& label) {
-    if (label == "H.264") return 2;
-    if (label.empty()) return 1;  // unknown: best effort
-    return 0;                     // HEVC / AV1 / XviD: no decoder on Vita
-}
-
-/// PS Vita audio-codec rank, for DEPRIORITIZATION only (never exclusion: a
-/// stream whose audio the Vita build can't decode — no eac3/dca/truehd/opus in
-/// VITABUILD — still plays video, just silent, and the tokens are less reliable
-/// than video ones). Decodable (AAC/AC3/FLAC/MP3) > unknown > undecodable.
-inline int audioRankVita(const std::string& label) {
-    if (label == "AAC" || label == "AC3" || label == "FLAC" || label == "MP3") return 2;
-    if (label.empty()) return 1;
-    return 0;  // DDP / DTS / TrueHD / Atmos / Opus
-}
-
 /// First "<number> <GB|MB|TB>" found, normalized ("8.4 GB"). Empty if none.
 inline std::string parseSizeLabel(const std::string& text) {
     static const char* units[] = {"GB", "MB", "TB", "GiB", "MiB"};

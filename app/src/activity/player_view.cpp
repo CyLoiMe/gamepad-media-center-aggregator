@@ -330,10 +330,6 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
     // play forced (resolvePlayback returns the direct source when set).
     opts.forceDirectPlay = MPVCore::FORCE_DIRECTPLAY || forceDirect;
     opts.maxHeight = MPVCore::MAX_RESOLUTION;
-#if defined(__PSV__)
-    // the Vita hardware H.264 decoder tops out at 1080p (scripts/vita/ffmpeg patch)
-    if (opts.maxHeight <= 0 || opts.maxHeight > 1080) opts.maxHeight = 1080;
-#endif
     if (!remote)
         opts.bitrateCap = media::limitedBitrate(opts.bitrateCap, MPVCore::RESOLUTION_LIMIT,
             AppConfig::instance().backend().caps().transcode, this->stream.width, this->stream.height,
