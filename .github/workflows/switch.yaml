@@ -129,7 +129,10 @@ jobs:
           echo "SMCA ${version}." > notes.md
           echo "::warning::no CHANGELOG section for ${version}"
         fi
-        { echo "## What's in this build"; echo; cat notes.md; } > body.md
+        # every '## [x.y.z]' heading is followed by a blank line; drop it so the
+        # release body does not start with two empty lines
+        sed '/./,$!d' notes.md > notes.trimmed.md
+        { echo "## What's in this build"; echo; cat notes.trimmed.md; } > body.md
 
     - name: Publish release
       uses: softprops/action-gh-release@v3

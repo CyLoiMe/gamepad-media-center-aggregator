@@ -34,23 +34,73 @@ renderer; an OpenGL build exists as a fallback.
 
 ## Build
 
-CI (`.github/workflows/switch.yml`) builds `SMCA.nro` on every push — grab the
-artifact from the Actions run.
+**CI is the verified path.** `.github/workflows/switch.yaml` builds `SMCA.nro` on
+every push to `main`, and a `v*` tag additionally publishes it as a release. Grab the
+artifact from the Actions run. The local steps below mirror that workflow, but they
+are best-effort: CI is what gets exercised on every change.
 
-Locally, with [devkitPro](https://devkitpro.org/wiki/Getting_Started) installed:
+Either way you need [devkitPro](https://devkitpro.org/wiki/Getting_Started) with the
+Switch toolchain, plus the pinned portlibs — the container does not ship libmpv,
+FFmpeg or curl built *for the Switch*, so the build fails at
+`Could NOT find MPV` without them.
+
+### 1. Portlibs
+
+Install the ten packages from this repository's `switch-portlibs` release:
+
+```sh
+DEPS_URL=https://github.com/CyLoiMe/switch-media-center-aggregator/releases/download/switch-portlibs
+
+# host-side tool that packs the HOME-tile forwarder
+dkp-pacman --noconfirm -U "$DEPS_URL/hacBrewPack-3.05-1-x86_64.pkg.tar.zst"
+
+for pkg in mbedtls-3.6.7-1 libssh2-1.11.1-1 dav1d-1.5.4-1 curl-8.16.0-3 \
+           ffmpeg-7.1.5-5 nspmini-main-1; do
+  dkp-pacman --noconfirm -U "$DEPS_URL/switch-${pkg}-any.pkg.tar.zst"
+done
+```
+
+The player library comes in two flavours and they are **not** interchangeable — pick
+the one matching the renderer you configure in step 3:
+
+```sh
+# deko3d (default): replace the OpenGL libmpv the container already has
+dkp-pacman --noconfirm -R switch-libmpv
+dkp-pacman --noconfirm -U "$DEPS_URL/switch-libmpv-deko3d-0.36.0-5-any.pkg.tar.zst" \
+                          "$DEPS_URL/libuam-master-1-any.pkg.tar.zst"
+
+# OpenGL fallback: leave the packaged libmpv alone, just pin the version
+# dkp-pacman --noconfirm -U "$DEPS_URL/switch-libmpv-0.36.0-5-any.pkg.tar.zst"
+```
+
+### 2. USB drives (optional, on in CI)
+
+`-DUSE_LIBUSBHSFS=ON` resolves the library with `find_library(... REQUIRED)`, so
+configure fails outright when it is missing. Build it first, or drop the flag — the
+Files tab then loses USB/UMS browsing:
+
+```sh
+git clone https://github.com/DarkMatterCore/libusbhsfs.git --depth=1
+make -C libusbhsfs BUILD_TYPE=GPL install -j$(nproc)
+```
+
+### 3. Configure and build
 
 ```sh
 git clone --recursive <this repo>
 cd <this repo>
 git -C library/borealis apply ../../scripts/patches/borealis-fixes.patch
 
-# portlibs: .github/workflows/switch.yml lists the exact pinned set
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DPLATFORM_SWITCH=ON \
-      -DUSE_LIBUSBHSFS=ON -DBUILTIN_NSP=ON
+      -DUSE_DEKO3D=ON -DUSE_LIBUSBHSFS=ON -DBUILTIN_NSP=ON
 make -C build SMCA.nro -j$(nproc)
 ```
 
-`scripts/build-switch.sh` does the same inside the devkitPro Docker image:
+`-DUSE_DEKO3D=ON` goes with the deko3d libmpv; leave it out for the OpenGL build.
+`-DBUILTIN_NSP=ON` embeds the HOME-tile forwarder in the NRO and needs `hacbrewpack`
+from step 1; `OFF` builds without it.
+
+`scripts/build-switch.sh` does all three steps inside the devkitPro container:
 `./scripts/build-switch.sh` (deko3d) or `DRIVER=opengl ./scripts/build-switch.sh`.
 
 ## Configuration

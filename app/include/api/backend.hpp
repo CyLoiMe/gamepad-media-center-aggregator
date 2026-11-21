@@ -224,7 +224,7 @@ public:
     /// downloadUrl(); Jellyfin/Emby override it because a remote source (.strm on a
     /// cloud drive) is only served through the URL PlaybackInfo hands out — the
     /// front-ends that serve it refuse the assembled stream URL with a 403, the same
-    /// way direct play used to (docs/playback.md). BLOCKING when it has to ask:
+    /// way direct play used to. BLOCKING when it has to ask:
     /// call it off the UI thread, as DownloadManager does on its worker.
     virtual std::string offlineFileUrl(const std::string& itemId, const std::string& partKey,
         const std::string& sourceId, bool remote) const {

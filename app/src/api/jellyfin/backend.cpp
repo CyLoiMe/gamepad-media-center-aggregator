@@ -872,8 +872,8 @@ std::string JellyfinBackend::offlineFileUrl(const std::string& itemId, const std
     const std::string& sourceId, bool remote) const {
     // A remote source (.strm on a cloud drive) may only be served through the URL
     // PlaybackInfo hands out: the front-ends that serve it reject the assembled
-    // /Videos/{id}/stream this falls back to with a 403 (docs/playback.md). One
-    // request, and it is what makes the download possible at all.
+    // /Videos/{id}/stream this falls back to with a 403. One request is what makes
+    // the download possible at all.
     if (remote && !sourceId.empty()) {
         const std::string direct = playbackInfoUrl(itemId, sourceId, token());
         if (!direct.empty()) {
