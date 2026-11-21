@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Settings → Others no longer carries three switches that do nothing. "Fullscreen",
+  "Always on top" and "Single instance" lost their handlers when the desktop code
+  path was removed, but their cells stayed in the XML: three untitled toggles that
+  changed nothing (two more sat hidden in the in-player settings). The cells, their
+  bindings, the settings behind them and their keys in all 14 locales are gone, and
+  so are the F11 fullscreen shortcut and the IPC-socket option that only existed to
+  serve them.
+
+### Removed
+
+- The last non-Switch branches in the player core: the PS Vita, PS4, Android,
+  desktop, GXM and D3D11 arms of `mpv_core.cpp` / `mpv_core.hpp`, with the PS4-only
+  HDR re-tag filter (`view/hdr_options.hpp`), its subtitle-font installer
+  (`utils/default_font.hpp`), their tests and the empty `misc::initCrashDump()`
+  stub the D3D11 arm called. What remains is what this tree actually builds:
+  deko3d, the OpenGL fallback (GLFW or SDL2) and the `MPV_SW_RENDER` CPU path. No
+  behaviour change on the console.
+
 ## [0.1.0] — 2026-11-21
 
 First public release.
