@@ -656,8 +656,8 @@ inline media::Media streamToMedia(const StreamOption& s, const std::string& addo
         p.accessible = true;
         p.exists = true;
         m.parts.push_back(std::move(p));
-        // structured fields, not just display: the PSV stream filter/sort in
-        // resolveAllStreams reads them (codecRankVita / audioRankVita)
+        // structured fields, not just display: the source list shows them and
+        // the player menu filters on them
         m.videoCodec = parseCodecLabel(blob);
         m.audioCodec = parseAudioLabel(blob);
         std::string size = parseSizeLabel(s.title.empty() ? s.name : s.title);

@@ -226,6 +226,7 @@ std::vector<media::Media> resolveAllStreams(
     }
     std::stable_sort(all.begin(), all.end(), [](const media::Media& x, const media::Media& y) {
         if (x.playable() != y.playable()) return x.playable();  // playable first
+        int qx = qualityRank(x.videoResolution), qy = qualityRank(y.videoResolution);
         if (qx != qy) return qx > qy;                           // then best quality
         if (x.playable() && x.cached != y.cached) return x.cached;  // then cached debrid first
         return false;
