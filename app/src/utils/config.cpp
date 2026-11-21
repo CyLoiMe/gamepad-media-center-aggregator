@@ -39,16 +39,15 @@ std::unordered_map<AppConfig::Item, AppConfig::Option> AppConfig::settingMap = {
     {AUDIO_CHANNELS, {"audio-channels", {"auto-safe", "stereo", "mono"}}},
     {KEYMAP, {"keymap", {"xbox", "ps", "keyboard"}}},
     {WINDOW_STATE, {"window_state"}},
-    {TRANSCODEC, {"transcodec", {"h264", "hevc", "av1"}}},
-    {FORCE_DIRECTPLAY, {"force_directplay"}},
-    {PLAYER_VIDEO_QUALITY, {"player_video_quality"}},
+    // "h264" | "hevc" — the transcode targets the console can actually decode
+    {TRANSCODEC, {"transcodec", {"h264", "hevc"}}},
+    {PLAYBACK_MODE, {"playback_mode", {"auto", "direct", "transcode"}}},
     {PLAYER_MAX_RESOLUTION,
         {
             "player_max_resolution",
             {"Auto", "4K", "1440p", "1080p", "720p", "480p"},
             {0, 2160, 1440, 1080, 720, 480},
         }},
-    {PLAYER_RESOLUTION_LIMIT, {"player_resolution_limit"}},
     {OSD_ON_TOGGLE, {"osd_on_toggle"}},
     {TOUCH_GESTURE, {"touch_gesture"}},
     {CLIP_POINT, {"clip_point"}},
@@ -210,16 +209,40 @@ bool AppConfig::init() {
     // 初始化是否使用硬件加速
     MPVCore::VO = this->getItem(MPV_VO, MPVCore::VO);
     MPVCore::HARDWARE_DEC = this->getItem(PLAYER_HWDEC, true);
-    MPVCore::FORCE_DIRECTPLAY = this->getItem(FORCE_DIRECTPLAY, false);
-    // default transcode bitrate cap. "Auto" (0 = direct play) stays selectable in
-    // the player quality menu; the Switch still transcodes sources above its max
-    // resolution, below. Persisted now (it was reset every launch, so the user's
-    // lowered choice never survived a restart).
-    MPVCore::VIDEO_QUALITY = this->getItem(PLAYER_VIDEO_QUALITY, (int64_t)0);
-    // sources above 1080p overwhelm the Switch: transcode them down by default
-    MPVCore::MAX_RESOLUTION = this->getItem(PLAYER_MAX_RESOLUTION, 1080);
-    MPVCore::RESOLUTION_LIMIT = this->getItem(PLAYER_RESOLUTION_LIMIT, true);
+
+    // ---- playback mode (Settings → Playback) --------------------------------
+    // One choice replaces the two switches that used to gate each other ("force
+    // direct play" and "also limit direct play"). They are read once and dropped:
+    // forcing direct meant mode=direct, and turning the limit off meant "no
+    // resolution threshold" (0), which under Auto is the same as always-direct.
+    {
+        const bool legacy = this->setting.contains("force_directplay") ||
+                            this->setting.contains("player_resolution_limit");
+        std::string mode = this->getItem(PLAYBACK_MODE, std::string{});
+        if (mode != "direct" && mode != "transcode")
+            mode = (legacy && this->setting.value("force_directplay", false)) ? "direct" : "auto";
+
+        MPVCore::PLAYBACK_MODE = mode == "direct"      ? MPVCore::PlaybackMode::Direct
+                                 : mode == "transcode" ? MPVCore::PlaybackMode::Transcode
+                                                       : MPVCore::PlaybackMode::Auto;
+        // sources above 1080p overwhelm the Switch: transcode them down by default.
+        // Under Transcode this is the output height, under Auto the threshold.
+        MPVCore::MAX_RESOLUTION = this->getItem(PLAYER_MAX_RESOLUTION, 1080);
+
+        if (legacy) {
+            if (!this->setting.value("player_resolution_limit", true)) MPVCore::MAX_RESOLUTION = 0;
+            this->setting.erase("force_directplay");
+            this->setting.erase("player_resolution_limit");
+            this->setting.erase("player_video_quality");  // a remembered cap is exactly what mode replaces
+            this->setItem(PLAYBACK_MODE, mode);
+            this->setItem(PLAYER_MAX_RESOLUTION, MPVCore::MAX_RESOLUTION);
+        }
+    }
+    // "h264" | "hevc": av1 was offered but dropped — the console has no AV1 decoder,
+    // so a stored "av1" is read back as h264.
     MPVCore::VIDEO_CODEC = this->getItem(TRANSCODEC, MPVCore::VIDEO_CODEC);
+    if (MPVCore::VIDEO_CODEC != "hevc") MPVCore::VIDEO_CODEC = "h264";
+    this->setItem(TRANSCODEC, MPVCore::VIDEO_CODEC);
     MPVCore::AUDIO_CHANNELS = this->getItem(AUDIO_CHANNELS, MPVCore::AUDIO_CHANNELS);
     // 初始化自定义的硬件加速方案
     MPVCore::PLAYER_HWDEC_METHOD = this->getItem(PLAYER_HWDEC_CUSTOM, MPVCore::PLAYER_HWDEC_METHOD);

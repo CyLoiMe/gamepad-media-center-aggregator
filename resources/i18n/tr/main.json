@@ -46,7 +46,8 @@
     "speed_up": "Mevcut hız {}",
     "repeat": "Tekrarla",
     "repeat_one": "Bu video",
-    "repeat_all": "Tüm liste"
+    "repeat_all": "Tüm liste",
+    "quality_direct": "Oynatma modu \"her zaman doğrudan\": seçilecek bir kalite yok."
   },
   "media": {
     "sort": "Sırala",
@@ -211,8 +212,7 @@
     "section_done": "İndirildi",
     "remove_all": "Tümünü kaldır",
     "confirm_remove_all": "Tüm indirmeler kaldırılsın mı?",
-    "empty_sub": "İndirilen filmler ve bölümler çevrimdışı izlemek için burada görünür.",
-    "eta": "{} kaldı"
+    "empty_sub": "İndirilen filmler ve bölümler çevrimdışı izlemek için burada görünür."
   },
   "setting": {
     "quit_hint": "Uygulamadan çıkış yapmak üzeresiniz. Değiştirilen ayarlar bir sonraki başlangıçtan sonra uygulanacak",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Oynatma",
+      "mode": {
+        "header": "Oynatma modu",
+        "auto": "Otomatik (sınırın üzerinde dönüştür)",
+        "direct": "Her zaman doğrudan",
+        "transcode": "Her zaman dönüştür"
+      },
       "low_quality": "Düşük kalite video çözümü (daha az işlemci kullanır)",
       "in_memory_cache": "Bellek içi önbellek",
       "subs_fallback": "Alt yazıları otomatik yükle",
@@ -248,7 +254,6 @@
       },
       "vo": "Video çıktısı",
       "hwdec": "Donanımsal kod çözme",
-      "force_directplay": "Doğrudan oynatmaya zorla",
       "osd_on_toggle": "Durdurulduğunda video arayüzünü göster",
       "touch_gesture": "İleri/geri sarma için dokunma hareketi",
       "clip_point": "Video kısımlarında klip noktasını göster",
@@ -258,9 +263,13 @@
       "subsync": "Alt Yazı Eşitleme"
     },
     "transcode": {
-      "header": "Yeniden Kodlama",
-      "max_resolution": "Maksimum dönüştürme çözünürlüğü",
-      "resolution_limit": "Doğrudan oynatmayı da sınırla"
+      "header": "Oynatma ve dönüştürme",
+      "max_resolution": "Dönüştürme çözünürlüğü",
+      "cloud_direct": {
+        "header": "Bulut dosyaları: her zaman doğrudan",
+        "detail": "Yalnızca doğrudan",
+        "hint": "Bulut sürücüsündeki dosyalar (CDN'e işaret eden bir .strm) her zaman doğrudan oynatılır.\n\nSunucunun bunlar için kodlayıcısı yoktur: dönüştürme, önce dosyanın tamamını sunucudan çekmesini gerektirir ve bu dosyaları sunan ön uçlar bunu reddeder veya başarısız olur. Burada seçilecek bir şey yok."
+      }
     },
     "control": {
       "header": "Oynatma Denetimleri",

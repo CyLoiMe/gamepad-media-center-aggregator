@@ -46,7 +46,8 @@
     "speed_up": "Velocidade atual {}",
     "repeat": "Repetir",
     "repeat_one": "Este vídeo",
-    "repeat_all": "Lista inteira"
+    "repeat_all": "Lista inteira",
+    "quality_direct": "O modo de reprodução é \"sempre direto\": não há qualidade a escolher."
   },
   "media": {
     "sort": "Ordenar",
@@ -211,8 +212,7 @@
     "section_done": "Transferidos",
     "remove_all": "Remover tudo",
     "confirm_remove_all": "Remover todas as transferências?",
-    "empty_sub": "Os filmes e episódios transferidos ficam aqui, prontos para ver offline.",
-    "eta": "{} restante"
+    "empty_sub": "Os filmes e episódios transferidos ficam aqui, prontos para ver offline."
   },
   "setting": {
     "quit_hint": "Está prestes a sair da aplicação. As definições entram em vigor após o próximo arranque",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Reprodução",
+      "mode": {
+        "header": "Modo de reprodução",
+        "auto": "Automático (transcodificar acima do limite)",
+        "direct": "Sempre direto",
+        "transcode": "Sempre transcodificar"
+      },
       "low_quality": "Descodificação de baixa qualidade (com menos uso do CPU)",
       "in_memory_cache": "Cache em memória",
       "subs_fallback": "Carregar legendas automaticamente",
@@ -248,7 +254,6 @@
       },
       "vo": "Saída de vídeo",
       "hwdec": "Descodificação por hardware",
-      "force_directplay": "Forçar reprodução direta",
       "osd_on_toggle": "Mostrar OSD quando em pausa",
       "touch_gesture": "Gesto tátil para passo de avanço",
       "clip_point": "Mostrar ponto de corte do capítulo",
@@ -258,9 +263,13 @@
       "subsync": "Sincronização de legendas"
     },
     "transcode": {
-      "header": "Transcodificação",
-      "max_resolution": "Resolução máxima da transcodificação",
-      "resolution_limit": "Limitar também a reprodução direta"
+      "header": "Reprodução e transcodificação",
+      "max_resolution": "Resolução de transcodificação",
+      "cloud_direct": {
+        "header": "Arquivos na nuvem: sempre direto",
+        "detail": "Somente direto",
+        "hint": "Arquivos de um disco na nuvem (um .strm apontando para um CDN) são sempre reproduzidos direto.\n\nO servidor não tem codificador para eles: transcodificar o obrigaria a puxar o arquivo inteiro por si mesmo, e os frontends que servem esses arquivos recusam ou falham. Não há nada a escolher aqui."
+      }
     },
     "control": {
       "header": "Controlo de reprodução",

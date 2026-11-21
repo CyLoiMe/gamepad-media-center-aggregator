@@ -140,12 +140,16 @@ public:
     // "auto" resolves to the console's NVDEC; the settings screen can still pick another method.
     inline static std::string PLAYER_HWDEC_METHOD = "auto";
     inline static std::string VO = "libmpv";
-    inline static std::string VIDEO_CODEC = "h264";
-    inline static int64_t VIDEO_QUALITY = 0;
-    inline static int MAX_RESOLUTION = 0;  // transcode height limit; 0 = auto
-    inline static bool RESOLUTION_LIMIT = false;  // also transcode direct play above MAX_RESOLUTION
-
-    inline static bool FORCE_DIRECTPLAY = false;
+    inline static std::string VIDEO_CODEC = "h264";  // transcode target: "h264" | "hevc"
+    /// Settings → Playback → Playback mode. A remote (cloud) source is deliberately
+    /// NOT part of this enum: it is always direct, because the server has no encoder
+    /// for a file it would first have to pull through itself (player_view.cpp).
+    enum class PlaybackMode { Auto, Direct, Transcode };
+    inline static PlaybackMode PLAYBACK_MODE = PlaybackMode::Auto;
+    /// Transcode target height; 0 = no limit (Auto). Under PlaybackMode::Auto it is
+    /// a threshold — only a source that exceeds it is transcoded; under Transcode it
+    /// is the output height (0 is read as 1080).
+    inline static int MAX_RESOLUTION = 0;
 
     // 触发倍速时的默认值，单位为 %
     inline static int VIDEO_SPEED = 200;

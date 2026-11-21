@@ -46,7 +46,8 @@
     "speed_up": "{} 倍速播放中",
     "repeat": "重複",
     "repeat_one": "目前影片",
-    "repeat_all": "整個列表"
+    "repeat_all": "整個列表",
+    "quality_direct": "目前為「始終直通」：沒有畫質可選。"
   },
   "media": {
     "sort": "排序",
@@ -211,8 +212,7 @@
     "section_done": "已下載",
     "remove_all": "全部移除",
     "confirm_remove_all": "移除全部下載項目？",
-    "empty_sub": "下載的電影和劇集會顯示在這裡，可離線觀看。",
-    "eta": "剩餘 {}"
+    "empty_sub": "下載的電影和劇集會顯示在這裡，可離線觀看。"
   },
   "setting": {
     "quit_hint": "即將退出本程式，變更的設定將在下次啟動時生效",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "播放設定",
+      "mode": {
+        "header": "播放方式",
+        "auto": "自動（超過上限才轉碼）",
+        "direct": "始終直通",
+        "transcode": "始終轉碼"
+      },
       "low_quality": "低畫質解碼（以降低 CPU 用量為代價）",
       "in_memory_cache": "記憶體快取",
       "subs_fallback": "自動載入字幕",
@@ -248,7 +254,6 @@
       },
       "vo": "視訊輸出",
       "hwdec": "硬體解碼",
-      "force_directplay": "強制直接播放",
       "osd_on_toggle": "暫停時顯示 OSD",
       "touch_gesture": "啟用拖曳定位手勢",
       "clip_point": "進度條顯示章節位置",
@@ -258,9 +263,13 @@
       "subsync": "字幕同步"
     },
     "transcode": {
-      "header": "轉碼設定",
-      "max_resolution": "最大轉碼解析度",
-      "resolution_limit": "同時限制直接播放"
+      "header": "播放方式與轉碼",
+      "max_resolution": "轉碼解析度上限",
+      "cloud_direct": {
+        "header": "雲端檔案：始終直通",
+        "detail": "僅直通",
+        "hint": "雲端硬碟上的檔案（指向 CDN 的 .strm）始終直通播放。\n\n伺服器沒有對應的編碼器：轉碼意味著先要把整個檔案拉過伺服器，而這類檔案的前端也會拒絕或直接失敗。這裡沒有可選項。"
+      }
     },
     "control": {
       "header": "播放控制",

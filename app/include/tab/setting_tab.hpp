@@ -37,11 +37,11 @@ private:
     BRLS_BIND(brls::BooleanCell, btnQuality, "setting/video/low_quality");
     BRLS_BIND(brls::BooleanCell, btnSubFallback, "setting/video/subs_fallback");
     BRLS_BIND(brls::SelectorCell, selectorSubLang, "setting/playback/subtitle_lang");
-    BRLS_BIND(brls::BooleanCell, btnDirectPlay, "setting/video/directplay");
+    BRLS_BIND(brls::SelectorCell, selectorPlaybackMode, "setting/playback/mode");
     BRLS_BIND(brls::SelectorCell, selectorVO, "setting/mpv/vo");
     BRLS_BIND(brls::SelectorCell, selectorCodec, "setting/transcode/codec");
     BRLS_BIND(brls::SelectorCell, selectorMaxResolution, "setting/transcode/max_resolution");
-    BRLS_BIND(brls::BooleanCell, btnResolutionLimit, "setting/transcode/resolution_limit");
+    BRLS_BIND(DisclosureCell, cellCloudDirect, "setting/transcode/cloud_direct");
     BRLS_BIND(brls::SelectorCell, selectorAudioChannels, "setting/playback/audio_channels");
     BRLS_BIND(brls::SelectorCell, selectorInmemory, "setting/video/inmemory");
     BRLS_BIND(brls::SelectorCell, selectorScale, "setting/ui/scale");

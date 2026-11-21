@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Settings → Playback is one mode instead of four knobs.** A single three-way
+  choice — *Auto* (direct, transcode only above the limit), *Always direct*,
+  *Always transcode* — replaces "force direct play" and "also limit direct play",
+  which gated each other and left "maximum transcoding resolution" doing nothing on
+  its own. The resolution limit is now that mode's parameter (a threshold under
+  Auto, the output height under Transcode) and is hidden in Always direct, together
+  with the codec row.
+- **The quality tier picked in the player now lasts for that playback only.** It
+  used to be written to `config.json`, so one selection silently turned every later
+  video into a transcode — the usual reason a library took seconds to open.
+- **The codec row is wired**: H.264 or HEVC reaches the transcoder (`opts.videoCodec`
+  was hard-coded to h264). AV1 is gone — the console has no AV1 decoder, so choosing
+  it only ever meant software decoding.
+- **Cloud files are shown as a read-only row** in that group: "always direct", with
+  a dialog explaining why (the server has no encoder for a file it would first have
+  to pull through itself). The rule was previously invisible — only a hidden menu
+  and a toast.
+
 ### Fixed
 
 - A cloud source (`.strm` behind a CDN) is no longer sent to the transcoder when its

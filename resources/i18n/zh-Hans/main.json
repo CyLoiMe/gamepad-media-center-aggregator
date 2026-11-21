@@ -46,7 +46,8 @@
     "speed_up": "{} 倍速播放中",
     "repeat": "重复",
     "repeat_one": "当前视频",
-    "repeat_all": "整个列表"
+    "repeat_all": "整个列表",
+    "quality_direct": "当前为「始终直通」：没有画质可选。"
   },
   "media": {
     "sort": "排序",
@@ -183,7 +184,7 @@
     "cancel": "取消下载",
     "remove": "移除下载",
     "downloading": "下载中...",
-    "eta": "剩余 {}",
+    "eta": "还剩 {}",
     "completed": "已完成",
     "failed": "下载失败",
     "forbidden": "被服务器拒绝 (403)",
@@ -211,8 +212,7 @@
     "section_done": "已下载",
     "remove_all": "全部删除",
     "confirm_remove_all": "删除全部下载内容？",
-    "empty_sub": "下载的电影和剧集会显示在这里，可离线观看。",
-    "eta": "还剩 {}"
+    "empty_sub": "下载的电影和剧集会显示在这里，可离线观看。"
   },
   "setting": {
     "quit_hint": "即将退出应用, 设置内容将在下次启动后生效",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "播放设置",
+      "mode": {
+        "header": "播放方式",
+        "auto": "自动（超过上限才转码）",
+        "direct": "始终直通",
+        "transcode": "始终转码"
+      },
       "low_quality": "低画质解码（以画质为代价换取更低的功耗）",
       "in_memory_cache": "内存缓存",
       "subs_fallback": "自动加载字幕",
@@ -248,7 +254,6 @@
       },
       "vo": "视频输出",
       "hwdec": "硬件解码",
-      "force_directplay": "强制直接播放",
       "osd_on_toggle": "暂停时显示控制界面",
       "touch_gesture": "启用播放进度手势",
       "clip_point": "进度条显示章节位置",
@@ -258,9 +263,13 @@
       "subsync": "字幕同步"
     },
     "transcode": {
-      "header": "转码配置",
-      "max_resolution": "最大转码分辨率",
-      "resolution_limit": "同时限制直接播放"
+      "header": "播放方式与转码",
+      "max_resolution": "转码分辨率上限",
+      "cloud_direct": {
+        "header": "云端文件：始终直通",
+        "detail": "仅直通",
+        "hint": "云盘上的文件（指向 CDN 的 .strm）始终直通播放。\n\n服务器没有对应的编码器：转码意味着先要把整个文件拉过服务器，而这类文件的前端也会拒绝或直接失败。这里没有可选项。"
+      }
     },
     "control": {
       "header": "播放控制",

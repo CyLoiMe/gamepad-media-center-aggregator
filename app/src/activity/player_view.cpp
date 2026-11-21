@@ -309,39 +309,51 @@ void PlayerView::startPlayback(const int64_t seekMs, bool forceDirect, int64_t f
     opts.seekMs = seekMs;
     // A remote source (.strm on a cloud drive) IS the original file: the CDN that
     // serves it has no encoder, and asking the server to transcode means pulling
-    // the whole file through the server. So neither the stored cap nor the
-    // resolution limit may route it into a transcode — `forceBitrate` is the one
-    // exception, because it only comes from tryTranscodeFallback(), i.e. from a
-    // direct play that already failed (a rescue, not a preference).
+    // the whole file through the server. So neither a quality tier nor the playback
+    // mode may route it into a transcode — `forceBitrate` is the one exception,
+    // because it only comes from tryTranscodeFallback() (a rescue, not a preference).
     const bool remote = this->stream.remote;
-    if (remote) {
-        // The OSD button too: every tier of that menu is a transcode, and there is
-        // nothing here to transcode from. The key binding still lands in
-        // toggleQuality(), which explains instead of opening a dead menu.
-        this->view->hideVideoQuality();
+    const bool directMode = MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Direct;
+    const bool transcodeMode = MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Transcode;
+    // Both of those leave nothing to choose: every tier of the quality menu means
+    // "ask the server to re-encode", which a cloud file cannot do and Direct mode
+    // refuses. The OSD button goes; the bound key still lands in toggleQuality(),
+    // which explains instead of opening a dead menu.
+    if (remote || directMode) this->view->hideVideoQuality();
+
+    const int maxHeight = MPVCore::MAX_RESOLUTION;
+    // Policy order, first match wins:
+    //   1. an explicit rescue bitrate (a failed attempt being retried),
+    //   2. a remote source: direct only (see above),
+    //   3. the tier picked in the player for THIS playback,
+    //   4. Settings → Playback: always transcode / auto (transcode only above the
+    //      resolution limit; 0 = no limit). Direct mode leaves the cap at 0.
+    if (forceBitrate > 0) {
+        opts.bitrateCap = forceBitrate;
+    } else if (remote || directMode) {
+        opts.bitrateCap = 0;
+    } else if (this->qualityCap > 0) {
+        opts.bitrateCap = this->qualityCap;
+    } else if (this->fallbackBitrate > 0) {
+        // a transcode already rescued this playback: stay on it until the user
+        // picks something (toggleQuality clears this) — see tryTranscodeFallback
+        opts.bitrateCap = this->fallbackBitrate;
+    } else if (transcodeMode) {
+        opts.bitrateCap = media::resolutionBitrate(maxHeight > 0 ? maxHeight : 1080);
+    } else {
+        opts.bitrateCap = media::limitedBitrate(0, maxHeight > 0,
+            AppConfig::instance().backend().caps().transcode, this->stream.width, this->stream.height, maxHeight);
     }
-    // a cap is what routes resolvePlayback through the transcoder, so the
-    // fallback needs one even when the user setting is 0 (auto)
-    opts.bitrateCap = forceBitrate > 0 ? forceBitrate
-                      : MPVCore::VIDEO_QUALITY > 0 ? MPVCore::VIDEO_QUALITY
-                                                   : this->fallbackBitrate;
-    if (remote && forceBitrate <= 0) opts.bitrateCap = 0;
     // forceDirect: the transcode->direct-play fallback re-resolves with direct
     // play forced (resolvePlayback returns the direct source when set).
-    opts.forceDirectPlay = MPVCore::FORCE_DIRECTPLAY || forceDirect;
-    opts.maxHeight = MPVCore::MAX_RESOLUTION;
-    if (!remote)
-        opts.bitrateCap = media::limitedBitrate(opts.bitrateCap, MPVCore::RESOLUTION_LIMIT,
-            AppConfig::instance().backend().caps().transcode, this->stream.width, this->stream.height,
-            opts.maxHeight);
+    opts.forceDirectPlay = directMode || forceDirect;
+    opts.maxHeight = maxHeight;
     opts.plainPartUrl = this->plainPartUrl;
     opts.audioStreamId = PlayerSetting::selectedAudio;
     opts.subtitleStreamId = PlayerSetting::selectedSubtitle;
     opts.burnSubtitles = PlayerSetting::selectedSubtitle > 0;
-    // transcode target codec: kept identical to the former hard-coded value
-    // (MPVCore::VIDEO_CODEC was never wired into the Plex transcoder — see
-    // MULTI_BACKEND.md §6); revisit when exposing the codec choice per backend
-    opts.videoCodec = "h264";
+    // the target the server encodes to when it transcodes (Settings → Playback)
+    opts.videoCodec = MPVCore::VIDEO_CODEC;
     opts.sessionId = this->sessionId;
 
     // copies for the worker thread (avoids racing on this->item during a switch)
@@ -526,7 +538,9 @@ bool PlayerView::tryTranscodeFallback() {
     if (this->playMethod != "directplay" || this->transcodeFallback) return false;
     // music excluded: the Plex audio transcode path falls back to direct play
     // on any doubt, so it would replay the same URL
-    if (MPVCore::FORCE_DIRECTPLAY) return false;
+    // "Always direct" means never transcode, so the rescue below would contradict
+    // the setting (it is the one path that turns a cap on).
+    if (MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Direct) return false;
     if (!AppConfig::instance().backend().caps().transcode) return false;
     if (this->item.type == media::mediaTypeTrack) return false;
     // A cloud source (.strm behind a CDN) has no encoder behind it: the server-side
@@ -595,6 +609,11 @@ bool PlayerView::toggleQuality() {
         brls::Application::notify("main/player/quality_remote"_i18n);
         return true;
     }
+    // "Always direct" leaves nothing to pick: same story, a different reason.
+    if (MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Direct) {
+        brls::Application::notify("main/player/quality_direct"_i18n);
+        return true;
+    }
     std::vector<std::string> options = {"main/player/auto"_i18n};
     std::vector<int64_t> values = {0};
     int64_t videoBitRate = this->stream.bitrate * 1000;  // Plex: kbps -> bps
@@ -610,16 +629,15 @@ bool PlayerView::toggleQuality() {
     options.push_back("720 kbps"), values.push_back(720000);
     options.push_back("420 kbps"), values.push_back(420000);
 
-    auto it = std::find(values.begin(), values.end(), MPVCore::VIDEO_QUALITY);
+    auto it = std::find(values.begin(), values.end(), this->qualityCap);
     if (it == values.end()) it = values.begin();
 
     brls::Dropdown* dropdown = new brls::Dropdown(
         "main/player/quality"_i18n, options,
         [this, values](int selected) {
-            MPVCore::VIDEO_QUALITY = values[selected];
-            // remember the choice across launches (it would otherwise reset to
-            // the default every session — see config.cpp)
-            AppConfig::instance().setItem(AppConfig::PLAYER_VIDEO_QUALITY, MPVCore::VIDEO_QUALITY);
+            // This playback only: the persistent policy is Settings → Playback, and
+            // a remembered tier used to turn every later open into a transcode.
+            this->qualityCap = values[selected];
             this->fallbackBitrate = 0;
             MPVCore::instance().getCustomEvent()->fire(QUALITY_CHANGE, nullptr);
             return true;

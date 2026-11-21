@@ -50,7 +50,8 @@
     "speed_up": "Vitesse actuelle {}",
     "repeat": "Répéter",
     "repeat_one": "Cette vidéo",
-    "repeat_all": "Toute la liste"
+    "repeat_all": "Toute la liste",
+    "quality_direct": "Le mode de lecture est « toujours direct » : aucune qualité à choisir."
   },
   "media": {
     "sort": "Tri",
@@ -250,6 +251,12 @@
     },
     "playback": {
       "header": "Paramètres de lecture",
+      "mode": {
+        "header": "Mode de lecture",
+        "auto": "Automatique (transcoder au-delà de la limite)",
+        "direct": "Toujours direct",
+        "transcode": "Toujours transcoder"
+      },
       "low_quality": "Décodage en basse qualité (réduit la qualité de l'image pour une moindre consommation d'énergie)",
       "in_memory_cache": "Cache en mémoire",
       "subs_fallback": "Chargement automatique des sous-titres",
@@ -260,7 +267,6 @@
       },
       "vo": "Sortie vidéo",
       "hwdec": "Décodage matériel",
-      "force_directplay": "Forcer la lecture directe",
       "osd_on_toggle": "Afficher l'interface de contrôle lors de la pause",
       "touch_gesture": "Activer les gestes de progression de lecture",
       "clip_point": "Afficher la position des chapitres sur la barre de progression",
@@ -270,9 +276,13 @@
       "subsync": "Synchronisation des sous-titres"
     },
     "transcode": {
-      "header": "Paramètres de transcodage",
-      "max_resolution": "Résolution max du transcodage",
-      "resolution_limit": "Limiter aussi la lecture directe"
+      "header": "Lecture et transcodage",
+      "max_resolution": "Résolution de transcodage",
+      "cloud_direct": {
+        "header": "Fichiers cloud : toujours en direct",
+        "detail": "Direct uniquement",
+        "hint": "Les fichiers d'un disque cloud (un .strm pointant vers un CDN) sont toujours lus en direct.\n\nLe serveur n'a pas d'encodeur pour eux : transcoder l'obligerait à tirer tout le fichier à travers lui, et les frontends qui servent ces fichiers le refusent ou échouent. Il n'y a rien à choisir ici."
+      }
     },
     "control": {
       "header": "Contrôle de lecture",

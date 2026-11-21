@@ -50,7 +50,8 @@
     "speed_up": "Current speed {}",
     "repeat": "Repeat",
     "repeat_one": "This video",
-    "repeat_all": "Whole list"
+    "repeat_all": "Whole list",
+    "quality_direct": "Playback mode is \"always direct\": there is no quality to pick."
   },
   "media": {
     "sort": "Sort",
@@ -250,6 +251,12 @@
     },
     "playback": {
       "header": "Playback",
+      "mode": {
+        "header": "Playback mode",
+        "auto": "Auto (transcode above the limit)",
+        "direct": "Always direct play",
+        "transcode": "Always transcode"
+      },
       "low_quality": "Low quality decoding (with less CPU usage)",
       "in_memory_cache": "Inmemory cache",
       "subs_fallback": "Autoload subtitles",
@@ -260,7 +267,6 @@
       },
       "vo": "Video output",
       "hwdec": "Hardware decode",
-      "force_directplay": "Force direct play",
       "osd_on_toggle": "Show OSD when paused",
       "touch_gesture": "Touch gesture for seeking step",
       "clip_point": "Show clip point of chapter",
@@ -270,9 +276,13 @@
       "subsync": "Subtitle Sync"
     },
     "transcode": {
-      "header": "Transcode",
-      "max_resolution": "Maximum transcoding resolution",
-      "resolution_limit": "Also limit direct play"
+      "header": "Playback & transcode",
+      "max_resolution": "Transcode resolution",
+      "cloud_direct": {
+        "header": "Cloud files: always direct",
+        "detail": "Direct only",
+        "hint": "Files on a cloud drive (a .strm pointing at a CDN) are always played direct.\n\nThe server has no encoder for them: transcoding would make it pull the whole file through itself first, and the front-ends that serve those files refuse or fail it. There is nothing to choose here."
+      }
     },
     "control": {
       "header": "Playback Control",

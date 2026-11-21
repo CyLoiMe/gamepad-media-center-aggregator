@@ -77,14 +77,15 @@
                 height="auto"
                 axis="column"
                 marginBottom="30px">
-                <brls:BooleanCell
-                    id="setting/video/directplay" />
-                <brls:SelectorCell
-                    id="setting/transcode/codec" />
-                <brls:SelectorCell
+                <SelectorCell
+                    id="setting/playback/mode" />
+                <SelectorCell
                     id="setting/transcode/max_resolution" />
-                <brls:BooleanCell
-                    id="setting/transcode/resolution_limit" />
+                <SelectorCell
+                    id="setting/transcode/codec" />
+                <DisclosureCell
+                    id="setting/transcode/cloud_direct"
+                    title="@i18n/main/setting/transcode/cloud_direct" />
             </brls:Box>
 
             <brls:Header

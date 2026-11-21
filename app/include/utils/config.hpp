@@ -159,10 +159,11 @@ public:
         KEYMAP,
         WINDOW_STATE,
         TRANSCODEC,
-        FORCE_DIRECTPLAY,
-        PLAYER_VIDEO_QUALITY,  // transcode bitrate cap (bps); 0 = auto/direct play
+        /// "auto" | "direct" | "transcode" — Settings → Playback → Playback mode.
+        /// Replaced FORCE_DIRECTPLAY + PLAYER_RESOLUTION_LIMIT, which gated each
+        /// other (see AppConfig::init).
+        PLAYBACK_MODE,
         PLAYER_MAX_RESOLUTION,
-        PLAYER_RESOLUTION_LIMIT,
         OSD_ON_TOGGLE,
         TOUCH_GESTURE,
         CLIP_POINT,

@@ -46,7 +46,8 @@
     "speed_up": "Velocidad actual {}",
     "repeat": "Repetir",
     "repeat_one": "Este vídeo",
-    "repeat_all": "Toda la lista"
+    "repeat_all": "Toda la lista",
+    "quality_direct": "El modo de reproducción es «siempre directo»: no hay calidad que elegir."
   },
   "media": {
     "sort": "Ordenar",
@@ -211,8 +212,7 @@
     "section_done": "Descargado",
     "remove_all": "Eliminar todo",
     "confirm_remove_all": "¿Eliminar todas las descargas?",
-    "empty_sub": "Las películas y episodios descargados aparecen aquí para verlos sin conexión.",
-    "eta": "{} restante"
+    "empty_sub": "Las películas y episodios descargados aparecen aquí para verlos sin conexión."
   },
   "setting": {
     "quit_hint": "Vas a salir de la aplicación. La configuración tendrá efecto tras el próximo arranque",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Reproducción",
+      "mode": {
+        "header": "Modo de reproducción",
+        "auto": "Automático (transcodificar por encima del límite)",
+        "direct": "Siempre directo",
+        "transcode": "Siempre transcodificar"
+      },
       "low_quality": "Decodificación de baja calidad (menor uso de CPU)",
       "in_memory_cache": "Caché en memoria",
       "subs_fallback": "Cargar subtítulos automáticamente",
@@ -248,7 +254,6 @@
       },
       "vo": "Salida de vídeo",
       "hwdec": "Decodificación por hardware",
-      "force_directplay": "Forzar reproducción directa",
       "osd_on_toggle": "Mostrar OSD al pausar",
       "touch_gesture": "Gesto táctil para el paso de avance",
       "clip_point": "Mostrar marca de capítulo",
@@ -258,9 +263,13 @@
       "subsync": "Sincronización de subtítulos"
     },
     "transcode": {
-      "header": "Transcodificación",
-      "max_resolution": "Resolución máxima de transcodificación",
-      "resolution_limit": "Limitar también la reproducción directa"
+      "header": "Reproducción y transcodificación",
+      "max_resolution": "Resolución de transcodificación",
+      "cloud_direct": {
+        "header": "Archivos en la nube: siempre directo",
+        "detail": "Solo directo",
+        "hint": "Los archivos de un disco en la nube (un .strm que apunta a un CDN) siempre se reproducen en directo.\n\nEl servidor no tiene codificador para ellos: transcodificar le obligaría a arrastrar todo el archivo a través de sí mismo, y los frontends que sirven esos archivos lo rechazan o fallan. Aquí no hay nada que elegir."
+      }
     },
     "control": {
       "header": "Control de reproducción",

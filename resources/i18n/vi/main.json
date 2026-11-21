@@ -46,7 +46,8 @@
     "speed_up": "Tốc độ hiện tại {}",
     "repeat": "Lặp lại",
     "repeat_one": "Video này",
-    "repeat_all": "Toàn bộ danh sách"
+    "repeat_all": "Toàn bộ danh sách",
+    "quality_direct": "Chế độ phát đang là \"luôn trực tiếp\": không có chất lượng để chọn."
   },
   "media": {
     "sort": "Sắp xếp",
@@ -183,7 +184,7 @@
     "cancel": "Hủy tải xuống",
     "remove": "Xóa bản tải",
     "downloading": "Đang tải xuống...",
-    "eta": "còn {}",
+    "eta": "Còn {}",
     "completed": "Đã tải xuống",
     "failed": "Tải xuống thất bại",
     "forbidden": "Bị máy chủ từ chối (403)",
@@ -211,8 +212,7 @@
     "section_done": "Đã tải xuống",
     "remove_all": "Xóa tất cả",
     "confirm_remove_all": "Xóa tất cả các mục đã tải?",
-    "empty_sub": "Phim và tập đã tải sẽ xuất hiện ở đây để xem ngoại tuyến.",
-    "eta": "Còn {}"
+    "empty_sub": "Phim và tập đã tải sẽ xuất hiện ở đây để xem ngoại tuyến."
   },
   "setting": {
     "quit_hint": "Bạn cần thoát khỏi ứng dụng và mở lại ứng dụng để các cài đặt mới hoạt động",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Phát lại",
+      "mode": {
+        "header": "Chế độ phát",
+        "auto": "Tự động (chuyển mã khi vượt giới hạn)",
+        "direct": "Luôn phát trực tiếp",
+        "transcode": "Luôn chuyển mã"
+      },
       "low_quality": "Giải mã chất lượng thấp (sử dụng ít CPU hơn)",
       "in_memory_cache": "Bộ nhớ đệm trong RAM",
       "subs_fallback": "Tự động tải phụ đề",
@@ -248,7 +254,6 @@
       },
       "vo": "Đầu ra video",
       "hwdec": "Giải mã phần cứng",
-      "force_directplay": "Buộc phát trực tiếp",
       "osd_on_toggle": "Hiển thị OSD khi tạm dừng",
       "touch_gesture": "Cảm ứng để tua nhanh",
       "clip_point": "Hiển thị điểm cắt của chương",
@@ -258,9 +263,13 @@
       "subsync": "Đồng bộ phụ đề"
     },
     "transcode": {
-      "header": "Chuyển mã",
-      "max_resolution": "Độ phân giải chuyển mã tối đa",
-      "resolution_limit": "Giới hạn cả phát trực tiếp"
+      "header": "Phát và chuyển mã",
+      "max_resolution": "Độ phân giải chuyển mã",
+      "cloud_direct": {
+        "header": "Tệp trên đám mây: luôn phát trực tiếp",
+        "detail": "Chỉ trực tiếp",
+        "hint": "Tệp trên ổ đám mây (.strm trỏ tới CDN) luôn được phát trực tiếp.\n\nMáy chủ không có bộ mã hoá cho chúng: chuyển mã sẽ buộc máy chủ kéo toàn bộ tệp qua chính nó, và các frontend phục vụ những tệp này sẽ từ chối hoặc lỗi. Ở đây không có gì để chọn."
+      }
     },
     "control": {
       "header": "Điều khiển phát lại",

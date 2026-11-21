@@ -151,14 +151,34 @@ void SettingTab::onCreate() {
             AppConfig::instance().setItem(AppConfig::PLAYER_SUBTITLE_LANG, subLangValues[selected]);
         });
 
-    btnDirectPlay->init("main/setting/playback/force_directplay"_i18n, MPVCore::FORCE_DIRECTPLAY, [&conf](bool value) {
-        if (MPVCore::FORCE_DIRECTPLAY == value) return;
-        MPVCore::FORCE_DIRECTPLAY = value;
-        conf.setItem(AppConfig::FORCE_DIRECTPLAY, value);
-    });
+    // Playback mode: one three-way choice replaced "force direct play" and "also
+    // limit direct play", which gated each other (see AppConfig::init).
+    const std::vector<std::string> modeValues = {"auto", "direct", "transcode"};
+    const int modeIndex = MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Direct      ? 1
+                          : MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Transcode ? 2
+                                                                                       : 0;
+    // the two transcode rows mean nothing in Direct mode: hide them, so the group
+    // reads "direct — nothing to tune" instead of offering dead knobs
+    auto applyModeRows = [this]() {
+        const bool transcodes = MPVCore::PLAYBACK_MODE != MPVCore::PlaybackMode::Direct;
+        const brls::Visibility v = transcodes ? brls::Visibility::VISIBLE : brls::Visibility::GONE;
+        if (auto* row = this->selectorMaxResolution.getView()) row->setVisibility(v);
+        if (auto* row = this->selectorCodec.getView()) row->setVisibility(v);
+    };
+    selectorPlaybackMode->init("main/setting/playback/mode/header"_i18n,
+        {"main/setting/playback/mode/auto"_i18n, "main/setting/playback/mode/direct"_i18n,
+            "main/setting/playback/mode/transcode"_i18n},
+        modeIndex, [modeValues, applyModeRows](int selected) {
+            MPVCore::PLAYBACK_MODE = selected == 1   ? MPVCore::PlaybackMode::Direct
+                                     : selected == 2 ? MPVCore::PlaybackMode::Transcode
+                                                     : MPVCore::PlaybackMode::Auto;
+            AppConfig::instance().setItem(AppConfig::PLAYBACK_MODE, modeValues[selected]);
+            applyModeRows();
+        });
+    applyModeRows();
 
     auto& codecOption = conf.getOptions(AppConfig::TRANSCODEC);
-    selectorCodec->init("main/setting/playback/transcodec"_i18n, {"AVC/H264", "HEVC/H265", "AV1"},
+    selectorCodec->init("main/setting/playback/transcodec"_i18n, {"H.264", "HEVC"},
         conf.getOptionIndex(AppConfig::TRANSCODEC), [&codecOption](int selected) {
             MPVCore::VIDEO_CODEC = codecOption.options[selected];
             AppConfig::instance().setItem(AppConfig::TRANSCODEC, MPVCore::VIDEO_CODEC);
@@ -179,12 +199,15 @@ void SettingTab::onCreate() {
             AppConfig::instance().setItem(AppConfig::PLAYER_MAX_RESOLUTION, MPVCore::MAX_RESOLUTION);
         });
 
-    btnResolutionLimit->init(
-        "main/setting/transcode/resolution_limit"_i18n, MPVCore::RESOLUTION_LIMIT, [&conf](bool value) {
-            if (MPVCore::RESOLUTION_LIMIT == value) return;
-            MPVCore::RESOLUTION_LIMIT = value;
-            conf.setItem(AppConfig::PLAYER_RESOLUTION_LIMIT, value);
-        });
+    // Cloud files are a rule, not a preference: the server has no encoder for a
+    // file it would first have to pull through itself, so a cloud source is always
+    // played direct. It sits in this group so the rule is discoverable, with no
+    // switch that could turn a guaranteed failure back on.
+    cellCloudDirect->setDetailText("main/setting/transcode/cloud_direct/detail"_i18n);
+    cellCloudDirect->registerClickAction([](...) -> bool {
+        Dialog::show("main/setting/transcode/cloud_direct/hint"_i18n);
+        return true;
+    });
 
     auto& audioChannelsOption = conf.getOptions(AppConfig::AUDIO_CHANNELS);
     selectorAudioChannels->init("main/setting/playback/audio_channels"_i18n, {"Auto", "Stereo", "Mono"},

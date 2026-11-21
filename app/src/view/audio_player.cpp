@@ -125,8 +125,10 @@ void AudioPlayer::resolveAndPlay(const media::Item& track) {
     }
     media::PlaybackOptions opts;
     opts.seekMs = track.viewOffset;
-    opts.bitrateCap = MPVCore::VIDEO_QUALITY;
-    opts.forceDirectPlay = MPVCore::FORCE_DIRECTPLAY;
+    // Music follows Settings → Playback too, with no resolution step: Transcode asks
+    // the server for an encoded track (320 kbps), Direct and Auto play the file.
+    opts.bitrateCap = MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Transcode ? 320000 : 0;
+    opts.forceDirectPlay = MPVCore::PLAYBACK_MODE == MPVCore::PlaybackMode::Direct;
     opts.sessionId = this->sessionId;
     std::string wantId = track.ratingKey;
     media::Item item = track;

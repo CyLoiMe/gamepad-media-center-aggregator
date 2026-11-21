@@ -46,7 +46,8 @@
     "speed_up": "Aktuelle Geschwindigkeit {}",
     "repeat": "Wiederholen",
     "repeat_one": "Dieses Video",
-    "repeat_all": "Ganze Liste"
+    "repeat_all": "Ganze Liste",
+    "quality_direct": "Der Wiedergabemodus ist „Immer direkt“: es gibt keine Qualitätsstufe zur Auswahl."
   },
   "media": {
     "sort": "Sortieren",
@@ -211,8 +212,7 @@
     "section_done": "Heruntergeladen",
     "remove_all": "Alle entfernen",
     "confirm_remove_all": "Alle Downloads entfernen?",
-    "empty_sub": "Heruntergeladene Filme und Episoden erscheinen hier, offline abspielbar.",
-    "eta": "{} verbleibend"
+    "empty_sub": "Heruntergeladene Filme und Episoden erscheinen hier, offline abspielbar."
   },
   "setting": {
     "quit_hint": "Du bist dabei, die Applikation zu beenden. Die Einstellungen treten beim nächsten Start in Kraft.",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Wiedergabe",
+      "mode": {
+        "header": "Wiedergabemodus",
+        "auto": "Automatisch (Transcode über dem Limit)",
+        "direct": "Immer direkt",
+        "transcode": "Immer transkodieren"
+      },
       "low_quality": "Dekodierung in geringer Qualität (weniger CPU-Last)",
       "in_memory_cache": "Arbeitsspeicher-Cache",
       "subs_fallback": "Untertitel automatisch laden",
@@ -248,7 +254,6 @@
       },
       "vo": "Videoausgabe",
       "hwdec": "Hardwaredekodierung",
-      "force_directplay": "Direct Play erzwingen",
       "osd_on_toggle": "OSD bei Pause anzeigen",
       "touch_gesture": "Touch-Geste für Sprungschritt",
       "clip_point": "Kapitelmarken anzeigen",
@@ -258,9 +263,13 @@
       "subsync": "Untertitel-Synchronisierung"
     },
     "transcode": {
-      "header": "Transkodierung",
-      "max_resolution": "Maximale Transkodierungsauflösung",
-      "resolution_limit": "Auch Direct Play begrenzen"
+      "header": "Wiedergabe & Transcode",
+      "max_resolution": "Transcode-Auflösung",
+      "cloud_direct": {
+        "header": "Cloud-Dateien: immer direkt",
+        "detail": "Nur direkt",
+        "hint": "Dateien auf einem Cloud-Laufwerk (eine .strm, die auf ein CDN zeigt) werden immer direkt wiedergegeben.\n\nDer Server hat dafür keinen Encoder: Ein Transcode würde die ganze Datei erst durch ihn hindurchziehen, und die Frontends, die solche Dateien ausliefern, lehnen das ab oder scheitern daran. Hier gibt es nichts zu wählen."
+      }
     },
     "control": {
       "header": "Wiedergabesteuerung",

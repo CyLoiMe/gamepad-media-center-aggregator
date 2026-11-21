@@ -46,7 +46,8 @@
     "speed_up": "Aktuální rychlost {}",
     "repeat": "Opakovat",
     "repeat_one": "Toto video",
-    "repeat_all": "Celý seznam"
+    "repeat_all": "Celý seznam",
+    "quality_direct": "Režim přehrávání je „vždy přímo“: není co vybírat."
   },
   "media": {
     "sort": "Řadit",
@@ -183,7 +184,7 @@
     "cancel": "Zrušit stahování",
     "remove": "Odstranit stažené",
     "downloading": "Stahování…",
-    "eta": "zbývá {}",
+    "eta": "Zbývá {}",
     "completed": "Staženo",
     "failed": "Stahování selhalo",
     "forbidden": "Odmítnuto serverem (403)",
@@ -211,8 +212,7 @@
     "section_done": "Staženo",
     "remove_all": "Odstranit vše",
     "confirm_remove_all": "Odstranit všechna stažení?",
-    "empty_sub": "Stažené filmy a epizody se zobrazí zde, připravené ke sledování offline.",
-    "eta": "Zbývá {}"
+    "empty_sub": "Stažené filmy a epizody se zobrazí zde, připravené ke sledování offline."
   },
   "setting": {
     "quit_hint": "Chystáte se ukončit aplikaci. Nastavení se projeví po příštím spuštění",
@@ -238,6 +238,12 @@
     },
     "playback": {
       "header": "Přehrávání",
+      "mode": {
+        "header": "Režim přehrávání",
+        "auto": "Automaticky (transkódovat nad limitem)",
+        "direct": "Vždy přímo",
+        "transcode": "Vždy transkódovat"
+      },
       "low_quality": "Nízká kvalita dekódování (s menším využitím CPU)",
       "in_memory_cache": "Vyrovnávací paměť v RAM",
       "subs_fallback": "Automaticky načítat titulky",
@@ -248,7 +254,6 @@
       },
       "vo": "Výstup videa",
       "hwdec": "Hardwarové dekódování",
-      "force_directplay": "Vynutit přímé přehrávání",
       "osd_on_toggle": "Zobrazit OSD při pozastavení",
       "touch_gesture": "Dotykové gesto pro krok převíjení",
       "clip_point": "Zobrazit bod střihu kapitoly",
@@ -258,9 +263,13 @@
       "subsync": "Synchronizace titulků"
     },
     "transcode": {
-      "header": "Překódování",
-      "max_resolution": "Maximální rozlišení překódování",
-      "resolution_limit": "Omezit i přímé přehrávání"
+      "header": "Přehrávání a transkódování",
+      "max_resolution": "Rozlišení transkódování",
+      "cloud_direct": {
+        "header": "Soubory v cloudu: vždy přímo",
+        "detail": "Pouze přímo",
+        "hint": "Soubory na cloudovém disku (.strm odkazující na CDN) se vždy přehrávají přímo.\n\nServer pro ně nemá kodér: transkódování by ho donutilo nejdřív protáhnout celý soubor přes sebe a frontendy, které tyto soubory poskytují, to odmítají nebo na tom selhávají. Není zde co vybírat."
+      }
     },
     "control": {
       "header": "Ovládání přehrávání",
